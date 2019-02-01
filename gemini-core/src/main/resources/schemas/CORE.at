@@ -1,0 +1,29 @@
+// Gemini Core Module
+
+INTERFACE Domain {
+    TEXT code *
+}
+
+ENTITY Entity {
+    TEXT name *
+    TEXT module
+    TEXT displayName
+}
+
+ENTITY Field {
+    TEXT    name *
+    Entity  entity *
+    TEXT    type
+    Entity  refEntity
+    BOOL    isLogicalKey
+}
+
+ENTITY ValueStrategy IMPLEMENTS Domain
+
+ENTITY FieldResolution {
+    Field   field *
+    TEXT    code *
+    TEXT    value
+}
+
+

@@ -1,0 +1,61 @@
+package it.at7.gemini.start;
+
+
+import it.at7.gemini.api.old.ApiRestInitializer;
+// import it.at7.gemini.core.persistence.PostgresAllInPublicPersistenceSchemaManager;
+// import it.at7.gemini.core.Gemini;
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.startup.Tomcat;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+
+import javax.servlet.ServletException;
+import javax.sql.DataSource;
+import java.io.File;
+import java.io.IOException;
+
+public class AnnotationAppMain {
+    public DataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("org.postgresql.Driver");
+        dataSource.setUrl("jdbc:postgresql://localhost:5432/gemini");
+        dataSource.setUsername("gemini");
+        dataSource.setPassword("gemini");
+        return dataSource;
+    }
+
+    public static Tomcat startTomcat(ApplicationContext appContext) throws LifecycleException, ServletException {
+        ApiRestInitializer.setDefaultApplicationContext(appContext);
+        String relativePath = ".";
+        Tomcat tomcat = new Tomcat();
+        tomcat.setPort(8080);
+        tomcat.getHost().setAppBase(createTomcatTempDir(8080));
+        tomcat.addWebapp("/", relativePath);
+        tomcat.start();
+        tomcat.getServer().await();
+        return tomcat;
+    }
+
+
+    private static String createTomcatTempDir(int port) {
+        try {
+            File tempDir = File.createTempFile("tomcat.", "." + port);
+            tempDir.delete();
+            tempDir.mkdir();
+            tempDir.deleteOnExit();
+            return tempDir.getAbsolutePath();
+        } catch (IOException ex) {
+            throw new RuntimeException(
+                    "Unable to create tempDir. java.io.tmpdir is set to " + System.getProperty("java.io.tmpdir"),
+                    ex
+            );
+        }
+    }
+
+    public static void main(String[] args) throws ServletException, LifecycleException {
+       /* ApplicationContext contextAuto =
+                new AnnotationConfigApplicationContext(AnnotationAppMain.class, PostgresAllInPublicPersistenceSchemaManager.class);
+        //Gemini.start(contextAuto);
+        //startTomcat(contextAuto); */
+    }
+}

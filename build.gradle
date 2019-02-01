@@ -1,0 +1,34 @@
+buildscript {
+    ext {
+        springBootVersion = '2.1.0.RELEASE'
+    }
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+
+    group 'it.at7.gemini'
+    version '1.0-SNAPSHOT'
+
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    sourceCompatibility = 1.9
+    targetCompatibility = 1.9
+
+    dependencies {
+        testCompile 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+}

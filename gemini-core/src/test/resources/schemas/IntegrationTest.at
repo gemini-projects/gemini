@@ -1,0 +1,30 @@
+ENTITY TestDomain1 {
+    TEXT code *
+}
+
+ENTITY TestDataType {
+    TEXT text *
+    NUMBER numberLong
+    NUMBER numberDouble
+    DOUBLE double
+    LONG long
+    BOOL bool
+    DATE date
+    TIME time
+    DATETIME datetime
+    TestDomain1 domain1
+
+}
+
+ENTITY TestDomainHierarchy {
+    TEXT code *
+    TestDomain1 domain1 *
+}
+
+// ----- a simple comment to check it works
+
+ENTITY TestDataTypeWithHierachy {
+    TEXT text *
+    TestDomainHierarchy dmHierarchy
+}
+

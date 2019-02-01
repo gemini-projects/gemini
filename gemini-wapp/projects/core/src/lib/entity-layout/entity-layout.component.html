@@ -1,0 +1,26 @@
+<div class="gemini-portlet">
+    <div class="gemini-portlet__head">
+        <div class="gemini-portlet__head-label">
+            <h3 class="gemini-portlet__head-title">
+                {{entitySchema.displayName}}
+            </h3>
+        </div>
+        <div *ngIf="!newEntityRecordEnabled" class="gemini-portlet__head-toolbar">
+            <button type="button" class="btn btn-outline-secondary" (click)="newEntityRecord()">
+                <i class="fas fa-plus"></i> Aggiungi
+            </button>
+        </div>
+        <div *ngIf="newEntityRecordEnabled" class="gemini-portlet__head-toolbar">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeNewEntityRecord()">
+                <i class="fas fa-back"></i> Torna indietro
+            </button>
+        </div>
+    </div>
+    <div *ngIf="!newEntityRecordEnabled" class="gemini-portlet__body">
+
+    </div>
+    <div *ngIf="newEntityRecordEnabled" class="gemini-portlet__body">
+        <gemini-form [entityName]="entitySchema.name"></gemini-form>
+    </div>
+    
+</div>

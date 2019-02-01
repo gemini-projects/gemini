@@ -1,0 +1,11 @@
+ENTITY-RECORD User
+{
+    "a" : 1,
+    "b" : "st",
+    "map": {
+       "a" : 1
+    }
+}
+
+ENTITY-RECORD Array
+[{"a" : 1},{"a": 2}]

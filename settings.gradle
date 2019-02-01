@@ -1,0 +1,6 @@
+include 'gemini-dsl'
+include 'gemini-core'
+include 'gemini-postgres'
+include 'gemini-boot'
+include 'gemini-wapp'
+

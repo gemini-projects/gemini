@@ -1,0 +1,12 @@
+<form [formGroup]="formStatus.formGroup" (submit)="onSubmit($event)">
+
+    <div *ngFor="let fieldStatus of formStatus.fieldsStatus;">
+        <form-field-container [fieldStatus]="fieldStatus"
+                              [formStatus]="formStatus"></form-field-container>
+    </div>
+
+    <div class="p-col">
+        <button type="submit" class="btn btn-outline-primary">Submit</button>
+    </div>
+
+</form>

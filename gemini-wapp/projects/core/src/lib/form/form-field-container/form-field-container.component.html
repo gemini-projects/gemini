@@ -1,0 +1,19 @@
+<div class="gemini-form-field-container p-grid p-nogutter">
+    <div class="p-col-3 text-right pr-2">
+        <span [attr.for]="fieldStatus.fieldSchema.name">{{fieldStatus.fieldSchema.name}}</span>
+    </div>
+    <div class="p-col-5 ">
+        <div>
+            <ng-container geminiFormField [fieldStatus]="fieldStatus" [formStatus]="formStatus">
+            </ng-container>
+
+
+        </div>
+    </div>
+
+    <div class="p-col-4 pl-2">
+        <div *ngIf="fieldStatus.formControl.touched && fieldStatus.formControl.errors">
+            <pre>{{fieldStatus.formControl.errors | json}}</pre>
+        </div>
+    </div>
+</div>

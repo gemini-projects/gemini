@@ -1,0 +1,8 @@
+<div [formGroup]="formStatus.formGroup" >
+    <input [formControlName]="fieldStatus.fieldSchema.name"
+           [id]="fieldStatus.fieldSchema.name" [type]="inputData.inputType"
+           [attr.step]="actualStep"
+           style="width: 100%"
+           pInputText >
+</div>
+<!--    <div class="errorMessage" *ngIf="!isValid">{{question.label}} is required</div> -->

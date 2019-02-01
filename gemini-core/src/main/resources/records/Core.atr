@@ -1,0 +1,15 @@
+ENTITY-RECORD FieldResolution
+[{
+   "field": {
+        "entity": "FIELD",
+        "name" : "entity"
+   },
+   "code" :  "DELETE",
+   "value" : "CASCADE"
+}]
+
+ENTITY-RECORD Entity
+[{
+    "name": "ENTITY",
+    "displayName": "Entità"
+}]

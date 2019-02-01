@@ -1,0 +1,11 @@
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-tomcat")
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile("cz.jirutka.rsql:rsql-parser:2.1.0")
+
+    compile project(':gemini-dsl')
+}
+
+jar {
+    enabled true
+}

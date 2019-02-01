@@ -1,0 +1,9 @@
+<form>
+  
+  <p-autoComplete [style]="{'width':'100%'}" [inputStyle]="{'width':'100%'}"  [inputStyleClass]="'form-control'"
+    [suggestions]="results" (completeMethod)="search($event)" (onSelect)="selected($event)" field="searchRoute"
+    placeholder="Ricerca rapida" aria-label="Ricerca rapida" emptyMessage="Nessun risultato"
+  >
+  </p-autoComplete>
+  
+</form>
