@@ -317,9 +317,9 @@ public class SchemaManagerImpl implements SchemaManager {
     private void checkAndSetType(Map<String, EntityBuilder> modelBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry) throws TypeNotFoundException {
         String type = entry.getType().toUpperCase();
 
-        Optional<FieldType> fieldType = FieldType.getBasicType(type);
+        Optional<FieldType> fieldType = FieldType.of(type);
         if (!fieldType.isPresent()) {
-            // it is not a basic type
+            // it is not a reconducible 1 to 1 type
 
             // try to get an alias
             Optional<FieldType> aliasOfType = FieldType.getAliasOfType(type);
@@ -328,12 +328,13 @@ public class SchemaManagerImpl implements SchemaManager {
                 return;
             }
 
-            // try to get the reference
+            // try to get a static reference for entity
             EntityBuilder modelForType = modelBuilders.get(type);
             if (modelForType != null) {
                 entityBuilder.addField(ENTITY_REF, entry, modelForType.getName());
                 return;
             }
+
             throw new FieldTypeNotKnown(entityBuilder.getName(), type, entry);
         } else {
             entityBuilder.addField(fieldType.get(), entry);

@@ -198,11 +198,14 @@ public class Record {
             String fieldNameLC = field.getName().toLowerCase();
             Object value = fieldValue.getValue();
             if (value == null) {
-                value = nullToDefauly(field);
+                value = nullToDefault(field);
             }
             switch (fieldType) {
                 case PK:
+                case LONG:
+                case DOUBLE:
                 case TEXT:
+                case TRANSL_TEXT:
                 case NUMBER:
                 case BOOL:
                 case RECORD:
@@ -252,6 +255,8 @@ public class Record {
                 case ENTITY_REF:
                     convertEntityRefToJSONValue(convertedMap, field, value);
                     break;
+                default:
+                    throw new RuntimeException(String.format("No conversion found for fieldtype %s", fieldType));
             }
         }
 
@@ -312,7 +317,7 @@ public class Record {
         }
 
 
-        static Object nullToDefauly(Field field) {
+        static Object nullToDefault(Field field) {
             FieldType fieldType = field.getType();
             switch (fieldType) {
                 case PK:
@@ -321,6 +326,7 @@ public class Record {
                 case TIME:
                 case DATE:
                 case DATETIME:
+                case TRANSL_TEXT:
                     return "";
                 case NUMBER:
                     return 0;
@@ -335,7 +341,7 @@ public class Record {
                 case RECORD:
                     return new Object();
             }
-            return "";
+            throw new RuntimeException(String.format("No default found for type %s", field));
         }
 
     }

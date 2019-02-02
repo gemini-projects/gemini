@@ -13,3 +13,13 @@ ENTITY-RECORD Entity V 2
     "name": "ENTITY",
     "displayName": "Entità"
 }]
+
+ENTITY-RECORD Language V 1
+[{
+    "code": "IT",
+    "description": "Italiano"
+},
+{
+    "code": "EN",
+    "description": "English"
+}]

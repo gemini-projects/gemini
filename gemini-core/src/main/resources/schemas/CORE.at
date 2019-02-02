@@ -1,22 +1,41 @@
 #  Gemini Core Module
 
 INTERFACE Domain {
-    TEXT code *
+    TEXT            code  *
+    TRANSL_TEXT     description
 }
 
 ENTITY Entity {
-    TEXT name *
-    TEXT module
-    TEXT displayName
+    TEXT            name *
+    TEXT            module
+    TRANSL_TEXT     displayName
 }
 
 ENTITY Field {
-    TEXT    name *
-    Entity  entity *
-    TEXT    type
-    Entity  refEntity
-    BOOL    isLogicalKey
+    TEXT            name *
+    Entity          entity *
+    TEXT            type
+    Entity          refEntity
+    BOOL            isLogicalKey
+    TRANSL_TEXT     displayName
 }
+
+ENTITY InitRecord {
+    Entity  entity          *
+    TEXT    versionName     *
+    LONG    versionNumber   *
+}
+
+ENTITY Language IMPLEMENTS Domain
+
+ENTITY Translation {
+    Entity          entity *
+    Field           field  *
+    LANGUAGE        language *
+    # ENTITY_RECORD   recordKey
+    TEXT            value
+}
+
 
 ENTITY ValueStrategy IMPLEMENTS Domain
 
@@ -26,10 +45,6 @@ ENTITY FieldResolution {
     TEXT    value
 }
 
-ENTITY InitRecord {
-    Entity  entity          *
-    TEXT    versionName     *
-    LONG    versionNumber   *
-}
+
 
 

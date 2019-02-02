@@ -17,6 +17,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.oneToOneType;
 import static it.at7.gemini.schema.Field.Converters.logicalKeyFromObject;
 
 @Service
@@ -212,16 +213,16 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             for (Field field : entity.getSchemaEntityFields()) {
                 FieldType type = field.getType();
                 String fieldName = field.getName().toLowerCase();
-                if (type.isBasicType()) {
+                if (oneToOneType(type)) {
                     Class specificType = typeClass(type);
                     Object object;
-                    if(specificType != null) {
+                    if (specificType != null) {
                         object = rs.getObject(fieldName, specificType);
                     } else {
                         object = rs.getObject(fieldName);
 
                     }
-                    er.put(field, object);
+                    er.put(field, object == null ? handleNullValueForField(field.getType()) : object);
                 }
                 if (type.equals(FieldType.ENTITY_REF)) {
                     EntityReferenceRecord entityReferenceRecord = null;
@@ -240,6 +241,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                     }
                     er.put(field, entityReferenceRecord);
                 }
+
             }
             er.put(entity.getIdField(), rs.getLong(Field.ID_NAME));
             ret.add(er);
@@ -257,7 +259,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             sql += first ? "(" : ",";
             first = false;
             FieldType type = field.getField().getType();
-            if (type.isBasicType() || type.equals(FieldType.ENTITY_REF)) {
+            if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += field.getField().getName().toLowerCase();
             }
         }
@@ -268,7 +270,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             sql += first ? "(" : ",";
             first = false;
             FieldType type = field.getField().getType();
-            if (type.isBasicType() || type.equals(FieldType.ENTITY_REF)) {
+            if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += ":" + columnName;
                 params.put(columnName, fromFieldToPrimitiveValue(field, transaction));
             }
@@ -286,7 +288,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             Record.FieldValue field = sortedFields.get(i);
             String columnName = field.getField().getName().toLowerCase();
             FieldType type = field.getField().getType();
-            if (type.isBasicType() || type.equals(FieldType.ENTITY_REF)) {
+            if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += String.format(" %s = :%s", columnName, columnName);
                 sql += i == sortedFields.size() - 1 ? " " : " , ";
                 params.put(columnName, fromFieldToPrimitiveValue(field, transaction));
@@ -296,7 +298,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return new QueryWithParams(sql, params);
     }
 
-    private QueryWithParams makeModifyQuery(Entity entity, Collection<EntityRecord.EntityFieldValue> filterFieldValueType, Collection<EntityRecord.EntityFieldValue> updateWith, Transaction transaction) throws SQLException, GeminiException {
+    private QueryWithParams makeModifyQuery(Entity entity, Collection<EntityRecord.EntityFieldValue> filterFieldValueType, Collection<EntityRecord.EntityFieldValue> updateWith, Transaction transaction) throws GeminiException {
         String sql = String.format("UPDATE %s SET ", entity.getName().toLowerCase());
         Map<String, Object> params = new HashMap<>();
         List<EntityRecord.EntityFieldValue> sortedUpdateWith = sortFields(updateWith);
@@ -307,7 +309,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             }
             String columnName = fieldValueType.getField().getName().toLowerCase();
             FieldType type = fieldValueType.getField().getType();
-            if (type.isBasicType() || type.equals(FieldType.ENTITY_REF)) {
+            if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += String.format(" %s = :%s", columnName, columnName);
                 sql += i == sortedUpdateWith.size() - 1 ? " " : " , ";
                 params.put(columnName, fromFieldToPrimitiveValue(fieldValueType, transaction));
@@ -323,7 +325,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             String columnName = fieldValueType.getField().getName().toLowerCase();
             String paramName = columnName + "_f";
             FieldType type = fieldValueType.getField().getType();
-            if (type.isBasicType() || type.equals(FieldType.ENTITY_REF)) {
+            if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += String.format(" %s = :%s", columnName, paramName);
                 sql += i == sortedFilterWith.size() - 1 ? " " : " , ";
                 params.put(paramName, fromFieldToPrimitiveValue(fieldValueType, transaction));
@@ -341,7 +343,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             Field field = filterValue.getField();
             FieldType type = field.getType();
             sql += needAnd ? "AND" : "";
-            if (type.isBasicType() || type.equals(FieldType.ENTITY_REF)) {
+            if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += handleSingleColumnSelectBasicType(entityName, params, filterValue, transaction);
             }
             needAnd = true;
@@ -371,7 +373,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         if (value == null) {
             return handleNullValueForField(type);
         }
-        if (type.isBasicType()) {
+        if (oneToOneType(type)) {
             return value;
         }
         if (type.equals(FieldType.ENTITY_REF)) {
@@ -411,6 +413,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             case PK:
                 return 0;
             case TEXT:
+            case TRANSL_TEXT:
                 return "";
             case LONG:
                 return 0L;
@@ -427,7 +430,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             case RECORD:
                 break;
         }
-        return "";
+        throw new RuntimeException(String.format("NO Null Value for type %s", type.name()));
     }
 
     private Class typeClass(FieldType type) {
@@ -437,6 +440,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             case PK:
                 return BigInteger.class;
             case TEXT:
+            case TRANSL_TEXT:
                 return String.class;
             case LONG:
                 return Long.class;

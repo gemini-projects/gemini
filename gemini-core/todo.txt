@@ -1,5 +1,4 @@
 - Entita senza codice non può essere usate nelle API
-- Gestione Entity record - dare un codice ad ogni insieme (per non riperterle)? Ogni file per entity o file generici .atr ?
 - Gestione callback campi - Gestione dipendenze campi - (default, dipendenti)
 - Gestione tipo traducibile
 - Gestione chiavi generiche

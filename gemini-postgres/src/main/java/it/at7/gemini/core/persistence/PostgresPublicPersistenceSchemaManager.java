@@ -22,6 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.oneToOneType;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -399,18 +400,18 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
 
     private String field(Field field, boolean isAlterColumn) {
         FieldType type = field.getType();
-        if (type.isBasicType() || type.equals(FieldType.ENTITY_REF)) {
+        if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
             return field.getName().toLowerCase() + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
         }
-        return ""; // TODO
+        throw new RuntimeException(String.format("%s - Field Not Implemented", field.getName())); // TODO
     }
 
     private String fieldUnique(Field field) {
         FieldType type = field.getType();
-        if (type.isBasicType() || type.equals(FieldType.ENTITY_REF)) {
+        if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
             return field.getName().toLowerCase();
         }
-        return ""; // TODO
+        throw new RuntimeException(String.format("%s - Field Not Implemented", field.getName())); // TODO
     }
 
     private String getSqlPrimitiveType(Field field) {
@@ -418,6 +419,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case PK:
                 break;
             case TEXT:
+            case TRANSL_TEXT:
                 return "TEXT";
             case NUMBER:
                 return "NUMERIC";
@@ -437,9 +439,13 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 Entity entityRef = field.getEntityRef();
                 return pkForeignKeyDomainFromModel(entityRef.getName()); // it is also a domain
             case RECORD:
-                break;
+                throw sqlTypeException(field);
         }
-        throw new NullPointerException(String.format("Type %s for field %s not Assigned to any PostrgresType", field.getType(), field.getName()));
+        throw sqlTypeException(field);
+    }
+
+    private RuntimeException sqlTypeException(Field field) {
+        return new RuntimeException(String.format("Type %s for field %s not Assigned to any PostrgresType", field.getType(), field.getName()));
     }
 
     private enum OPE {

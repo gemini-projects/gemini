@@ -29,6 +29,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         assertEquals("logKey", testEntity.get("text")); // real field
+        assertEquals("", testEntity.get("transl_text")); // real field
         assertEquals(0, (long) testEntity.get("numberLong")); // default
         assertEquals(0, (long) testEntity.get("numberDouble")); // default
         assertEquals(0., testEntity.get("double"), 0.001); // default
