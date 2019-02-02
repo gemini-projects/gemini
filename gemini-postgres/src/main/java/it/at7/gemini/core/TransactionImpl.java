@@ -6,9 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
-import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterUtils;
 import org.springframework.jdbc.core.namedparam.ParsedSql;
@@ -21,6 +19,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -116,7 +115,8 @@ public class TransactionImpl implements Transaction {
         }
     }
 
-    private PreparedStatement getPreparedStatement(String sql, @Nullable Map<String, Object> parameters) throws SQLException {
+    private PreparedStatement getPreparedStatement(String sql, @Nullable Map<String, ?> parameters) throws SQLException {
+        // Map<String, SqlParameterValue> paramSqlType = extractSqlParameterType(parameters);
         SqlParameterSource paramSource = new MapSqlParameterSource(parameters);
         ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
         String sqlToUse = NamedParameterUtils.substituteNamedParameters(parsedSql, paramSource);
@@ -133,6 +133,13 @@ public class TransactionImpl implements Transaction {
         return preparedStatement;
     }
 
+   /*  private Map<String, SqlParameterValue> extractSqlParameterType(Map<String, ?> parameters) {
+        Map<String, SqlParameterValue> ret = new HashMap<>();
+        for (Map.Entry<String, ?> par : parameters.entrySet()) {
+            new SqlParameterValue(, par.getValue())
+        }
+    } */
+
     @FunctionalInterface
     public interface CallbackWithResultThrowingSqlException<R, T> {
         R accept(T t) throws SQLException, GeminiException;
@@ -143,19 +150,5 @@ public class TransactionImpl implements Transaction {
         void accept(T t) throws SQLException;
     }
 
-    /*
-    enum Autocommit {
-        AUTOCOMMIT_FALSE(false),
-        AUTOCOMMIT_TRUE(true);
 
-        private final boolean b;
-
-        Autocommit(boolean b) {
-            this.b = b;
-        }
-
-        public boolean getValue() {
-            return b;
-        }
-    }*/
 }

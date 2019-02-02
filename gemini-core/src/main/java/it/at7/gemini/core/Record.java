@@ -33,6 +33,10 @@ public class Record {
         store.put(field.getName(), value);
     }*/
 
+    public boolean set(String fieldName, Object value) {
+        return put(fieldName, value);
+    }
+
     public boolean put(String fieldName, Object value) {
         Field field = getFieldFrom(fieldName, value);
         assert field != null;

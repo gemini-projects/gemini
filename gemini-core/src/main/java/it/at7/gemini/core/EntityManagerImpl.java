@@ -117,7 +117,7 @@ public class EntityManagerImpl implements EntityManager {
         if (!rec.isPresent()) {
             handleInsertSchemaCoreEntities(record, transaction);
             // can insert the entity record
-            return persistenceEntityManager.saveNewEntityRecord(record, transaction);
+            return persistenceEntityManager.createNewEntityRecord(record, transaction);
         }
         throw EntityRecordException.MULTIPLE_LK_FOUND(record);
     }
@@ -127,7 +127,7 @@ public class EntityManagerImpl implements EntityManager {
         if (!rec.isPresent()) {
             handleInsertSchemaCoreEntities(record, transaction);
             // can insert the entity record
-            return persistenceEntityManager.saveNewEntityRecord(record, transaction);
+            return persistenceEntityManager.createNewEntityRecord(record, transaction);
         } else {
             EntityRecord persistedRecord = rec.get();
             persistedRecord.update(record);

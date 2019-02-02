@@ -30,11 +30,10 @@ public class RecordParser {
             expect(ENTITYRECORD);
             String entityName = expect(ENTITYNAME);
             SchemaRawRecordBuilder schemaRawRecordBuilder = builders.computeIfAbsent(entityName.toUpperCase(), SchemaRawRecordBuilder::new);
-            boolean def = has(DEFAULT);
             StringBuilder jsonBuilder = new StringBuilder();
-            if (def) {
-                expect(DEFAULT);
-            }
+            boolean def = checkDefault();
+            String versionName = expect(VERSIONNAME); // DEFAULT in case of default record
+            long versionProgressive = Long.parseLong(expect(VERSIONPROGRESSIVE));
             while ((line = reader.readLine()) != null) {
                 this.scanner = new Scanner(line);
                 if (!has(ENTITYRECORD)) {
@@ -50,18 +49,22 @@ public class RecordParser {
                 Object singleRecord = new ObjectMapper().readValue(jsonString,
                         new TypeReference<Map<String, Object>>() {
                         });
-                if (def) schemaRawRecordBuilder.setDefaultRecord(singleRecord);
-                else schemaRawRecordBuilder.addRecord(singleRecord);
+                if (def) schemaRawRecordBuilder.setDefaultRecord(versionProgressive, singleRecord);
+                else schemaRawRecordBuilder.addRecord(versionName, versionProgressive, singleRecord);
             } else {
                 assert jsonString.charAt(0) == '[';
                 List<Object> listRecord = new ObjectMapper().readValue(jsonString,
                         new TypeReference<List<Map<String, Object>>>() {
                         });
                 assert !def;
-                schemaRawRecordBuilder.addRecords(listRecord);
+                schemaRawRecordBuilder.addRecords(versionName, versionProgressive, listRecord);
             }
         }
         return builders.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, b -> b.getValue().build()));
+    }
+
+    private boolean checkDefault() {
+        return has(DEFAULT);
     }
 
     private String expect(Token token) throws SyntaxError {
@@ -77,7 +80,6 @@ public class RecordParser {
         return scanner.hasNext(token.pattern);
     }
 
-
     public static Map<String, SchemaRawRecords> parse(Reader r) throws SyntaxError, IOException {
         return new RecordParser(r).parse();
     }
@@ -85,6 +87,8 @@ public class RecordParser {
     public enum Token {
         ENTITYRECORD("ENTITY-RECORD"),
         ENTITYNAME("[a-zA-z]+"),
+        VERSIONNAME("[a-zA-z]+"),
+        VERSIONPROGRESSIVE("[0-9]+"),
         DEFAULT("DEFAULT"),
         L_BRACE(Pattern.quote("{")),
         L_BRACKET(Pattern.quote("[")),

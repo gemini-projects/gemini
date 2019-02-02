@@ -34,7 +34,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
-    public EntityRecord saveNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
+    public EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         QueryWithParams queryWithParams = makeInsertQuery(record, transaction);
         try {
@@ -93,7 +93,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             }
             return persistedEntityRecord;
         } else {
-            return saveNewEntityRecord(entityRecord, transaction);
+            return createNewEntityRecord(entityRecord, transaction);
         }
     }
 

@@ -26,4 +26,10 @@ ENTITY FieldResolution {
     TEXT    value
 }
 
+ENTITY InitRecord {
+    Entity  entity          *
+    TEXT    versionName     *
+    LONG    versionNumber   *
+}
+
 

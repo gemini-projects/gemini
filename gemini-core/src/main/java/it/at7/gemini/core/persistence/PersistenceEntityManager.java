@@ -26,7 +26,7 @@ public interface PersistenceEntityManager {
 
     Optional<EntityRecord> getRecordByLogicalKey(EntityRecord record, Transaction transaction) throws GeminiException;
 
-    EntityRecord saveNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException;
+    EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException;
 
     EntityRecord updateEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException;
 

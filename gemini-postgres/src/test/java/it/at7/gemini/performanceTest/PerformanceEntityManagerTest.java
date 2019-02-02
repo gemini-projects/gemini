@@ -41,7 +41,7 @@ public class PerformanceEntityManagerTest extends GeminiTestBase {
                 newrec.put("bool", false);
                 for (int i = 0; i < 10000; i++) {
                     newrec.put("text", "textString" + i);
-                    persistenceEntityManager.saveNewEntityRecord(newrec, t);
+                    persistenceEntityManager.createNewEntityRecord(newrec, t);
                 }
             }
         });
@@ -58,7 +58,7 @@ public class PerformanceEntityManagerTest extends GeminiTestBase {
             transactionManager.executeInSingleTrasaction(new VoidTransactionCallback() {
                 @Override
                 public void doInTransaction(Transaction t) throws GeminiException {
-                    persistenceEntityManager.saveNewEntityRecord(newrec, t);
+                    persistenceEntityManager.createNewEntityRecord(newrec, t);
                 }
 
             });

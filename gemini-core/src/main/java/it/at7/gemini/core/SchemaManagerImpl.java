@@ -9,10 +9,7 @@ import it.at7.gemini.dsl.entities.RawEntity;
 import it.at7.gemini.dsl.entities.RawSchema;
 import it.at7.gemini.dsl.entities.SchemaRawRecords;
 import it.at7.gemini.exceptions.*;
-import it.at7.gemini.schema.Entity;
-import it.at7.gemini.schema.EntityBuilder;
-import it.at7.gemini.schema.EntityField;
-import it.at7.gemini.schema.FieldType;
+import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -195,17 +192,28 @@ public class SchemaManagerImpl implements SchemaManager {
         return Collections.unmodifiableCollection(entities.values());
     }
 
-    private void createProvidedEntityRecords(Map<String, List<SchemaRawRecords>> recordsByEntity, Transaction transaction) throws GeminiException, SQLException {
+    private void createProvidedEntityRecords(Map<String, List<SchemaRawRecords>> recordsByEntity, Transaction transaction) throws GeminiException {
         for (Map.Entry<String, List<SchemaRawRecords>> e : recordsByEntity.entrySet()) {
             String key = e.getKey();
             Entity entity = entities.get(key);
             List<SchemaRawRecords> rawRecords = e.getValue();
             for (SchemaRawRecords rr : rawRecords) {
-                List<Object> records = rr.getRecords();
-                for (Object record : records) {
-                    EntityRecord entityRecord = EntityRecord.Converters.recordFromJSONMap(entity, (Map<String, Object>) record);
-                    // TODO schema table to store the last update type and field
-                    persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction);
+                Map<String, SchemaRawRecords.VersionedRecords> versionedRecords = rr.getVersionedRecords();
+                for (SchemaRawRecords.VersionedRecords version : versionedRecords.values()) {
+                    EntityRecord initVersionRec = new EntityRecord(entities.get(InitRecordDef.NAME));
+                    initVersionRec.set(InitRecordDef.FIELDS.ENTITY, entity.getName());
+                    initVersionRec.set(InitRecordDef.FIELDS.VERSION_NAME, version.getVersionName());
+                    initVersionRec.set(InitRecordDef.FIELDS.VERSION_NUMBER, version.getVersionProgressive());
+                    Optional<EntityRecord> optRecord = persistenceEntityManager.getRecordByLogicalKey(initVersionRec, transaction);
+
+                    if (!optRecord.isPresent()) {
+                        logger.info(String.format("Handling records for entity %s and version %s - %d", entity.getName(), version.getVersionName(), version.getVersionProgressive()));
+                        for (Object record : version.getRecords()) {
+                            EntityRecord entityRecord = EntityRecord.Converters.recordFromJSONMap(entity, (Map<String, Object>) record);
+                            persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction);
+                        }
+                        persistenceEntityManager.createNewEntityRecord(initVersionRec, transaction);
+                    }
                 }
             }
         }

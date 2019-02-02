@@ -154,7 +154,7 @@ public class UnitTestConfiguration {
 
 
             @Override
-            public EntityRecord saveNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
+            public EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
                 Entity entity = record.getEntity();
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.computeIfAbsent(entityName, k -> new HashMap<>());

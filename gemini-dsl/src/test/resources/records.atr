@@ -1,4 +1,4 @@
-ENTITY-RECORD User
+ENTITY-RECORD User VERSION 1
 {
     "a" : 1,
     "b" : "st",
@@ -7,5 +7,5 @@ ENTITY-RECORD User
     }
 }
 
-ENTITY-RECORD Array
+ENTITY-RECORD Array V 1
 [{"a" : 1},{"a": 2}]

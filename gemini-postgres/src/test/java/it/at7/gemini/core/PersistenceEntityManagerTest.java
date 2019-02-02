@@ -32,7 +32,7 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
         EntityRecord savedEntity =
                 transactionManager.executeInSingleTrasaction(t -> {
                     // new record
-                    EntityRecord entity = persistenceEntityManager.saveNewEntityRecord(newrec, t);
+                    EntityRecord entity = persistenceEntityManager.createNewEntityRecord(newrec, t);
                     assertEquals("textString", entity.get("text"));
                     assertEquals(Long.valueOf(77), entity.get("numberLong"));
                     assertEquals(Double.valueOf(77.7), entity.get("numberDouble"));
@@ -45,7 +45,7 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
         transactionManager.executeInSingleTrasaction(t -> {
             // check duplicated
             try {
-                persistenceEntityManager.saveNewEntityRecord(newrec, t);
+                persistenceEntityManager.createNewEntityRecord(newrec, t);
                 fail("It should throw Duplicate Exception because logical key already exist");
             } catch (GeminiException e) {
 
@@ -100,14 +100,14 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
                 transactionManager.executeInSingleTrasaction(t -> {
                     EntityRecord domain = new EntityRecord(domainEntity);
                     domain.put("code", "D1");
-                    persistenceEntityManager.saveNewEntityRecord(domain, t);
+                    persistenceEntityManager.createNewEntityRecord(domain, t);
 
                     EntityRecord target = new EntityRecord(dataTypeEntity);
                     target.put("text", "textString");
                     target.put("domain1", "D1");
 
                     // get new saved entity record
-                    EntityRecord savedTarget = persistenceEntityManager.saveNewEntityRecord(target, t);
+                    EntityRecord savedTarget = persistenceEntityManager.createNewEntityRecord(target, t);
                     EntityReferenceRecord domain1 = savedTarget.get("domain1");
                     assertTrue(domain1.hasPrimaryKey());
                     assertEquals("D1", domain1.getLogicalKeyRecord().get("code"));
@@ -118,7 +118,7 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
         transactionManager.executeInSingleTrasaction(t -> {
             EntityRecord domain = new EntityRecord(domainEntity);
             domain.put("code", "D2");
-            EntityRecord savedDomain = persistenceEntityManager.saveNewEntityRecord(domain, t);
+            EntityRecord savedDomain = persistenceEntityManager.createNewEntityRecord(domain, t);
 
             savedEntity.put("domain1", "D2");
             EntityRecord updatedRecord = persistenceEntityManager.updateEntityRecord(savedEntity, t);

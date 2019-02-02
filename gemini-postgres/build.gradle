@@ -2,7 +2,7 @@ group 'it.at7.gemini.core.persistence'
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-jdbc")
-    compile 'org.postgresql:postgresql:42.2.2'
+    compile 'org.postgresql:postgresql:42.2.5'
     compile project(':gemini-core')
 
     compileTestJava.dependsOn tasks.getByPath(':gemini-core:testClasses')

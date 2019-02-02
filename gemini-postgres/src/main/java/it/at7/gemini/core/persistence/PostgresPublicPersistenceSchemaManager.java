@@ -368,6 +368,10 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 return data_type.equals("text");
             case NUMBER:
                 return data_type.equals("numeric");
+            case LONG:
+                return data_type.equals("bigint");
+            case DOUBLE:
+                return data_type.equals("double precision");
             case BOOL:
                 return data_type.equals("boolean");
             case TIME:

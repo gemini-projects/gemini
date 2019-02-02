@@ -50,6 +50,8 @@ public abstract class BasicTypesEntityManagerAbstTest {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-allBasicTypes");
         entityRecord.put("numberLong", 10);
         entityRecord.put("numberDouble", 11.1);
+        entityRecord.put("long", 10);
+        entityRecord.put("double", 11.1);
         entityRecord.put("bool", true);
         entityRecord.put("date", LocalDate.of(1989, 6, 9));
         entityRecord.put("time", LocalTime.of(7, 7, 7));
@@ -57,7 +59,9 @@ public abstract class BasicTypesEntityManagerAbstTest {
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         assertEquals("logKey-allBasicTypes", testEntity.get("text")); // real field
         assertEquals(10, (long) testEntity.get("numberLong"));
+        assertEquals(10, (long) testEntity.get("long"));
         assertEquals(11.1, testEntity.get("numberDouble"), 0.01);
+        assertEquals(11.1, testEntity.get("double"), 0.01);
         assertEquals(LocalDate.of(1989, 6, 9), testEntity.get("date"));
         assertEquals(LocalTime.of(7, 7, 7), testEntity.get("time"));
         assertEquals(LocalDateTime.of(1989, 6, 9, 7, 7, 7), testEntity.get("datetime"));
@@ -68,9 +72,11 @@ public abstract class BasicTypesEntityManagerAbstTest {
     public void n3_update() throws GeminiException {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
         entityRecord.put("numberLong", 10);
+        entityRecord.put("long", 10);
         Set<EntityRecord.EntityFieldValue> logicalKey = entityRecord.getLogicalKeyValue();
         EntityRecord updated = Services.getEntityManager().update(entityRecord, logicalKey);
         Assert.assertEquals(10L, (long) updated.get("numberLong"));
+        Assert.assertEquals(10L, (long) updated.get("long"));
 
         EntityRecord updatedByGet = Services.getEntityManager().get(entityRecord.getEntity(), logicalKey);
         Assert.assertEquals(updated.getID(), updatedByGet.getID());
@@ -99,17 +105,22 @@ public abstract class BasicTypesEntityManagerAbstTest {
     @Test
     public void n6_putOrUpdate() throws GeminiException {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
-        entityRecord.put("numberLong", 10);
+        entityRecord.put("numberLong", 100);
+        entityRecord.put("long", 100);
         EntityRecord testEntity = Services.getEntityManager().putOrUpdate(entityRecord);
         assertEquals("logKey", testEntity.get("text"));
-        assertEquals(Long.valueOf(10), testEntity.get("numberLong"));
+        assertEquals(Long.valueOf(100), testEntity.get("numberLong"));
+        assertEquals(Long.valueOf(100), testEntity.get("long"));
         assertEquals(Long.valueOf(0), testEntity.get("numberDouble"));
         assertEquals(false, testEntity.get("bool"));
-        testEntity.put("numberDouble", 10.5);
+        testEntity.put("numberDouble", 100.5);
+        testEntity.put("double", 100.5);
         EntityRecord testEntityUpdate = Services.getEntityManager().putOrUpdate(testEntity);
         assertEquals("logKey", testEntityUpdate.get("text"));
-        assertEquals(Long.valueOf(10), testEntityUpdate.get("numberLong"));
-        assertEquals(Double.valueOf(10.5), testEntityUpdate.get("numberDouble"));
+        assertEquals(Long.valueOf(100), testEntityUpdate.get("numberLong"));
+        assertEquals(Long.valueOf(100), testEntity.get("long"));
+        assertEquals(Double.valueOf(100.5), testEntityUpdate.get("numberDouble"));
+        assertEquals(Double.valueOf(100.5), testEntityUpdate.get("double"));
         assertEquals(false, testEntityUpdate.get("bool"));
     }
 
@@ -122,9 +133,17 @@ public abstract class BasicTypesEntityManagerAbstTest {
         assertEquals(1, recordsMatching.size());
         EntityRecord entityRecord = recordsMatching.get(0);
         assertEquals("logKey", entityRecord.get("text"));
-        assertEquals(Long.valueOf(10), entityRecord.get("numberLong"));
-        assertEquals(Double.valueOf(10.5), entityRecord.get("numberDouble"));
+        assertEquals(Long.valueOf(100), entityRecord.get("numberLong"));
+        assertEquals(Long.valueOf(100), entityRecord.get("long"));
+        assertEquals(Double.valueOf(100.5), entityRecord.get("numberDouble"));
+        assertEquals(Double.valueOf(100.5), entityRecord.get("double"));
         assertEquals(false, entityRecord.get("bool"));
+
+        record = new Record();
+        record.put("long", 100);
+        recordsMatching = Services.getEntityManager().getRecordsMatching(testDataTypeEntity, record);
+        assertEquals(1, recordsMatching.size());
+
     }
 
 }

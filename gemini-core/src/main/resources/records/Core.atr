@@ -1,4 +1,4 @@
-ENTITY-RECORD FieldResolution
+ENTITY-RECORD FieldResolution V 1
 [{
    "field": {
         "entity": "FIELD",
@@ -8,7 +8,7 @@ ENTITY-RECORD FieldResolution
    "value" : "CASCADE"
 }]
 
-ENTITY-RECORD Entity
+ENTITY-RECORD Entity V 2
 [{
     "name": "ENTITY",
     "displayName": "Entità"
