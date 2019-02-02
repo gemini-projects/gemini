@@ -1,4 +1,4 @@
-// Gemini Core Module
+#  Gemini Core Module
 
 INTERFACE Domain {
     TEXT code *

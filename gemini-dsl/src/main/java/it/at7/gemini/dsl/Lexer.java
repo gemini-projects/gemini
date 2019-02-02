@@ -49,8 +49,8 @@ public class Lexer {
         input.resetSyntax();
         input.wordChars('!', '~');
         input.whitespaceChars('\u0000', ' ');
-        input.eolIsSignificant(false);
         input.eolIsSignificant(true);
+        input.commentChar('#');
     }
 
     public TokenType nextToken() {
