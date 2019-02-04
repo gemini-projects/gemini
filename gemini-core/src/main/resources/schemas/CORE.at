@@ -9,6 +9,7 @@ ENTITY Entity {
     TEXT            name *
     TEXT            module
     TRANSL_TEXT     displayName
+    [FIELD:entity]  fields      // collection of fields
 }
 
 ENTITY Field {

@@ -20,6 +20,7 @@ public class FieldTypePersistenceUtility {
             case ENTITY_REF:
             case GENERIC_ENTITY_REF:
             case RECORD:
+            case ENTITY_COLLECTION_REF:
                 return false;
         }
         return false;

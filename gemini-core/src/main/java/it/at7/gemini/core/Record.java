@@ -56,20 +56,20 @@ public class Record {
 
     private Field getFieldFrom(String fieldName, Object value) {
         if (String.class.isAssignableFrom(value.getClass())) {
-            return new Field(FieldType.TEXT, fieldName, null);
+            return new Field(FieldType.TEXT, fieldName);
         }
         if (Number.class.isAssignableFrom(value.getClass())) {
-            return new Field(FieldType.NUMBER, fieldName, null);
+            return new Field(FieldType.NUMBER, fieldName);
         }
         if (Boolean.class.isAssignableFrom(value.getClass())) {
-            return new Field(FieldType.BOOL, fieldName, null);
+            return new Field(FieldType.BOOL, fieldName);
         }
         if (EntityRecord.class.isAssignableFrom(value.getClass())) {
             EntityRecord entityValue = (EntityRecord) value;
             return new Field(FieldType.ENTITY_REF, fieldName, entityValue.getEntity().getName());
         }
         if (Record.class.isAssignableFrom(value.getClass())) {
-            return new Field(FieldType.RECORD, fieldName, null);
+            return new Field(FieldType.RECORD, fieldName);
         }
         throw new RuntimeException("Unsupported Operation");
     }

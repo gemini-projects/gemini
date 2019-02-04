@@ -186,6 +186,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     private boolean sameOf(EntityRecord entityRecord, EntityRecord persistedEntityRecord, Transaction transaction) throws GeminiException {
         for (Record.FieldValue fieldValue : entityRecord.getEntityFieldValues()) {
             Field field = fieldValue.getField();
+            if (fieldCanBeIgnoredInSameOf(field))
+                continue;
+
             Object valueRec = fromFieldToPrimitiveValue(fieldValue, transaction);
             Record.FieldValue persistedFVT = persistedEntityRecord.getFieldValue(field);
             Object persistedValue = fromFieldToPrimitiveValue(persistedFVT, transaction);
@@ -194,6 +197,12 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             }
         }
         return true;
+    }
+
+    private boolean fieldCanBeIgnoredInSameOf(Field field) {
+        if(field.getType() == FieldType.ENTITY_COLLECTION_REF)
+            return true;
+        return false;
     }
 
     private Optional<EntityRecord> getRecordByLogicalKeyInner(Transaction transaction, Entity entity, Collection<? extends Record.FieldValue> logicalKeyValues) throws GeminiException {
@@ -213,6 +222,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             for (Field field : entity.getSchemaEntityFields()) {
                 FieldType type = field.getType();
                 String fieldName = field.getName().toLowerCase();
+                boolean handled = false;
                 if (oneToOneType(type)) {
                     Class specificType = typeClass(type);
                     Object object;
@@ -223,6 +233,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
                     }
                     er.put(field, object == null ? handleNullValueForField(field.getType()) : object);
+                    handled = true;
                 }
                 if (type.equals(FieldType.ENTITY_REF)) {
                     EntityReferenceRecord entityReferenceRecord = null;
@@ -240,8 +251,11 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                         }
                     }
                     er.put(field, entityReferenceRecord);
+                    handled = true;
                 }
-
+                if(!handled){
+                    throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
+                }
             }
             er.put(entity.getIdField(), rs.getLong(Field.ID_NAME));
             ret.add(er);
@@ -256,21 +270,21 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         List<? extends Record.FieldValue> sortedFields = sortFields(record.getEntityFieldValues());
         boolean first = true;
         for (Record.FieldValue field : sortedFields) {
-            sql += first ? "(" : ",";
-            first = false;
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
+                sql += first ? "(" : ",";
+                first = false;
                 sql += field.getField().getName().toLowerCase();
             }
         }
         sql += ") VALUES ";
         first = true;
         for (Record.FieldValue field : sortedFields) {
-            String columnName = field.getField().getName().toLowerCase();
-            sql += first ? "(" : ",";
-            first = false;
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
+                String columnName = field.getField().getName().toLowerCase();
+                sql += first ? "(" : ",";
+                first = false;
                 sql += ":" + columnName;
                 params.put(columnName, fromFieldToPrimitiveValue(field, transaction));
             }
@@ -402,8 +416,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return entityRecord.get(entityRef.getIdField());
             }
         }
-        // TODO complex types
-        return null;
+        throw new RuntimeException(String.format("Not implemented %s", field.getType()));
     }
 
     private Object handleNullValueForField(FieldType type) {

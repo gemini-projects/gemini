@@ -190,7 +190,10 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("CREATE TABLE " + entity.getName().toLowerCase() + " ( ");
         sqlBuilder.append(primaryKeyField(Field.ID_NAME));
-        entity.getSchemaEntityFields().forEach(f -> sqlBuilder.append(", " + field(f)));
+        entity.getSchemaEntityFields().forEach(f -> {
+            if(!typeNotNeedColumns(f.getType()))
+                sqlBuilder.append(", " + field(f));
+        });
         handleUniqueLogicalKeyConstraint(sqlBuilder, entity);
         sqlBuilder.append(" );");
         transaction.executeUpdate(sqlBuilder.toString());
@@ -203,6 +206,9 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     private void updateEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException {
         logger.info("{}: check/update Fields for {}", entity.getModule().getName(), entity.getName());
         for (EntityField field : entity.getSchemaEntityFields()) {
+            if (typeNotNeedColumns(field.getType())) {
+                continue;
+            }
             if (field.getType() == FieldType.ENTITY_REF) {
                 // to be sure we have
                 Entity refEntity = field.getEntityRef();
@@ -220,6 +226,13 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         ON ccu.constraint_name = tc.constraint_name
         where
         tc.constraint_name = 'fieldresolution_lk' */
+    }
+
+    private boolean typeNotNeedColumns(FieldType type) {
+        if (type == FieldType.ENTITY_COLLECTION_REF) {
+            return true;
+        }
+        return false;
     }
 
     private void handleUniqueLogicalKeyConstraint(StringBuilder sqlBuilder, Entity entity) {

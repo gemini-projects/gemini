@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import static it.at7.gemini.schema.FieldType.ENTITY_COLLECTION_REF;
 import static it.at7.gemini.schema.FieldType.ENTITY_REF;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
@@ -314,7 +315,7 @@ public class SchemaManagerImpl implements SchemaManager {
         return entities;
     }
 
-    private void checkAndSetType(Map<String, EntityBuilder> modelBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry) throws TypeNotFoundException {
+    private void checkAndSetType(Map<String, EntityBuilder> entityBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry) throws TypeNotFoundException {
         String type = entry.getType().toUpperCase();
 
         Optional<FieldType> fieldType = FieldType.of(type);
@@ -329,9 +330,14 @@ public class SchemaManagerImpl implements SchemaManager {
             }
 
             // try to get a static reference for entity
-            EntityBuilder modelForType = modelBuilders.get(type);
-            if (modelForType != null) {
-                entityBuilder.addField(ENTITY_REF, entry, modelForType.getName());
+            EntityBuilder entityForType = entityBuilders.get(type);
+            if (entityForType != null) {
+                entityBuilder.addField(ENTITY_REF, entry, entityForType.getName());
+                return;
+            }
+
+            // try to get a static collection reference for entity
+            if (handleEntityCollectionRef(entityBuilders, entityBuilder, entry)) {
                 return;
             }
 
@@ -339,5 +345,31 @@ public class SchemaManagerImpl implements SchemaManager {
         } else {
             entityBuilder.addField(fieldType.get(), entry);
         }
+    }
+
+    private boolean handleEntityCollectionRef(Map<String, EntityBuilder> entityBuilders, EntityBuilder currentEntityBuilder, RawEntity.Entry entry) {
+        String type = entry.getType();
+        if (type.startsWith("[") && type.endsWith("]")) {
+            String innerType = type.substring(1, type.length() - 1);
+            String[] splitted = innerType.split(":");
+            if (splitted.length != 2) {
+                return false;
+            }
+            String collectionEntityName = splitted[0];
+            String collectionEntityField = splitted[1];
+            EntityBuilder collectionEntityBuilder = entityBuilders.get(collectionEntityName);
+            if (collectionEntityBuilder == null) {
+                return false;
+            }
+            List<RawEntity.Entry> targetEntityEntries = collectionEntityBuilder.getRawEntity().getEntries();
+            Optional<RawEntity.Entry> findLinker = targetEntityEntries.stream()
+                    .filter(e -> e.getName().equalsIgnoreCase(collectionEntityField) && e.getType().equalsIgnoreCase(currentEntityBuilder.getName()))
+                    .findAny();
+            if(findLinker.isPresent()){
+                currentEntityBuilder.addField(ENTITY_COLLECTION_REF, entry, collectionEntityName, collectionEntityField);
+                return true;
+            }
+        }
+        return false;
     }
 }
