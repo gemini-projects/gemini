@@ -15,7 +15,6 @@ export class EntityLayoutComponent {
 
     newEntityRecordEnabled: boolean;
 
-    entityName: string;
     entitySchema: EntitySchema;
 
     constructor(schemaService: GeminiSchemaService, formService: FormService) {

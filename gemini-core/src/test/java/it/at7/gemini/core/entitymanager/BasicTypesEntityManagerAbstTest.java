@@ -17,8 +17,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class BasicTypesEntityManagerAbstTest {
@@ -35,6 +34,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
         assertEquals(0., testEntity.get("double"), 0.001); // default
         assertEquals(0, (long) testEntity.get("long")); // default
         assertEquals(false, testEntity.get("bool")); // default
+        assertArrayEquals(new String[]{}, testEntity.get("textarray")); // default
         assertNull(testEntity.get("date")); // default
         assertNull(testEntity.get("time")); // default
         assertNull(testEntity.get("datetime")); // default
@@ -57,6 +57,8 @@ public abstract class BasicTypesEntityManagerAbstTest {
         entityRecord.put("date", LocalDate.of(1989, 6, 9));
         entityRecord.put("time", LocalTime.of(7, 7, 7));
         entityRecord.put("datetime", LocalDateTime.of(1989, 6, 9, 7, 7, 7));
+        entityRecord.put("textarray", new String[]{"abc", "def"});
+        entityRecord.put("textarrayList", List.of("abc", "def"));
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         assertEquals("logKey-allBasicTypes", testEntity.get("text")); // real field
         assertEquals(10, (long) testEntity.get("numberLong"));
@@ -67,6 +69,8 @@ public abstract class BasicTypesEntityManagerAbstTest {
         assertEquals(LocalTime.of(7, 7, 7), testEntity.get("time"));
         assertEquals(LocalDateTime.of(1989, 6, 9, 7, 7, 7), testEntity.get("datetime"));
         assertEquals(true, testEntity.get("bool")); // default
+        assertArrayEquals(new String[]{"abc", "def"}, testEntity.get("textarray")); // default
+        assertArrayEquals(new String[]{"abc", "def"}, testEntity.get("textarrayList")); // default
     }
 
     @Test

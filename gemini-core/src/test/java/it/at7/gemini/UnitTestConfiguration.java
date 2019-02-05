@@ -111,7 +111,7 @@ public class UnitTestConfiguration {
             }
 
             @Override
-            public List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException {
+            public List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFieldValueType, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
                 return List.of();
             }
 
@@ -266,7 +266,7 @@ public class UnitTestConfiguration {
             }
 
             @Override
-            public List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, Transaction transaction) throws GeminiException {
+            public List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.get(entityName);
                 if (entityStorage == null) {

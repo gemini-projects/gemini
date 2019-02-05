@@ -42,7 +42,6 @@ public class SchemaManagerTest extends GeminiTestBase {
             assertTrue(recordByLogicalKey.isPresent());
             EntityRecord entityRecord = recordByLogicalKey.get();
             assertEquals("ENTITY", entityRecord.get(EntityRef.FIELDS.NAME));
-            assertEquals("CORE", entityRecord.get(EntityRef.FIELDS.MODULE));
 
             Map<String, Object> nameFieldLogicalKey = Map.of(
                     FieldRef.FIELDS.NAME, "name",

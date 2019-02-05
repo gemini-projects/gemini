@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.math.BigInteger;
+import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -99,13 +100,13 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
-    public List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFielValue, Transaction transaction) throws GeminiException {
+    public List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFielValue, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         Set<EntityRecord.EntityFieldValue> filter = convertToEntityFieldValues(entity, filterFielValue);
         try {
             QueryWithParams queryWithParams = makeSelectQueryFilteringFiledValue(entity, filter, transaction);
             return transactionImpl.executeQuery(queryWithParams.sql, queryWithParams.params, resultSet -> {
-                return fromResultSetToEntityRecord(resultSet, entity, transaction);
+                return fromResultSetToEntityRecord(resultSet, entity, resolutionContext, transaction);
             });
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
@@ -124,13 +125,13 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
-    public List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, Transaction transaction) throws GeminiException {
+    public List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         try {
             QueryWithParams query = createSelectQueryFor(entity);
             addFilterRequestTo(query, filterRequest);
             return transactionImpl.executeQuery(query.sql, query.params, resultSet -> {
-                return fromResultSetToEntityRecord(resultSet, entity, transaction);
+                return fromResultSetToEntityRecord(resultSet, entity, resolutionContext, transaction);
             });
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
@@ -200,7 +201,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private boolean fieldCanBeIgnoredInSameOf(Field field) {
-        if(field.getType() == FieldType.ENTITY_COLLECTION_REF)
+        if (field.getType() == FieldType.ENTITY_COLLECTION_REF)
             return true;
         return false;
     }
@@ -215,7 +216,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return size == 0 ? Optional.empty() : Optional.of(recordsMatching.get(0));
     }
 
-    private List<EntityRecord> fromResultSetToEntityRecord(ResultSet rs, Entity entity, Transaction transaction) throws SQLException, GeminiException {
+    private List<EntityRecord> fromResultSetToEntityRecord(ResultSet rs, Entity entity, EntityResolutionContext resolutionContext, Transaction transaction) throws SQLException, GeminiException {
         List<EntityRecord> ret = new ArrayList<>();
         while (rs.next()) {
             EntityRecord er = new EntityRecord(entity);
@@ -226,11 +227,15 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 if (oneToOneType(type)) {
                     Class specificType = typeClass(type);
                     Object object;
-                    if (specificType != null) {
+                    if (specificType != null && !specificType.isArray()) {
                         object = rs.getObject(fieldName, specificType);
+                    } else if (specificType != null && specificType.isArray()) {
+                        Array array = rs.getArray(fieldName);
+                        assert array != null;
+                        object = specificType.cast(array.getArray());
                     } else {
+                        // try the default resolution
                         object = rs.getObject(fieldName);
-
                     }
                     er.put(field, object == null ? handleNullValueForField(field.getType()) : object);
                     handled = true;
@@ -253,7 +258,14 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                     er.put(field, entityReferenceRecord);
                     handled = true;
                 }
-                if(!handled){
+                if (type.equals(FieldType.ENTITY_COLLECTION_REF)) {
+                    if (resolutionContext.getCollection().equals(EntityResolutionContext.Strategy.NONE)) {
+                        handled = true;
+                    } else {
+                        throw new RuntimeException(String.format("Field %s of type %s not handled - strategy must be implemented", field.getName(), field.getType()));
+                    }
+                }
+                if (!handled) {
                     throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
                 }
             }
@@ -440,6 +452,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return null;
             case ENTITY_REF:
                 return 0;
+            case TEXT_ARRAY:
+                return new String[]{};
             case RECORD:
                 break;
         }
@@ -469,6 +483,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return LocalDateTime.class;
             case ENTITY_REF:
                 return BigInteger.class;
+            case TEXT_ARRAY:
+                return String[].class;
             case RECORD:
                 break;
         }

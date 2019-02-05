@@ -21,6 +21,7 @@ import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -65,10 +66,11 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .contentType(APPLICATION_JSON)
                 .content(jsonString)
                 .accept(APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk','domain1':{},'numberdouble':0,'double':0.0,'numberlong':10, 'long':0,'date':'', 'time': '', 'datetime':'', 'transl_text':''}", true));
+                        .json("{'bool':false,'text':'lk','domain1':{},'numberdouble':0,'double':0.0,'numberlong':10, 'long':0,'date':'', 'time': '', 'datetime':'', 'transl_text':'', 'textarray':[]}", true));
         // no duplicated keys
         mockMvc.perform(post(API_PATH + "/TestDataType")
                 .contentType(APPLICATION_JSON)
@@ -94,6 +96,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .contentType(APPLICATION_JSON)
                 .content(jsonAllBtypeString)
                 .accept(APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail

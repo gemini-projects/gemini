@@ -16,6 +16,7 @@ public class FieldTypePersistenceUtility {
             case DATE:
             case DATETIME:
             case TRANSL_TEXT:
+            case TEXT_ARRAY:
                 return true;
             case ENTITY_REF:
             case GENERIC_ENTITY_REF:

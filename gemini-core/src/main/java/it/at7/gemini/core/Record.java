@@ -209,6 +209,7 @@ public class Record {
                 case NUMBER:
                 case BOOL:
                 case RECORD:
+                case TEXT_ARRAY:
                     convertedMap.put(fieldNameLC, value);
                     break;
                 case TIME:
@@ -340,6 +341,8 @@ public class Record {
                     return EntityReferenceRecord.NO_REFERENCE;
                 case RECORD:
                     return new Object();
+                case TEXT_ARRAY:
+                    return new String[]{};
             }
             throw new RuntimeException(String.format("No default found for type %s", field));
         }

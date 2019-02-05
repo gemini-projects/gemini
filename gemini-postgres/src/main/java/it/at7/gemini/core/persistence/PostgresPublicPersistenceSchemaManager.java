@@ -416,7 +416,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
             return field.getName().toLowerCase() + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
         }
-        throw new RuntimeException(String.format("%s - Field Not Implemented", field.getName())); // TODO
+        throw new RuntimeException(String.format("%s - Field od type %s Not Implemented", field.getName(), field.getType())); // TODO
     }
 
     private String fieldUnique(Field field) {
@@ -451,6 +451,8 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case ENTITY_REF:
                 Entity entityRef = field.getEntityRef();
                 return pkForeignKeyDomainFromModel(entityRef.getName()); // it is also a domain
+            case TEXT_ARRAY:
+                return "TEXT[]";
             case RECORD:
                 throw sqlTypeException(field);
         }

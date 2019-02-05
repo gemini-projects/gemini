@@ -1,9 +1,6 @@
 package it.at7.gemini.core.persistence;
 
-import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.FilterRequest;
-import it.at7.gemini.core.Record;
-import it.at7.gemini.core.Transaction;
+import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
 
@@ -11,12 +8,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import static it.at7.gemini.core.EntityResolutionContext.DEFAULT;
+
 public interface PersistenceEntityManager {
 
-    List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFieldValueType, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException;
 
+    default List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException {
+        return getRecordsMatching(entity, filterFieldValueType, DEFAULT, transaction);
+    }
 
-    List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, Transaction transaction) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException;
+
+    default List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, Transaction transaction) throws GeminiException {
+        return getRecordsMatching(entity, filterRequest, DEFAULT, transaction);
+    }
 
     default Optional<EntityRecord> getRecordByLogicalKey(Entity entity, Record logicalKeyRecord, Transaction transaction) throws GeminiException {
         return getRecordByLogicalKey(entity, logicalKeyRecord.getFieldValues(), transaction);
