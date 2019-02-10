@@ -1,9 +1,8 @@
 package it.at7.gemini.exceptions;
 
+import it.at7.gemini.core.DynamicRecord;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.EntityReferenceRecord;
-import it.at7.gemini.core.ErrorService;
-import it.at7.gemini.core.Record;
 import it.at7.gemini.schema.Entity;
 
 import java.util.Collection;
@@ -19,10 +18,10 @@ public class EntityRecordException extends GeminiException {
     }
 
     private final Entity entity;
-    private final Collection<? extends Record.FieldValue> lk;
+    private final Collection<? extends DynamicRecord.FieldValue> lk;
     private final Code errorCode;
 
-    public EntityRecordException(Code errorCode, Entity entity, Collection<? extends Record.FieldValue> lk, String message) {
+    public EntityRecordException(Code errorCode, Entity entity, Collection<? extends DynamicRecord.FieldValue> lk, String message) {
         super(errorCode.name(), message);
         this.errorCode = errorCode;
         this.entity = entity;
@@ -37,13 +36,13 @@ public class EntityRecordException extends GeminiException {
         return entity;
     }
 
-    public Collection<? extends Record.FieldValue> getLk() {
+    public Collection<? extends DynamicRecord.FieldValue> getLk() {
         return lk;
     }
 
     public static EntityRecordException MULTIPLE_LK_FOUND(EntityReferenceRecord referenceRecord) {
         Entity entity = referenceRecord.getEntity();
-        Record logicalKeyRecord = referenceRecord.getLogicalKeyRecord();
+        DynamicRecord logicalKeyRecord = referenceRecord.getLogicalKeyRecord();
         return MULTIPLE_LK_FOUND(entity, logicalKeyRecord.getFieldValues());
     }
 
@@ -51,11 +50,11 @@ public class EntityRecordException extends GeminiException {
         return MULTIPLE_LK_FOUND(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
     }
 
-    public static EntityRecordException MULTIPLE_LK_FOUND(Entity entity, Collection<? extends Record.FieldValue> lk) {
-        return new EntityRecordException(MULTIPLE_LK_FOUND, entity, lk, String.format("Found multiple Record for Logical Key of %s : %s", entity.getName(), lk.toString()));
+    public static EntityRecordException MULTIPLE_LK_FOUND(Entity entity, Collection<? extends DynamicRecord.FieldValue> lk) {
+        return new EntityRecordException(MULTIPLE_LK_FOUND, entity, lk, String.format("Found multiple DynamicRecord for Logical Key of %s : %s", entity.getName(), lk.toString()));
     }
 
-    public static EntityRecordException LK_NOTFOUND(Entity entity, Collection<? extends Record.FieldValue> lk) {
+    public static EntityRecordException LK_NOTFOUND(Entity entity, Collection<? extends DynamicRecord.FieldValue> lk) {
         return new EntityRecordException(LK_NOTFOUND, entity, lk, String.format("Logical Key for entity %s not found: %s ", entity.getName(), lk.toString()));
     }
 

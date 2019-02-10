@@ -19,8 +19,8 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static it.at7.gemini.core.FieldConverters.logicalKeyFromObject;
 import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.oneToOneType;
-import static it.at7.gemini.schema.Field.Converters.logicalKeyFromObject;
 
 @Service
 public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
@@ -32,7 +32,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
-    public Optional<EntityRecord> getRecordByLogicalKey(Entity entity, Collection<? extends Record.FieldValue> logicalKeyValues, Transaction transaction) throws GeminiException {
+    public Optional<EntityRecord> getRecordByLogicalKey(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKeyValues, Transaction transaction) throws GeminiException {
         return getRecordByLogicalKeyInner(transaction, entity, logicalKeyValues);
     }
 
@@ -89,7 +89,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         if (recordByLogicalKey.isPresent()) {
             EntityRecord persistedEntityRecord = recordByLogicalKey.get();
             if (!sameOf(entityRecord, persistedEntityRecord, transaction)) {
-                EntityField idField = entityRecord.getEntity().getIdField();
+                EntityField idField = entityRecord.getEntity().getIdEntityField();
                 Object persistedID = persistedEntityRecord.get(idField);
                 entityRecord.put(idField, persistedID);
                 persistedEntityRecord = updateEntityRecord(entityRecord, transaction);
@@ -101,7 +101,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
-    public List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFielValue, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException {
+    public List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFielValue, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         Set<EntityRecord.EntityFieldValue> filter = convertToEntityFieldValues(entity, filterFielValue);
         try {
@@ -155,9 +155,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return new QueryWithParams(select);
     }
 
-    private Set<EntityRecord.EntityFieldValue> convertToEntityFieldValues(Entity entity, Collection<? extends Record.FieldValue> filterFielValueType) throws EntityFieldException {
+    private Set<EntityRecord.EntityFieldValue> convertToEntityFieldValues(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFielValueType) throws EntityFieldException {
         Set<EntityRecord.EntityFieldValue> filter = new HashSet<>();
-        for (Record.FieldValue fieldValue : filterFielValueType) {
+        for (DynamicRecord.FieldValue fieldValue : filterFielValueType) {
             if (fieldValue instanceof EntityRecord.EntityFieldValue) {
                 EntityRecord.EntityFieldValue ef = (EntityRecord.EntityFieldValue) fieldValue;
                 filter.add(ef);
@@ -174,10 +174,10 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             throw EntityRecordException.INSERTED_RECORD_NOT_FOUND(record.getEntity(), record.getLogicalKeyValue());
         }
         EntityRecord ins = insertedRecord.get();
-        long idField = ins.get(ins.getEntity().getIdField());
+        long idField = ins.get(ins.getEntity().getIdEntityField());
         assert recordId == idField;
         // TODO check values is not easy... for Entity Ref and recursive logical keys
-        /* for (Record.FieldValue fvt : record.getFieldValues()) {
+        /* for (DynamicRecord.FieldValue fvt : record.getFieldValues()) {
             Field field = fvt.get();
             Object value = fvt.getValue();
             Object persistedValue = ins.get(field);
@@ -186,15 +186,15 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private boolean sameOf(EntityRecord entityRecord, EntityRecord persistedEntityRecord, Transaction transaction) throws GeminiException {
-        for (EntityRecord.FieldValue fieldValue : entityRecord.getOnlyModifiedEntityFieldValue()) {
-            Field field = fieldValue.getField();
+        for (EntityRecord.EntityFieldValue fieldValue : entityRecord.getOnlyModifiedEntityFieldValue()) {
+            EntityField field = fieldValue.getEntityField();
             if (fieldCanBeIgnoredInSameOf(field))
                 continue;
 
             // todo stiamo razzando via la roba non voluta
 
             Object valueRec = fromFieldToPrimitiveValue(fieldValue, transaction);
-            Record.FieldValue persistedFVT = persistedEntityRecord.getFieldValue(field);
+            EntityRecord.EntityFieldValue persistedFVT = persistedEntityRecord.getEntityFieldValue(field);
             Object persistedValue = fromFieldToPrimitiveValue(persistedFVT, transaction);
             if (!((valueRec == null && persistedValue == null) || valueRec.equals(persistedValue))) {
                 return false;
@@ -209,7 +209,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return false;
     }
 
-    private Optional<EntityRecord> getRecordByLogicalKeyInner(Transaction transaction, Entity entity, Collection<? extends Record.FieldValue> logicalKeyValues) throws GeminiException {
+    private Optional<EntityRecord> getRecordByLogicalKeyInner(Transaction transaction, Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKeyValues) throws GeminiException {
         if (logicalKeyValues.isEmpty()) {
             return Optional.empty();
         }
@@ -250,7 +250,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                     if (pkValue != null && (Number.class.isAssignableFrom(pkValue.getClass()) && ((Long) pkValue) != 0)) {
                         entityReferenceRecord = new EntityReferenceRecord(field.getEntityRef());
                         entityReferenceRecord.addPKValue(pkValue);
-                        Record.FieldValue fieldValue = EntityRecord.EntityFieldValue.create(entityRef.getIdField(), pkValue);
+                        DynamicRecord.FieldValue fieldValue = EntityRecord.EntityFieldValue.create(entityRef.getIdEntityField(), pkValue);
                         List<EntityRecord> recordsMatching = getRecordsMatching(entityRef, Set.of(fieldValue), transaction);
                         assert recordsMatching.size() == 1;
                         EntityRecord lkEntityRecord = recordsMatching.get(0);
@@ -272,7 +272,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                     throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
                 }
             }
-            er.put(entity.getIdField(), rs.getLong(entity.getIdField().getName()));
+            er.put(entity.getIdEntityField(), rs.getLong(entity.getIdEntityField().getName()));
             ret.add(er);
         }
         return ret;
@@ -282,9 +282,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         Entity entity = record.getEntity();
         String sql = String.format("INSERT INTO %s", entity.getName().toLowerCase());
         Map<String, Object> params = new HashMap<>();
-        List<? extends Record.FieldValue> sortedFields = sortFields(record.getAllEntityFieldValues());
+        List<? extends DynamicRecord.FieldValue> sortedFields = sortFields(record.getAllSchemaEntityFieldValues());
         boolean first = true;
-        for (Record.FieldValue field : sortedFields) {
+        for (DynamicRecord.FieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += first ? "(" : ",";
@@ -294,7 +294,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
         sql += ") VALUES ";
         first = true;
-        for (Record.FieldValue field : sortedFields) {
+        for (DynamicRecord.FieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 String columnName = field.getField().getName().toLowerCase();
@@ -312,9 +312,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         Entity entity = record.getEntity();
         String sql = String.format("UPDATE %s SET ", entity.getName().toLowerCase());
         Map<String, Object> params = new HashMap<>();
-        List<? extends Record.FieldValue> sortedFields = sortFields(record.getOnlyModifiedEntityFieldValue());
+        List<? extends DynamicRecord.FieldValue> sortedFields = sortFields(record.getOnlyModifiedEntityFieldValue());
         for (int i = 0; i < sortedFields.size(); i++) {
-            Record.FieldValue field = sortedFields.get(i);
+            DynamicRecord.FieldValue field = sortedFields.get(i);
             String columnName = field.getField().getName().toLowerCase();
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
@@ -323,7 +323,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 params.put(columnName, fromFieldToPrimitiveValue(field, transaction));
             }
         }
-        sql += String.format(" WHERE %s = %s", Field.ID_NAME, record.get(record.getEntity().getIdField(), Long.class));
+        sql += String.format(" WHERE %s = %s", Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class));
         return new QueryWithParams(sql, params);
     }
 
@@ -368,7 +368,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         String sql = String.format("SELECT %1$s.* FROM %1$s WHERE ", entityName);
         Map<String, Object> params = new HashMap<>();
         boolean needAnd = false;
-        for (Record.FieldValue filterValue : filterValues) {
+        for (DynamicRecord.FieldValue filterValue : filterValues) {
             Field field = filterValue.getField();
             FieldType type = field.getType();
             sql += needAnd ? "AND" : "";
@@ -380,7 +380,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return new QueryWithParams(sql, params);
     }
 
-    private String handleSingleColumnSelectBasicType(String entityName, Map<String, Object> params, Record.FieldValue fieldValue, Transaction transaction) throws SQLException, GeminiException {
+    private String handleSingleColumnSelectBasicType(String entityName, Map<String, Object> params, DynamicRecord.FieldValue fieldValue, Transaction transaction) throws SQLException, GeminiException {
         String colName = fieldValue.getField().getName();
         Object value = fromFieldToPrimitiveValue(fieldValue, transaction);
         String res = String.format(" %s.%s = :%2$s ", entityName, colName);
@@ -390,12 +390,12 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
     private QueryWithParams makeDeleteQUery(EntityRecord record) {
         Entity entity = record.getEntity();
-        String sql = String.format("DELETE FROM %s WHERE %s = %s", entity.getName().toLowerCase(), Field.ID_NAME, record.get(record.getEntity().getIdField(), Long.class));
+        String sql = String.format("DELETE FROM %s WHERE %s = %s", entity.getName().toLowerCase(), Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class));
         return new QueryWithParams(sql, null);
     }
 
 
-    private Object fromFieldToPrimitiveValue(Record.FieldValue fieldValue, Transaction transaction) throws GeminiException {
+    private Object fromFieldToPrimitiveValue(DynamicRecord.FieldValue fieldValue, Transaction transaction) throws GeminiException {
         Object value = fieldValue.getValue();
         Field field = fieldValue.getField();
         FieldType type = field.getType();
@@ -416,9 +416,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return refRecord.getPrimaryKey();
             } else {
                 assert refRecord.hasLogicalKey();
-                Record lkValue = refRecord.getLogicalKeyRecord();
+                DynamicRecord lkValue = refRecord.getLogicalKeyRecord();
                 Entity entityRef = field.getEntityRef();
-                Set<Record.FieldValue> lkFieldValuesType = lkValue.getFieldValues(entityRef.getLogicalKey().getLogicalKeySet());
+                Set<DynamicRecord.FieldValue> lkFieldValuesType = lkValue.getFieldValues(entityRef.getLogicalKey().getLogicalKeySet());
 
                 List<EntityRecord> lkRecords = getRecordsMatching(entityRef, lkFieldValuesType, transaction);
                 if (lkRecords.isEmpty()) {
@@ -428,7 +428,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                     throw EntityRecordException.MULTIPLE_LK_FOUND(refRecord);
                 }
                 EntityRecord entityRecord = lkRecords.get(0);
-                return entityRecord.get(entityRef.getIdField());
+                return entityRecord.get(entityRef.getIdEntityField());
             }
         }
         throw new RuntimeException(String.format("Not implemented %s", field.getType()));
@@ -494,7 +494,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         throw new RuntimeException(String.format("No Class for type %s", type.name()));
     }
 
-    private <T extends Record.FieldValue> List<T> sortFields(Collection<T> fieldValue) {
+    private <T extends DynamicRecord.FieldValue> List<T> sortFields(Collection<T> fieldValue) {
         return fieldValue.stream().sorted(Comparator.comparing(f -> f.getField().getName())).collect(Collectors.toList());
     }
 

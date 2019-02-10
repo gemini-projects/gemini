@@ -1,7 +1,8 @@
 package it.at7.gemini.schema;
 
-import it.at7.gemini.core.EntityReferenceRecord;
 import it.at7.gemini.core.EntityRecord;
+import it.at7.gemini.core.EntityReferenceRecord;
+import it.at7.gemini.core.RecordConverters;
 import it.at7.gemini.core.Services;
 import it.at7.gemini.exceptions.InvalidLogicalKeyValue;
 import it.at7.gemini.exceptions.InvalidTypeForObject;
@@ -68,7 +69,7 @@ public class EntityField extends Field {
         values.put("islogicalkey", isLogicalKey());
         Entity entity = Services.getSchemaManager().getEntity("FIELD");
         assert entity != null;
-        return EntityRecord.Converters.recordFromJSONMap(entity, values);
+        return RecordConverters.entityRecordFromMap(entity, values);
     }
 
     @Override

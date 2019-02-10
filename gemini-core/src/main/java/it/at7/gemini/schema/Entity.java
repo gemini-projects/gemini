@@ -1,9 +1,7 @@
 package it.at7.gemini.schema;
 
-import it.at7.gemini.core.EntityRecord;
+import it.at7.gemini.core.*;
 import it.at7.gemini.core.Module;
-import it.at7.gemini.core.Record;
-import it.at7.gemini.core.Services;
 import it.at7.gemini.exceptions.EntityFieldException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -72,7 +70,7 @@ public class Entity {
 
     public EntityField getField(String fieldName) throws EntityFieldException {
         fieldName = fieldName.toLowerCase();
-        EntityField idField = getIdField();
+        EntityField idField = getIdEntityField();
         if (idField.getName().toLowerCase().equals(fieldName)) {
             return idField; // id is a special field
         }
@@ -85,7 +83,7 @@ public class Entity {
 
     @Nullable // TODO this method probably may be removed
     public Object getDefaultEntityRecord() {
-        return EntityRecord.Converters.recordFromJSONMap(Services.getSchemaManager().getEntity("ENTITY"), copyDefaultRecord());
+        return RecordConverters.entityRecordFromMap(Services.getSchemaManager().getEntity("ENTITY"), copyDefaultRecord());
     }
 
     public Set<EntityField> getSchemaEntityFields() {
@@ -96,7 +94,7 @@ public class Entity {
         return logicalKey;
     }
 
-    public EntityField getIdField() {
+    public EntityField getIdEntityField() {
         return idField;
     }
 
@@ -106,7 +104,7 @@ public class Entity {
         values.put("module", module.getName());
         Entity entity = Services.getSchemaManager().getEntity(ENTITY);
         assert entity != null;
-        return EntityRecord.Converters.recordFromJSONMap(entity, values);
+        return RecordConverters.entityRecordFromMap(entity, values);
     }
 
     public void setFieldIDValue(Object idValue) {
@@ -151,16 +149,6 @@ public class Entity {
         }
         return ret;
     }
-
-    public EntityRecord entityRecordFrom(Map<String, Object> fieldValueMap) {
-        return EntityRecord.Converters.recordFromJSONMap(this, fieldValueMap);
-    }
-
-    public Record logicalRecordFrom(Map<String, Object> fieldValueMap) {
-        Collection<EntityField> logicalKeySet = logicalKey.getLogicalKeyList();
-        return Record.Converters.recordFromMap(logicalKeySet, fieldValueMap);
-    }
-
 
     public class LogicalKey {
 

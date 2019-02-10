@@ -1,5 +1,6 @@
 package it.at7.gemini.api;
 
+import it.at7.gemini.core.RecordConverters;
 import it.at7.gemini.core.EntityRecord;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -25,7 +26,7 @@ public class EntityRecordMessageConverter extends MappingJackson2HttpMessageConv
     @Override
     protected void writeInternal(Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         EntityRecord record = EntityRecord.class.cast(object);
-        Map<String, Object> recordMap = EntityRecord.Converters.toJSONMap(record);
+        Map<String, Object> recordMap = RecordConverters.toJSONMap(record);
         super.writeInternal(recordMap, type, outputMessage);
     }
 }

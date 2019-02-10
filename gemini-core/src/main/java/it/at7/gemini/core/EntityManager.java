@@ -19,24 +19,24 @@ public interface EntityManager {
 
     EntityRecord putOrUpdate(EntityRecord rec) throws GeminiException;
 
-    EntityRecord update(EntityRecord rec, Collection<? extends Record.FieldValue> logicalKey) throws GeminiException;
+    EntityRecord update(EntityRecord rec, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
 
     default EntityRecord delete(EntityRecord entityRecord) throws GeminiException {
         return delete(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
     }
 
-    EntityRecord delete(Entity e, Collection<? extends Record.FieldValue> logicalKey) throws GeminiException;
+    EntityRecord delete(Entity e, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
 
-    EntityRecord get(Entity e, Collection<? extends Record.FieldValue> logicalKey) throws GeminiException;
+    EntityRecord get(Entity e, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
 
-    default List<EntityRecord> getRecordsMatching(Entity entity, Record searchRecord) throws GeminiException {
+    default List<EntityRecord> getRecordsMatching(Entity entity, DynamicRecord searchRecord) throws GeminiException {
         assert searchRecord != null;
         return getRecordsMatching(entity, searchRecord.getFieldValues());
     }
 
-    List<EntityRecord> getRecordsMatching(Entity entity, Set<Record.FieldValue> filterFielValueType) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, Set<DynamicRecord.FieldValue> filterFielValueType) throws GeminiException;
 
-    List<EntityRecord> getRecordsMatching(Entity entity, Set<Record.FieldValue> filterFielValueType, Transaction transaction) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, Set<DynamicRecord.FieldValue> filterFielValueType, Transaction transaction) throws GeminiException;
 
     List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest) throws GeminiException;
 }

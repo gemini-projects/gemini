@@ -139,7 +139,7 @@ public class SchemaManagerImpl implements SchemaManager {
             logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
             EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();
             fieldEntityRecord = persistenceEntityManager.createOrUpdateEntityRecord(fieldEntityRecord, transaction);
-            field.setFieldIDValue(fieldEntityRecord.get(fieldEntityRecord.getEntity().getIdField()));
+            field.setFieldIDValue(fieldEntityRecord.get(fieldEntityRecord.getEntity().getIdEntityField()));
         }
         persistenceSchemaManager.deleteUnnecessaryFields(entity, fields, transaction);
     }
@@ -148,7 +148,7 @@ public class SchemaManagerImpl implements SchemaManager {
         logger.info("{}: creating/updating EntityRecord for {}", entity.getModule().getName(), entity.getName());
         EntityRecord entityRecord = entity.toInitializationEntityRecord();
         entityRecord = persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction);
-        entity.setFieldIDValue(entityRecord.get(entity.getIdField()));
+        entity.setFieldIDValue(entityRecord.get(entity.getIdEntityField()));
     }
 
 
@@ -208,7 +208,7 @@ public class SchemaManagerImpl implements SchemaManager {
                     if (!optRecord.isPresent()) {
                         logger.info(String.format("Handling records for entity %s and version %s - %d", entity.getName(), version.getVersionName(), version.getVersionProgressive()));
                         for (Object record : version.getRecords()) {
-                            EntityRecord entityRecord = EntityRecord.Converters.recordFromJSONMap(entity, (Map<String, Object>) record);
+                            EntityRecord entityRecord = RecordConverters.entityRecordFromMap(entity, (Map<String, Object>) record);
                             persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction);
                         }
                         persistenceEntityManager.createNewEntityRecord(initVersionRec, transaction);

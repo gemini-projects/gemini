@@ -1,7 +1,7 @@
 package it.at7.gemini.api;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import it.at7.gemini.core.Record;
+import it.at7.gemini.core.DynamicRecord;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
@@ -13,7 +13,7 @@ class ApiError {
     LocalDateTime timestamp;
     String message;
     String errorcode;
-    List<? extends Record> records;
+    List<? extends DynamicRecord> records;
 
     private ApiError() {
         timestamp = LocalDateTime.now();
@@ -30,12 +30,12 @@ class ApiError {
         this.message = message;
     }
 
-    ApiError(HttpStatus status, Record record) {
+    ApiError(HttpStatus status, DynamicRecord record) {
         this(status);
         this.records = List.of(record);
     }
 
-    ApiError(HttpStatus status, List<? extends Record> records) {
+    ApiError(HttpStatus status, List<? extends DynamicRecord> records) {
         this(status);
         this.records = records;
     }
@@ -56,7 +56,7 @@ class ApiError {
         return message;
     }
 
-    public List<? extends Record> getRecords() {
+    public List<? extends DynamicRecord> getRecords() {
         return records;
     }
 }

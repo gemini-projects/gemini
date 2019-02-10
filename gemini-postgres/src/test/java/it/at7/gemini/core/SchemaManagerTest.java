@@ -37,8 +37,8 @@ public class SchemaManagerTest extends GeminiTestBase {
         // then check some default records that must be in db
         transactionManager.executeInSingleTrasaction(t -> {
             Map<String, Object> entityLogicalKey = Map.of(EntityRef.FIELDS.NAME, "ENTITY");
-            Record lkRecord = entityEntity.logicalRecordFrom(entityLogicalKey);
-            Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getRecordByLogicalKey(entityEntity, lkRecord, t);
+            EntityRecord entityRecordWithLogicalKey = RecordConverters.entityRecordFromMap(entityEntity, entityLogicalKey);
+            Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getRecordByLogicalKey(entityEntity, entityRecordWithLogicalKey, t);
             assertTrue(recordByLogicalKey.isPresent());
             EntityRecord entityRecord = recordByLogicalKey.get();
             assertEquals("ENTITY", entityRecord.get(EntityRef.FIELDS.NAME));
@@ -46,13 +46,13 @@ public class SchemaManagerTest extends GeminiTestBase {
             Map<String, Object> nameFieldLogicalKey = Map.of(
                     FieldRef.FIELDS.NAME, "name",
                     FieldRef.FIELDS.ENTITY, "ENTITY");
-            Record lkNameFieldRecord = fieldEntity.logicalRecordFrom(nameFieldLogicalKey);
+            EntityRecord lkNameFieldRecord = RecordConverters.entityRecordFromMap(fieldEntity, nameFieldLogicalKey);
             Optional<EntityRecord> fieldRecordByLogicalKey = persistenceEntityManager.getRecordByLogicalKey(fieldEntity, lkNameFieldRecord, t);
             assertTrue(fieldRecordByLogicalKey.isPresent());
             EntityRecord nameFieldRecord = fieldRecordByLogicalKey.get();
             assertEquals("name", nameFieldRecord.get(FieldRef.FIELDS.NAME));
             EntityReferenceRecord refRecord = nameFieldRecord.get(FieldRef.FIELDS.ENTITY); // reference to entity
-            Record logicalKeyValue = refRecord.getLogicalKeyRecord();
+            DynamicRecord logicalKeyValue = refRecord.getLogicalKeyRecord();
             assertEquals("ENTITY", logicalKeyValue.get(EntityRef.FIELDS.NAME));
             assertEquals(true, nameFieldRecord.get(FieldRef.FIELDS.ISLOGICALKEY));
             return true;

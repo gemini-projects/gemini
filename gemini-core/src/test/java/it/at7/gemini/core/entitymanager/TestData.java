@@ -13,7 +13,7 @@ public class TestData {
     }
 
     /**
-     * Record with primitive dataType
+     * DynamicRecord with primitive dataType
      */
     public static EntityRecord getTestDataTypeEntityRecord(String logicalKey) {
         SchemaManager schemaManager = Services.getSchemaManager();

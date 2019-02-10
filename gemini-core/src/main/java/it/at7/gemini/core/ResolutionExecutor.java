@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static it.at7.gemini.schema.Entity.FIELD_RESOLUTION;
-
 public class ResolutionExecutor {
     private final EntityRecord entityRecord;
     private final PersistenceEntityManager persistenceEntityManager;
@@ -53,7 +51,7 @@ public class ResolutionExecutor {
                     break;
 
             }
-            // EntityRecord.Converters.logicalKeyFromObject(fieldResolutionEntity, )
+            // EntityRecord.RecordConverters.logicalKeyFromObject(fieldResolutionEntity, )
             // entityManager.getRecordsMatching(fieldResolutionEntity, Set.of(),)
 
         }
@@ -61,15 +59,14 @@ public class ResolutionExecutor {
 
     private FieldResolutionDef.VALUE getResolutionType(EntityField field) throws GeminiException {
         Entity fieldResolutionEntity = schemaManager.getEntity(Entity.FIELD_RESOLUTION);
-        Record fieldResolutionRec = new EntityRecord(fieldResolutionEntity);
-        Record fieldRecord = new Record();
+        EntityRecord fieldResolutionRec = new EntityRecord(fieldResolutionEntity);
+        DynamicRecord fieldRecord = new DynamicRecord();
         fieldRecord.put(FieldRef.FIELDS.NAME, field.getName().toLowerCase());
         fieldRecord.put(FieldRef.FIELDS.ENTITY, field.getEntity().getName());
         fieldResolutionRec.put(FieldResolutionDef.FIELDS.FIELD, fieldRecord);
         fieldResolutionRec.put(FieldResolutionDef.FIELDS.CODE, "DELETE");
-        EntityRecord fieldResolutionRecord = EntityRecord.Converters.recordFromRawRecord(fieldResolutionEntity, fieldResolutionRec);
         try {
-            Optional<EntityRecord> resRecordOpt = persistenceEntityManager.getRecordByLogicalKey(fieldResolutionEntity, fieldResolutionRecord.getLogicalKeyValue(), transaction);
+            Optional<EntityRecord> resRecordOpt = persistenceEntityManager.getRecordByLogicalKey(fieldResolutionEntity, fieldResolutionRec.getLogicalKeyValue(), transaction);
             if (!resRecordOpt.isPresent()) {
                 return FieldResolutionDef.VALUE.EMPTY;
             }

@@ -239,12 +239,14 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .contentType(APPLICATION_JSON)
                 .content(domainJsonString)
                 .accept(APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'code':'dm2'}"));
         //==== object with entity reference (FK) - single logical key
         mockMvc.perform(get(API_PATH + "/TestDataType/lkWithDomain")
                 .accept(APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'bool':false,'text':'lkWithDomain','domain1':'dm2','numberDouble':0,'numberLong':11}"));

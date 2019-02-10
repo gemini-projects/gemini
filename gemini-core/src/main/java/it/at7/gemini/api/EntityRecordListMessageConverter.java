@@ -1,5 +1,6 @@
 package it.at7.gemini.api;
 
+import it.at7.gemini.core.RecordConverters;
 import it.at7.gemini.core.EntityRecord;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -21,16 +22,16 @@ public class EntityRecordListMessageConverter extends MappingJackson2HttpMessage
 
     @Override
     public boolean canWrite(Class<?> clazz, MediaType mediaType) {
-        return super.canWrite(mediaType) && EntityRecord.EntityRecordsListWrapper.class.isAssignableFrom(clazz);
+        return super.canWrite(mediaType) && Wrappers.EntityRecordsListWrapper.class.isAssignableFrom(clazz);
     }
 
     @Override
     protected void writeInternal(Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
-        EntityRecord.EntityRecordsListWrapper recordsWrapper = EntityRecord.EntityRecordsListWrapper.class.cast(object);
+        Wrappers.EntityRecordsListWrapper recordsWrapper = Wrappers.EntityRecordsListWrapper.class.cast(object);
         Collection<EntityRecord> records = recordsWrapper.getRecords();
         List<Object> listOfFields = new ArrayList<>(records.size());
         for (EntityRecord record : records) {
-            listOfFields.add(EntityRecord.Converters.toJSONMap(record));
+            listOfFields.add(RecordConverters.toJSONMap(record));
         }
         super.writeInternal(listOfFields, type, outputMessage);
     }

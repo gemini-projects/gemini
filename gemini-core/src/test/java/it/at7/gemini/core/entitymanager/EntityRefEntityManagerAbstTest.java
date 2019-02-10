@@ -1,8 +1,8 @@
 package it.at7.gemini.core.entitymanager;
 
+import it.at7.gemini.core.DynamicRecord;
 import it.at7.gemini.core.EntityReferenceRecord;
 import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.Record;
 import it.at7.gemini.core.Services;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
@@ -55,7 +55,7 @@ public abstract class EntityRefEntityManagerAbstTest {
     @Test
     public void n3_putIfAbsent_WithRecordObject() throws SQLException, GeminiException {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey3");
-        Record lk1 = new Record();
+        DynamicRecord lk1 = new DynamicRecord();
         lk1.put("code", "lk1");
         entityRecord.put("domain1", lk1);
         EntityRecord persistedEntity = Services.getEntityManager().putIfAbsent(entityRecord);
@@ -71,7 +71,7 @@ public abstract class EntityRefEntityManagerAbstTest {
     @Test
     public void n4_getEntityRecordsMatchingReferenceField() throws SQLException, GeminiException {
         Entity testDataTypeEntity = TestData.getTestDataTypeEntity();
-        Record entityRef = new Record();
+        DynamicRecord entityRef = new DynamicRecord();
         entityRef.put("domain1", "lk1");
         List<EntityRecord> recordsMatching = Services.getEntityManager().getRecordsMatching(testDataTypeEntity, entityRef);
         Assert.assertEquals(3, recordsMatching.size()); // we have inserted 3 record with lk domain

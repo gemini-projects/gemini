@@ -12,12 +12,12 @@ public class EntityReferenceRecord {
 
     private Set<StoredType> storedTypeSet;
     private Object primaryKey;
-    private Record logicalKeyValue;
+    private DynamicRecord logicalKeyValue;
     private Entity entity;
 
     private EntityReferenceRecord() {
         this.storedTypeSet = new HashSet<>();
-        this.logicalKeyValue = new Record();
+        this.logicalKeyValue = new DynamicRecord();
     }
 
     public EntityReferenceRecord(Entity entity) {
@@ -46,7 +46,7 @@ public class EntityReferenceRecord {
         return storedTypeSet.contains(StoredType.LOGICAL_KEY);
     }
 
-    public Record getLogicalKeyRecord() {
+    public DynamicRecord getLogicalKeyRecord() {
         return logicalKeyValue;
     }
 

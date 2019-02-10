@@ -3,6 +3,7 @@ package it.at7.gemini.api;
 import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.FilterRequest;
+import it.at7.gemini.core.RecordConverters;
 import it.at7.gemini.exceptions.EntityException;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.InvalidRequesException;
@@ -97,7 +98,7 @@ public class RestAPIController {
                 .with(searchString)
                 .build();
         List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterRequest);
-        return EntityRecord.EntityRecordsListWrapper.of(recordList);
+        return Wrappers.EntityRecordsListWrapper.of(recordList);
     }
 
     private String getSearchFromParameters(String[] searchParams) {
@@ -117,17 +118,17 @@ public class RestAPIController {
     }
 
     private EntityRecord handleInsertRecord(Map<String, Object> body, Entity e) throws GeminiException {
-        EntityRecord rec = EntityRecord.Converters.recordFromJSONMap(e, body);
+        EntityRecord rec = RecordConverters.entityRecordFromMap(e, body);
         return entityManager.putIfAbsent(rec);
     }
 
     private Object handleInsertRecords(List<Map<String, Object>> body, Entity e) throws GeminiException {
         List<EntityRecord> records = new ArrayList<>();
         for (Map<String, Object> record : body) {
-            records.add(EntityRecord.Converters.recordFromJSONMap(e, record));
+            records.add(RecordConverters.entityRecordFromMap(e, record));
         }
         Collection<EntityRecord> entityRecords = entityManager.putIfAbsent(records);
-        return EntityRecord.EntityRecordsListWrapper.of(entityRecords);
+        return Wrappers.EntityRecordsListWrapper.of(entityRecords);
     }
 
 
@@ -138,23 +139,23 @@ public class RestAPIController {
     }
 
     private EntityRecord handleUpdateRecord(Entity e, Map<String, Object> body, String... logicalKey) throws GeminiException {
-        EntityRecord rec = EntityRecord.Converters.recordFromJSONMap(e, body);
-        List<EntityRecord.EntityFieldValue> logicalKeyValues = EntityRecord.Converters.logicalKeyFromStrings(e, logicalKey);
+        EntityRecord rec = RecordConverters.entityRecordFromMap(e, body);
+        List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
         return entityManager.update(rec, logicalKeyValues);
     }
 
     private EntityRecord handleDeleteRecord(Entity e, String... logicalKey) throws GeminiException {
-        List<EntityRecord.EntityFieldValue> logicalKeyValues = EntityRecord.Converters.logicalKeyFromStrings(e, logicalKey);
+        List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
         return entityManager.delete(e, logicalKeyValues);
     }
 
     private EntityRecord handleGetRecord(Entity e, String... logicalKey) throws GeminiException {
-        List<EntityRecord.EntityFieldValue> logicalKeyValues = EntityRecord.Converters.logicalKeyFromStrings(e, logicalKey);
+        List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
         return entityManager.get(e, logicalKeyValues);
     }
 
     /* private EntityRecord handleGetRecord(Entity e, String logicalKey) throws SQLException, GeminiException {
-        Set<Record.FieldValue> logicalKeyValue = Set.of(Field.Converters.logicalKeyFromStrings(e, logicalKey));
+        Set<DynamicRecord.FieldValue> logicalKeyValue = Set.of(Field.RecordConverters.logicalKeyFromStrings(e, logicalKey));
         return entityManager.get(e, logicalKeyValue);
     } */
 

@@ -12,9 +12,9 @@ import static it.at7.gemini.core.EntityResolutionContext.DEFAULT;
 
 public interface PersistenceEntityManager {
 
-    List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFieldValueType, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFieldValueType, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException;
 
-    default List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends Record.FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException {
+    default List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException {
         return getRecordsMatching(entity, filterFieldValueType, DEFAULT, transaction);
     }
 
@@ -24,11 +24,11 @@ public interface PersistenceEntityManager {
         return getRecordsMatching(entity, filterRequest, DEFAULT, transaction);
     }
 
-    default Optional<EntityRecord> getRecordByLogicalKey(Entity entity, Record logicalKeyRecord, Transaction transaction) throws GeminiException {
-        return getRecordByLogicalKey(entity, logicalKeyRecord.getFieldValues(), transaction);
+    default Optional<EntityRecord> getRecordByLogicalKey(Entity entity, EntityRecord logicalKeyRecord, Transaction transaction) throws GeminiException {
+        return getRecordByLogicalKey(entity, logicalKeyRecord.getLogicalKeyValue(), transaction);
     }
 
-    Optional<EntityRecord> getRecordByLogicalKey(Entity entity, Collection<? extends Record.FieldValue> logicalKey, Transaction transaction) throws GeminiException;
+    Optional<EntityRecord> getRecordByLogicalKey(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException;
 
     Optional<EntityRecord> getRecordByLogicalKey(EntityRecord record, Transaction transaction) throws GeminiException;
 

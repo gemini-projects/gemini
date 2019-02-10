@@ -1,7 +1,7 @@
 package it.at7.gemini.core.entitymanager;
 
+import it.at7.gemini.core.DynamicRecord;
 import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.Record;
 import it.at7.gemini.core.Services;
 import it.at7.gemini.exceptions.EntityRecordException;
 import it.at7.gemini.exceptions.GeminiException;
@@ -137,7 +137,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
     @Test
     public void n7_getRecordMatching() throws GeminiException {
         Entity testDataTypeEntity = TestData.getTestDataTypeEntity();
-        Record record = new Record();
+        DynamicRecord record = new DynamicRecord();
         record.put("text", "logKey");
         List<EntityRecord> recordsMatching = Services.getEntityManager().getRecordsMatching(testDataTypeEntity, record);
         assertEquals(1, recordsMatching.size());
@@ -149,7 +149,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
         assertEquals(Double.valueOf(100.5), entityRecord.get("double"));
         assertEquals(false, entityRecord.get("bool"));
 
-        record = new Record();
+        record = new DynamicRecord();
         record.put("long", 100);
         recordsMatching = Services.getEntityManager().getRecordsMatching(testDataTypeEntity, record);
         assertEquals(1, recordsMatching.size());
