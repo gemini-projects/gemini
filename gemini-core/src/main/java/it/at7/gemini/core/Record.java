@@ -195,7 +195,7 @@ public class Record {
         static protected void convertSingleFieldTOJSONValue(Map<String, Object> convertedMap, FieldValue fieldValue) {
             Field field = fieldValue.getField();
             FieldType fieldType = field.getType();
-            String fieldNameLC = field.getName().toLowerCase();
+            String fieldNameLC = field.getName();
             Object value = fieldValue.getValue();
             if (value == null) {
                 value = nullToDefault(field);
@@ -262,7 +262,7 @@ public class Record {
         }
 
         private static void convertEntityRefToJSONValue(Map<String, Object> convertedMap, Field field, Object value) {
-            String fieldNameLC = field.getName().toLowerCase();
+            String fieldNameLC = field.getName();
             if (EntityReferenceRecord.class.isAssignableFrom(value.getClass())) {
                 EntityReferenceRecord pkRefRec = (EntityReferenceRecord) value;
                 if (pkRefRec.equals(EntityReferenceRecord.NO_REFERENCE)) {
@@ -349,6 +349,9 @@ public class Record {
 
     }
 
+    /**
+     * A simple container to hold a Field and its Value
+     */
     public static class FieldValue {
         private final Field field;
         private final Object value;

@@ -5,7 +5,7 @@ import {Observable} from 'rxjs';
 
 import {AppRoutingModule} from '../../app-routing.module'
 
-import {GeminiComponent, GeminiConfigService} from '@gemini/core';
+import {GeminiComponent, GeminiUriService} from '@gemini/core';
 
 
 @Component({
@@ -17,7 +17,7 @@ export class QuickSearchComponent extends GeminiComponent {
     results: SearchElement[];
     items: SearchElement[];
 
-    constructor(private router: Router, private httpClient: HttpClient, private geminiConfigService: GeminiConfigService) {
+    constructor(private router: Router, private httpClient: HttpClient, private geminiConfigService: GeminiUriService) {
         super('Common.QuickSearch', httpClient, geminiConfigService);
         this.items = [];
     }
@@ -43,7 +43,7 @@ export class QuickSearchComponent extends GeminiComponent {
 
     selected(value) {
         const route: string = AppRoutingModule.ENTITY_ROUTE;
-        this.router.navigate([route, value.searchRoute.toLowerCase()]);
+        this.router.navigate([route, value.searchRoute]);
     }
 }
 

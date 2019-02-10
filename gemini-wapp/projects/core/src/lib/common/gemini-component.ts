@@ -1,7 +1,7 @@
 import {OnInit} from '@angular/core'
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
-import {GeminiConfigService} from './gemini-config.service'
+import {GeminiUriService} from './gemini-uri.service'
 
 export abstract class GeminiComponent implements OnInit {
     public static readonly ON_INIT_EVENT = 'oninit';
@@ -9,7 +9,7 @@ export abstract class GeminiComponent implements OnInit {
 
     constructor(protected componentName: string,
                 private http?: HttpClient,
-                protected GeminiConfig?: GeminiConfigService) {
+                protected GeminiConfig?: GeminiUriService) {
     }
 
     /**
@@ -24,7 +24,7 @@ export abstract class GeminiComponent implements OnInit {
 
     ngOnInit() {
         if (this.geminiOnInit) {
-            let url: string = this.GeminiConfig.getComponentEventURI(this.componentName.toLowerCase(), GeminiComponent.ON_INIT_EVENT);
+            let url: string = this.GeminiConfig.getComponentEventUrl(this.componentName.toLowerCase(), GeminiComponent.ON_INIT_EVENT);
             let options: any = {};
             if (this.geminiInitParam) {
                 let params = new HttpParams();

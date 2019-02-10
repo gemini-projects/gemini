@@ -1,4 +1,8 @@
-<div class="gemini-portlet">
+<div *ngIf="!entitySchema">
+    <p-messages [(value)]="errorMsgs" [closable]="false" severity="error"></p-messages>
+</div>
+
+<div *ngIf="entitySchema" class="gemini-portlet">
     <div class="gemini-portlet__head">
         <div class="gemini-portlet__head-label">
             <h3 class="gemini-portlet__head-title">

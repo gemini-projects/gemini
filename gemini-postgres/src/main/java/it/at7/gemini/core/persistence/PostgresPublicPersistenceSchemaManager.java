@@ -54,7 +54,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     @Override
     public void deleteUnnecessaryEntites(Collection<Entity> entities, Transaction transaction) throws SQLException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
-        // NB - we are using fields that should be existet in entity/fields (generalize ? )
+        // NB - we are using fields that should be existed in entity/fields (generalize ? )
         List<Long> entitiesID = entities.stream().map(Entity::getIDValue).map(Long.class::cast).collect(toList());
         String sql = String.format("SELECT name FROM entity WHERE %s NOT IN (:ids)", Field.ID_NAME);
         HashMap<String, Object> parameters = new HashMap<>();
@@ -191,7 +191,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         sqlBuilder.append("CREATE TABLE " + entity.getName().toLowerCase() + " ( ");
         sqlBuilder.append(primaryKeyField(Field.ID_NAME));
         entity.getSchemaEntityFields().forEach(f -> {
-            if(!typeNotNeedColumns(f.getType()))
+            if (!typeNotNeedColumns(f.getType()))
                 sqlBuilder.append(", " + field(f));
         });
         handleUniqueLogicalKeyConstraint(sqlBuilder, entity);
@@ -229,9 +229,9 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     }
 
     private boolean typeNotNeedColumns(FieldType type) {
-        if (type == FieldType.ENTITY_COLLECTION_REF) {
+        /* if (type == FieldType.ENTITY_COLLECTION_REF) {
             return true;
-        }
+        } */
         return false;
     }
 
@@ -357,7 +357,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             } else {
                 String data_type = resultSet.getString("data_type");
                 String domain_name = resultSet.getString("domain_name");
-                if (!checkPrimitiveDBType(field, data_type, domain_name)) {
+                if (!checkSqlType(field, data_type, domain_name)) {
                     String sqlAlterTable =
                             "ALTER TABLE " + entity.getName().toLowerCase() +
                                     " DROP COLUMN " + field.getName().toLowerCase();
@@ -373,12 +373,13 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         });
     }
 
-    private boolean checkPrimitiveDBType(Field field, String data_type, String domain_name) {
+    private boolean checkSqlType(Field field, String data_type, String domain_name) {
         FieldType type = field.getType();
         switch (type) {
             case PK:
                 return data_type.equals("bigint");
             case TEXT:
+            case TRANSL_TEXT:
                 return data_type.equals("text");
             case NUMBER:
                 return data_type.equals("numeric");
@@ -400,7 +401,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case RECORD:
                 break;
         }
-        return false;
+        throw new RuntimeException(String.format("Field %s not handled for drop/create dirty column", type));
     }
 
     private String primaryKeyField(String id) {

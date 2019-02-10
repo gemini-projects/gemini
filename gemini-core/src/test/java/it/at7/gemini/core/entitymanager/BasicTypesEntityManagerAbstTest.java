@@ -58,7 +58,6 @@ public abstract class BasicTypesEntityManagerAbstTest {
         entityRecord.put("time", LocalTime.of(7, 7, 7));
         entityRecord.put("datetime", LocalDateTime.of(1989, 6, 9, 7, 7, 7));
         entityRecord.put("textarray", new String[]{"abc", "def"});
-        entityRecord.put("textarrayList", List.of("abc", "def"));
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         assertEquals("logKey-allBasicTypes", testEntity.get("text")); // real field
         assertEquals(10, (long) testEntity.get("numberLong"));
@@ -68,9 +67,15 @@ public abstract class BasicTypesEntityManagerAbstTest {
         assertEquals(LocalDate.of(1989, 6, 9), testEntity.get("date"));
         assertEquals(LocalTime.of(7, 7, 7), testEntity.get("time"));
         assertEquals(LocalDateTime.of(1989, 6, 9, 7, 7, 7), testEntity.get("datetime"));
-        assertEquals(true, testEntity.get("bool")); // default
-        assertArrayEquals(new String[]{"abc", "def"}, testEntity.get("textarray")); // default
-        assertArrayEquals(new String[]{"abc", "def"}, testEntity.get("textarrayList")); // default
+        assertEquals(true, testEntity.get("bool"));
+        assertArrayEquals(new String[]{"abc", "def"}, testEntity.get("textarray"));
+
+        // textArray test support for List
+        entityRecord = TestData.getTestDataTypeEntityRecord("logKey-listFields");
+        entityRecord.put("textarray", List.of("abc", "def"));
+        EntityRecord testEntityList = Services.getEntityManager().putIfAbsent(entityRecord);
+        assertEquals("logKey-listFields", testEntityList.get("text")); // real field
+        assertArrayEquals(new String[]{"abc", "def"}, testEntityList.get("textarray"));
     }
 
     @Test

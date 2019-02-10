@@ -39,13 +39,16 @@ public class EntityBuilder {
     }
 
     public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, String refEntityName) {
-        return addField(fieldType, entry, refEntityName, null);
+        // return addField(fieldType, entry, refEntityName, null);
+        fieldsBuilders.add(new EntityFieldBuilder(fieldType, entry.getName(), entry.isLogicalKey(), refEntityName));
+        return this;
     }
 
+    /*
     public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, String collectionEntityName, String collectionEntityField) {
         fieldsBuilders.add(new EntityFieldBuilder(fieldType, entry.getName(), entry.isLogicalKey(), collectionEntityName, collectionEntityField));
         return this;
-    }
+    } */
 
     public EntityBuilder setDefaultRecord(Object defRecord) {
         this.defaultRecord = defRecord;

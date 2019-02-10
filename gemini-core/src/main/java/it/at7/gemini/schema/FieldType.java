@@ -16,7 +16,6 @@ public enum FieldType {
     DATE,
     DATETIME,
     ENTITY_REF,
-    ENTITY_COLLECTION_REF,
     TRANSL_TEXT,
     GENERIC_ENTITY_REF,
     TEXT_ARRAY("[TEXT]"),

@@ -1,56 +1,50 @@
 import {Injectable} from '@angular/core';
-
-import {GeminiConfigService} from "../common";
 import {EntitySchema} from "./entity-schema";
-import {FieldType} from "./field-schema";
+import {FieldSchema, FieldType} from "./field-schema";
 import {GeminiValueStrategy} from "./gemini-value-strategy";
+import {Observable, of} from "rxjs";
+import {GeminiApiService} from "../api";
 
 @Injectable({
     providedIn: 'root',
 })
 export class GeminiSchemaService {
 
-    constructor(configService: GeminiConfigService) {
-        // TODO query the application to get the entity schema
+    private entityCache: { [key: string]: EntitySchema };
+
+    constructor(private apiService: GeminiApiService) {
+        this.entityCache = {}
     }
 
-    getEntitySchema(entityName: string): EntitySchema {
-        return {
-            name: entityName,
-            displayName: entityName.toUpperCase(),
-            fields: [{
-                name: "required text",
-                type: FieldType.TEXT,
-                requiredStrategy: GeminiValueStrategy.SIMPLE,
-                visibleStrategy: GeminiValueStrategy.SIMPLE,
-                modifiableStrategy: GeminiValueStrategy.SIMPLE,
-                required: true,
-                visible: true
-            }, {
-                name: "not required Long",
-                type: FieldType.LONG,
-                requiredStrategy: GeminiValueStrategy.SIMPLE,
-                visibleStrategy: GeminiValueStrategy.SIMPLE,
-                modifiableStrategy: GeminiValueStrategy.SIMPLE,
-                visible: true
-            }, {
-                name: "not required Double",
-                type: FieldType.DOUBLE,
-                requiredStrategy: GeminiValueStrategy.SIMPLE,
-                visibleStrategy: GeminiValueStrategy.SIMPLE,
-                modifiableStrategy: GeminiValueStrategy.SIMPLE,
-                visible: true
-            } ]
-        };
+    getEntitySchema(entityName: string): Observable<EntitySchema> {
+        return this.apiService.getEntityRecord("entity", entityName);
+       // return of({name: "Entity", displayname: "ENNN"});
     }
 
-    /*
-    , {
-                name: "long",
-                entity: {},
-                type: FieldType.LONG
-            }
-     */
-
+    getEntityFields(entityName: string): FieldSchema[] {
+        return [{
+            name: "required text",
+            type: FieldType.TEXT,
+            requiredStrategy: GeminiValueStrategy.SIMPLE,
+            visibleStrategy: GeminiValueStrategy.SIMPLE,
+            modifiableStrategy: GeminiValueStrategy.SIMPLE,
+            required: true,
+            visible: true
+        }, {
+            name: "not required Long",
+            type: FieldType.LONG,
+            requiredStrategy: GeminiValueStrategy.SIMPLE,
+            visibleStrategy: GeminiValueStrategy.SIMPLE,
+            modifiableStrategy: GeminiValueStrategy.SIMPLE,
+            visible: true
+        }, {
+            name: "not required Double",
+            type: FieldType.DOUBLE,
+            requiredStrategy: GeminiValueStrategy.SIMPLE,
+            visibleStrategy: GeminiValueStrategy.SIMPLE,
+            modifiableStrategy: GeminiValueStrategy.SIMPLE,
+            visible: true
+        }]
+    }
 
 }

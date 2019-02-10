@@ -100,7 +100,7 @@ public class Entity {
         return idField;
     }
 
-    public EntityRecord toEntityRecord() {
+    public EntityRecord toInitializationEntityRecord() {
         Map<String, Object> values = copyDefaultRecord();
         values.put("name", name);
         values.put("module", module.getName());
@@ -129,18 +129,13 @@ public class Entity {
         if (o == null || getClass() != o.getClass()) return false;
         Entity entity = (Entity) o;
         return Objects.equals(module, entity.module) &&
-                Objects.equals(name, entity.name) &&
-                Objects.equals(schemaFields, entity.schemaFields) &&
-                Objects.equals(logicalKey, entity.logicalKey) &&
-                Objects.equals(idField, entity.idField) &&
-                Objects.equals(defaultRecord, entity.defaultRecord);
-        // no ID VALUE in Equals
+                Objects.equals(name, entity.name);
     }
 
     @Override
     public int hashCode() {
-        // no ID Value in Equals
-        return Objects.hash(module, name, schemaFields, logicalKey, idField, defaultRecord);
+        // no ID Value / Fields in Equals
+        return Objects.hash(module, name);
     }
 
     private Map<String, Object> copyDefaultRecord() {

@@ -169,7 +169,7 @@ public class EntityManagerImpl implements EntityManager {
             assert entityRefPK != null;
             entityRef = entityRefPK.getLogicalKeyRecord().getRequiredField("name");
         }
-        EntityFieldBuilder entityFieldBuilder = new EntityFieldBuilder(fieldType, name, isLogicalKey, entityRef, null);
+        EntityFieldBuilder entityFieldBuilder = new EntityFieldBuilder(fieldType, name, isLogicalKey, entityRef);
         entityFieldBuilder.setEntity(entityObj);
         return entityFieldBuilder.build();
     }

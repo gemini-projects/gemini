@@ -22,37 +22,37 @@ public class Field {
     private final FieldType fieldType;
     private final String fieldName;
     private final String entityRefName;
-    private final String entityCollectionRefField;
+    //private final String entityCollectionRefField;
 
 
     public Field(Field field) {
         this.fieldType = field.fieldType;
         this.fieldName = field.fieldName;
         this.entityRefName = field.entityRefName;
-        this.entityCollectionRefField = field.entityCollectionRefField;
+        // this.entityCollectionRefField = field.entityCollectionRefField;
     }
 
     public Field(FieldType fieldType, String fieldName) {
-        this(fieldType, fieldName, null, null);
+        this(fieldType, fieldName, null);
     }
 
-    public Field(FieldType fieldType, String fieldName, String entityRefName) {
+    /* public Field(FieldType fieldType, String fieldName, String entityRefName) {
         this(fieldType, fieldName, entityRefName, null);
-    }
+    } */
 
-    public Field(FieldType fieldType, String fieldName, String entityRefName, String entityCollectionRefField) {
+    public Field(FieldType fieldType, String fieldName, String entityRefName /*  String entityCollectionRefField */) {
         Assert.notNull(fieldType, "FielType required for Field");
         Assert.notNull(fieldName, "Name required for Field");
         if (fieldType == FieldType.ENTITY_REF) {
             Assert.notNull(entityRefName, String.format("Entity Name Required for %s FieldType", FieldType.ENTITY_REF.name()));
         }
-        if (fieldType == FieldType.ENTITY_COLLECTION_REF) {
+        /* if (fieldType == FieldType.ENTITY_COLLECTION_REF) {
             Assert.notNull(entityCollectionRefField, String.format("Entity Collection Field Name Required for %s FieldType", FieldType.ENTITY_COLLECTION_REF.name()));
-        }
+        } */
         this.entityRefName = entityRefName;
         this.fieldType = fieldType;
         this.fieldName = fieldName;
-        this.entityCollectionRefField = entityCollectionRefField;
+        // this.entityCollectionRefField = entityCollectionRefField;
     }
 
 
@@ -206,22 +206,6 @@ public class Field {
         static EntityReferenceRecord logicalKeyFromEntityRecord(EntityRecord entityRecord) {
             return logicalKeyFromObject(entityRecord.getEntity(), entityRecord);
         }
-
-        /* static Record.FieldValue logicalKeyFromStrings(Entity entity, String...keys) {
-            Entity.LogicalKey logicalKey = entity.getLogicalKey();
-            List<EntityField> logicalKeyList = logicalKey.getLogicalKeyList();
-            assert keys.length == logicalKeyList.size();
-            List<Record.FieldValue> lkFieldValues = new ArrayList<>();
-            for(int i= 0;i<logicalKeyList.size();i++){
-                EntityField field = logicalKeyList.get(i);
-                String lkElem = keys[i];
-                lkFieldValues.add(EntityRecord.EntityFieldValue.create(field, lkElem));
-            }
-            ArrayList<Field> fields = new ArrayList<>(logicalKeySet);
-            Field field = fields.get(0);
-            Object convertedFieldValue = getConvertedFieldValue(field, key);
-            return Record.FieldValue.create(field, convertedFieldValue);
-        } */
 
         @SuppressWarnings("unchecked")
         static EntityReferenceRecord logicalKeyFromObject(Entity entity, Object value) {

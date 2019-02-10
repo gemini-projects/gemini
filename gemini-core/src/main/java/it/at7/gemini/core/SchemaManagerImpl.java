@@ -26,7 +26,6 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import static it.at7.gemini.schema.FieldType.ENTITY_COLLECTION_REF;
 import static it.at7.gemini.schema.FieldType.ENTITY_REF;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
@@ -138,7 +137,7 @@ public class SchemaManagerImpl implements SchemaManager {
         Set<EntityField> fields = entity.getSchemaEntityFields();
         for (EntityField field : fields) {
             logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
-            EntityRecord fieldEntityRecord = field.toEntityRecord();
+            EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();
             fieldEntityRecord = persistenceEntityManager.createOrUpdateEntityRecord(fieldEntityRecord, transaction);
             field.setFieldIDValue(fieldEntityRecord.get(fieldEntityRecord.getEntity().getIdField()));
         }
@@ -147,8 +146,7 @@ public class SchemaManagerImpl implements SchemaManager {
 
     private void updateENTITYRecord(Transaction transaction, Entity entity) throws SQLException, GeminiException {
         logger.info("{}: creating/updating EntityRecord for {}", entity.getModule().getName(), entity.getName());
-        EntityRecord entityRecord = entity.toEntityRecord();
-        entityRecord.getLogicalKeyValue();
+        EntityRecord entityRecord = entity.toInitializationEntityRecord();
         entityRecord = persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction);
         entity.setFieldIDValue(entityRecord.get(entity.getIdField()));
     }
@@ -336,10 +334,12 @@ public class SchemaManagerImpl implements SchemaManager {
                 return;
             }
 
+            /*  TODO entity collections must be revisited
+
             // try to get a static collection reference for entity
             if (handleEntityCollectionRef(entityBuilders, entityBuilder, entry)) {
                 return;
-            }
+            } */
 
             throw new FieldTypeNotKnown(entityBuilder.getName(), type, entry);
         } else {
@@ -347,6 +347,7 @@ public class SchemaManagerImpl implements SchemaManager {
         }
     }
 
+    /*
     private boolean handleEntityCollectionRef(Map<String, EntityBuilder> entityBuilders, EntityBuilder currentEntityBuilder, RawEntity.Entry entry) {
         String type = entry.getType();
         if (type.startsWith("[") && type.endsWith("]")) {
@@ -365,11 +366,11 @@ public class SchemaManagerImpl implements SchemaManager {
             Optional<RawEntity.Entry> findLinker = targetEntityEntries.stream()
                     .filter(e -> e.getName().equalsIgnoreCase(collectionEntityField) && e.getType().equalsIgnoreCase(currentEntityBuilder.getName()))
                     .findAny();
-            if(findLinker.isPresent()){
+            if (findLinker.isPresent()) {
                 currentEntityBuilder.addField(ENTITY_COLLECTION_REF, entry, collectionEntityName, collectionEntityField);
                 return true;
             }
         }
         return false;
-    }
+    } */
 }

@@ -6,8 +6,8 @@ const PROXY_CONFIG = [
     ],
     "target": "http://127.0.0.1:8090",
     "secure": false,
-    "logLevel": "debug",
-    "changeOrigin": true
+    "logLevel": "debug"
+    // "changeOrigin": true
   }
 ];
 

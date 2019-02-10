@@ -4,6 +4,7 @@ import it.at7.gemini.core.*;
 import it.at7.gemini.core.Module;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.core.persistence.PersistenceSchemaManager;
+import it.at7.gemini.exceptions.EntityFieldException;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
@@ -134,7 +135,7 @@ public class UnitTestConfiguration {
                 Key key = new Key(logicalKey);
                 EntityRecord entityRecord = entityStorage.get(key);
                 if (entityRecord == null) return Optional.empty();
-                for (EntityRecord.EntityFieldValue entityFieldValue : entityRecord.getEntityFieldValues()) {
+                for (EntityRecord.EntityFieldValue entityFieldValue : entityRecord.getAllEntityFieldValues()) {
                     EntityField entityField = entityFieldValue.getEntityField();
                     if (entityField.getType().equals(FieldType.ENTITY_REF)) {
                         Object value = entityFieldValue.getValue();
@@ -145,7 +146,11 @@ public class UnitTestConfiguration {
                                     .filter(r -> r.getIDFieldValueType().getValue().equals(value))
                                     .findFirst();
                             EntityRecord refEntityRecord = first.get();
-                            entityRecord.put(entityField, refEntityRecord);
+                            try {
+                                entityRecord.put(entityField, refEntityRecord);
+                            } catch (EntityFieldException e) {
+                                // It should not happen because of the foreach on entity field values
+                            }
                         }
                     }
                 }
@@ -164,7 +169,7 @@ public class UnitTestConfiguration {
                 if (existentRecord != null) {
                     // error ???
                 }
-                /* for (EntityRecord.EntityFieldValue entityFieldValue : record.getEntityFieldValues()) {
+                /* for (EntityRecord.EntityFieldValue entityFieldValue : record.getEntityFieldValue()) {
                     EntityField entityField = entityFieldValue.getEntityField();
                     if (entityField.getType().equals(FieldType.ENTITY_REF)) {
                         Object value = entityFieldValue.getValue();

@@ -3,6 +3,7 @@ package it.at7.gemini.core.persistence;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.Entity;
+import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.Field;
 import it.at7.gemini.schema.FieldType;
 import org.springframework.stereotype.Service;
@@ -88,7 +89,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         if (recordByLogicalKey.isPresent()) {
             EntityRecord persistedEntityRecord = recordByLogicalKey.get();
             if (!sameOf(entityRecord, persistedEntityRecord, transaction)) {
-                Field idField = entityRecord.getEntity().getIdField();
+                EntityField idField = entityRecord.getEntity().getIdField();
                 Object persistedID = persistedEntityRecord.get(idField);
                 entityRecord.put(idField, persistedID);
                 persistedEntityRecord = updateEntityRecord(entityRecord, transaction);
@@ -185,10 +186,12 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private boolean sameOf(EntityRecord entityRecord, EntityRecord persistedEntityRecord, Transaction transaction) throws GeminiException {
-        for (Record.FieldValue fieldValue : entityRecord.getEntityFieldValues()) {
+        for (EntityRecord.FieldValue fieldValue : entityRecord.getOnlyModifiedEntityFieldValue()) {
             Field field = fieldValue.getField();
             if (fieldCanBeIgnoredInSameOf(field))
                 continue;
+
+            // todo stiamo razzando via la roba non voluta
 
             Object valueRec = fromFieldToPrimitiveValue(fieldValue, transaction);
             Record.FieldValue persistedFVT = persistedEntityRecord.getFieldValue(field);
@@ -201,8 +204,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private boolean fieldCanBeIgnoredInSameOf(Field field) {
-        if (field.getType() == FieldType.ENTITY_COLLECTION_REF)
-            return true;
+        /* if (field.getType() == FieldType.ENTITY_COLLECTION_REF)
+            return true; */
         return false;
     }
 
@@ -220,7 +223,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         List<EntityRecord> ret = new ArrayList<>();
         while (rs.next()) {
             EntityRecord er = new EntityRecord(entity);
-            for (Field field : entity.getSchemaEntityFields()) {
+            for (EntityField field : entity.getSchemaEntityFields()) {
                 FieldType type = field.getType();
                 String fieldName = field.getName().toLowerCase();
                 boolean handled = false;
@@ -258,18 +261,18 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                     er.put(field, entityReferenceRecord);
                     handled = true;
                 }
-                if (type.equals(FieldType.ENTITY_COLLECTION_REF)) {
+                /* if (type.equals(FieldType.ENTITY_COLLECTION_REF)) {
                     if (resolutionContext.getCollection().equals(EntityResolutionContext.Strategy.NONE)) {
                         handled = true;
                     } else {
                         throw new RuntimeException(String.format("Field %s of type %s not handled - strategy must be implemented", field.getName(), field.getType()));
                     }
-                }
+                } */
                 if (!handled) {
                     throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
                 }
             }
-            er.put(entity.getIdField(), rs.getLong(Field.ID_NAME));
+            er.put(entity.getIdField(), rs.getLong(entity.getIdField().getName()));
             ret.add(er);
         }
         return ret;
@@ -279,7 +282,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         Entity entity = record.getEntity();
         String sql = String.format("INSERT INTO %s", entity.getName().toLowerCase());
         Map<String, Object> params = new HashMap<>();
-        List<? extends Record.FieldValue> sortedFields = sortFields(record.getEntityFieldValues());
+        List<? extends Record.FieldValue> sortedFields = sortFields(record.getAllEntityFieldValues());
         boolean first = true;
         for (Record.FieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
@@ -309,7 +312,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         Entity entity = record.getEntity();
         String sql = String.format("UPDATE %s SET ", entity.getName().toLowerCase());
         Map<String, Object> params = new HashMap<>();
-        List<? extends Record.FieldValue> sortedFields = sortFields(record.getEntityFieldValues());
+        List<? extends Record.FieldValue> sortedFields = sortFields(record.getOnlyModifiedEntityFieldValue());
         for (int i = 0; i < sortedFields.size(); i++) {
             Record.FieldValue field = sortedFields.get(i);
             String columnName = field.getField().getName().toLowerCase();

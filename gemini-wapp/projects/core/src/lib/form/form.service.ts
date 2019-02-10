@@ -1,28 +1,31 @@
 import {Injectable} from '@angular/core';
-import {EntitySchema} from "../schema/entity-schema";
 import {FieldSchema, FieldType} from "../schema/field-schema";
 import {FormBuilder, ValidatorFn, Validators} from "@angular/forms";
 import {GeminiValueStrategy} from "../schema/gemini-value-strategy";
 import {FormStatus} from "./form-status";
 import {FormFieldComponent, FormFieldStatus} from "./form-field-status";
 import {InputComponent} from "./form-fields/input-field/input-field.component";
+import {GeminiSchemaService} from "../schema/schema.service";
 
 @Injectable({
     providedIn: 'root'
 })
 export class FormService {
 
-    constructor(private fb: FormBuilder) {
+    constructor(private fb: FormBuilder, private schemaService: GeminiSchemaService) {
     }
 
-    public entitySchemaToForm(entitySchema: EntitySchema): FormStatus {
+    public entitySchemaToForm(entityName: string): FormStatus {
+        let entityFields = this.schemaService.getEntityFields(entityName);
+
+
         let formStatus = new FormStatus();
         let formGroup = formStatus.formGroup = this.fb.group({});
         let formFieldsStatus: FormFieldStatus[] = [];
 
         this.registerValueChange(formStatus);
 
-        for (let field of entitySchema.fields) {
+        for (let field of entityFields) {
             let formFieldStatus = this.createFormFieldStatus(field);
             if (formFieldStatus) {
                 formGroup.addControl(field.name, formFieldStatus.formControl);

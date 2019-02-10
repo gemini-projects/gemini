@@ -6,14 +6,14 @@ public class EntityFieldBuilder {
     private String name;
     private boolean logicalKey;
     private String refEntityName;
-    private String refEntityCollectionFieldName;
+    // private String refEntityCollectionFieldName;
 
-    public EntityFieldBuilder(FieldType fieldType, String name, boolean logicalKey, String refEntityName, String refEntityCollectionFieldName) {
+    public EntityFieldBuilder(FieldType fieldType, String name, boolean logicalKey, String refEntityName/*, String refEntityCollectionFieldName*/) {
         this.fieldType = fieldType;
         this.name = name;
         this.logicalKey = logicalKey;
         this.refEntityName = refEntityName;
-        this.refEntityCollectionFieldName = refEntityCollectionFieldName;
+        // this.refEntityCollectionFieldName = refEntityCollectionFieldName;
     }
 
     public EntityFieldBuilder setEntity(Entity entity) {
@@ -22,11 +22,11 @@ public class EntityFieldBuilder {
     }
 
     public EntityField build() {
-        return new EntityField(entity, fieldType, name, logicalKey, refEntityName, refEntityCollectionFieldName);
+        return new EntityField(entity, fieldType, name, logicalKey, refEntityName/* , refEntityCollectionFieldName*/);
     }
 
     public static EntityField ID(Entity entity) {
-        return new EntityField(entity, FieldType.PK, Field.ID_NAME, false, null, null);
+        return new EntityField(entity, FieldType.PK, Field.ID_NAME, false, null);
     }
 
 }

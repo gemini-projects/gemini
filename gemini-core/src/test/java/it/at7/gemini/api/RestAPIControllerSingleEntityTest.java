@@ -60,7 +60,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
         //==== basic object -- with default value
         Map<String, Object> json = new HashMap<>();
         json.put("text", "lk");
-        json.put("numberlong", 10);
+        json.put("numberLong", 10);
         String jsonString = objectMapper.writeValueAsString(json);
         mockMvc.perform(post(API_PATH + "/TestDataType")
                 .contentType(APPLICATION_JSON)
@@ -70,7 +70,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk','domain1':{},'numberdouble':0,'double':0.0,'numberlong':10, 'long':0,'date':'', 'time': '', 'datetime':'', 'transl_text':'', 'textarray':[]}", true));
+                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'double':0.0,'numberLong':10, 'long':0,'date':'', 'time': '', 'datetime':'', 'transl_text':'', 'textArray':[]}", true));
         // no duplicated keys
         mockMvc.perform(post(API_PATH + "/TestDataType")
                 .contentType(APPLICATION_JSON)
@@ -85,12 +85,13 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
         jsonAllBasicTypes.put("text", "lk-allBasicTypes");
         jsonAllBasicTypes.put("numberlong", 10);
         jsonAllBasicTypes.put("long", 100);
-        jsonAllBasicTypes.put("numberdouble", 11.1);
+        jsonAllBasicTypes.put("numberDouble", 11.1);
         jsonAllBasicTypes.put("double", 111.11);
         jsonAllBasicTypes.put("date", "1989/9/6");
         jsonAllBasicTypes.put("time", "02:10");
         jsonAllBasicTypes.put("datetime", "1989-09-06T01:01");
         jsonAllBasicTypes.put("transl_text", "translation");
+        jsonAllBasicTypes.put("textArray", new String[]{"abc", "def"});
         String jsonAllBtypeString = objectMapper.writeValueAsString(jsonAllBasicTypes);
         mockMvc.perform(post(API_PATH + "/TestDataType")
                 .contentType(APPLICATION_JSON)
@@ -100,7 +101,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberdouble':11.1, 'double': 111.11, 'numberlong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation'}", true));
+                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1, 'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation', 'textArray': ['abc','def']}", true));
 
 
         //==== object with entity reference (FK) - single logical key
@@ -126,7 +127,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lkWithDomain','domain1':'dm1','numberdouble':0,'numberlong':11, 'long': 0, 'double': 0.0, 'transl_text':''}"));
+                        .json("{'bool':false,'text':'lkWithDomain','domain1':'dm1','numberDouble':0,'numberLong':11, 'long': 0, 'double': 0.0, 'transl_text':''}"));
 
         //=== lets POST a list of Objects
         List<Map<String, Object>> objList = new ArrayList<>();
@@ -146,8 +147,8 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("[ {'bool':false,'text':'lk_list','domain1':{},'numberdouble':0,'numberlong':20}, " +
-                                "{'bool':false,'text':'lkWithDomain_list','domain1':'dm1','numberdouble':0,'numberlong':22}" +
+                        .json("[ {'bool':false,'text':'lk_list','domain1':{},'numberDouble':0,'numberLong':20}, " +
+                                "{'bool':false,'text':'lkWithDomain_list','domain1':'dm1','numberDouble':0,'numberLong':22}" +
                                 "]"));
 
 
@@ -174,7 +175,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'text':'lkWithHKDomain','dmhierarchy':{'code':'dmH1', 'domain1': 'dm1'}}'", true));
+                        .json("{'text':'lkWithHKDomain','dmHierarchy':{'code':'dmH1', 'domain1': 'dm1'}}'", true));
     }
 
     @Test
@@ -185,7 +186,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'bool':false,'text':'lk','domain1':{},'numberdouble':0,'numberlong':10}"));
+                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':10}"));
 
         //==== basic object -- with all basic types value
         mockMvc.perform(get(API_PATH + "/TestDataType/lk-allBasicTypes")
@@ -193,7 +194,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberdouble':11.1,'double': 111.11, 'numberlong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation'}", true));
+                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1,'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation', 'textArray': ['abc','def']}", true));
 
 
         //==== object with entity reference (FK) - single logical key
@@ -201,7 +202,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'bool':false,'text':'lkWithDomain','domain1':'dm1','numberdouble':0,'numberlong':11}"));
+                        .json("{'bool':false,'text':'lkWithDomain','domain1':'dm1','numberDouble':0,'numberLong':11}"));
 
 
         //==== test entity with FK of to a hierarchy domain (LK with FK)
@@ -209,7 +210,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'text':'lkWithHKDomain','dmhierarchy':{'code':'dmH1', 'domain1': 'dm1'}}'", true));
+                        .json("{'text':'lkWithHKDomain','dmHierarchy':{'code':'dmH1', 'domain1': 'dm1'}}'", true));
     }
 
     @Test
@@ -226,7 +227,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk','domain1':{},'numberdouble':0,'numberlong':100, 'date':''}", false)); // TODO need strict true
+                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':100, 'date':''}", false)); // TODO need strict true
 
 
         //==== update a domain and query the object that refers it
@@ -246,7 +247,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'bool':false,'text':'lkWithDomain','domain1':'dm2','numberdouble':0,'numberlong':11}"));
+                        .json("{'bool':false,'text':'lkWithDomain','domain1':'dm2','numberDouble':0,'numberLong':11}"));
 
     }
 
@@ -258,7 +259,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'bool':false,'text':'lk','domain1':{},'numberdouble':0,'numberlong':100, 'date':''}", false)); // TODO need strict true
+                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':100, 'date':''}", false)); // TODO need strict true
         mockMvc.perform(get(API_PATH + "/TestDataType/lk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().is4xxClientError());
@@ -278,6 +279,6 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'bool':false,'text':'lkWithDomain','domain1':{},'numberdouble':0,'numberlong':11}"));
+                        .json("{'bool':false,'text':'lkWithDomain','domain1':{},'numberDouble':0,'numberLong':11}"));
     }
 }

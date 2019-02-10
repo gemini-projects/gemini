@@ -13,8 +13,9 @@ export class EntityLayoutComponent {
     private schemaService: GeminiSchemaService;
     private formService: FormService;
 
-    newEntityRecordEnabled: boolean;
+    errorMsgs: [any];
 
+    newEntityRecordEnabled: boolean;
     entitySchema: EntitySchema;
 
     constructor(schemaService: GeminiSchemaService, formService: FormService) {
@@ -26,7 +27,14 @@ export class EntityLayoutComponent {
     @Input()
     set name(name: string) {
         let entityName = name.trim();
-        this.entitySchema = this.schemaService.getEntitySchema(entityName);
+        this.schemaService.getEntitySchema(entityName)
+            .subscribe(es => {
+                    this.entitySchema = es
+                },
+                error => {
+                    this.errorMsgs = [{severity: 'error', summary: 'Error', detail: error}]
+                }
+            );
 
         // todo conversion from field schema to form fields
     }

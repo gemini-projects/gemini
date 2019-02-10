@@ -26,8 +26,7 @@ export class GeminiFormComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.entitySchema = this.schemaService.getEntitySchema(this.entityName);
-        this.formStatus = this.formService.entitySchemaToForm(this.entitySchema);
+        this.formStatus = this.formService.entitySchemaToForm(this.entityName);
     }
 
     onSubmit(event) {
