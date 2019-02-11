@@ -6,6 +6,9 @@ import {FormStatus} from "./form-status";
 import {FormFieldComponent, FormFieldStatus} from "./form-field-status";
 import {InputComponent} from "./form-fields/input-field/input-field.component";
 import {GeminiSchemaService} from "../schema/schema.service";
+import {Observable} from "rxjs";
+import {map} from 'rxjs/operators';
+
 
 @Injectable({
     providedIn: 'root'
@@ -15,25 +18,27 @@ export class FormService {
     constructor(private fb: FormBuilder, private schemaService: GeminiSchemaService) {
     }
 
-    public entitySchemaToForm(entityName: string): FormStatus {
-        let entityFields = this.schemaService.getEntityFields(entityName);
+    public entitySchemaToForm(entityName: string): Observable<FormStatus> {
+        return this.schemaService.getEntityFields(entityName)
+            .pipe(
+                map((fieldSchemas: FieldSchema[]) => {
 
+                    let formStatus = new FormStatus();
+                    let formGroup = formStatus.formGroup = this.fb.group({});
+                    let formFieldsStatus: FormFieldStatus[] = [];
 
-        let formStatus = new FormStatus();
-        let formGroup = formStatus.formGroup = this.fb.group({});
-        let formFieldsStatus: FormFieldStatus[] = [];
+                    this.registerValueChange(formStatus);
 
-        this.registerValueChange(formStatus);
-
-        for (let field of entityFields) {
-            let formFieldStatus = this.createFormFieldStatus(field);
-            if (formFieldStatus) {
-                formGroup.addControl(field.name, formFieldStatus.formControl);
-                formFieldsStatus.push(formFieldStatus);
-            }
-        }
-        formStatus.fieldsStatus = formFieldsStatus;
-        return formStatus;
+                    for (let field of fieldSchemas) {
+                        let formFieldStatus = this.createFormFieldStatus(field);
+                        if (formFieldStatus) {
+                            formGroup.addControl(field.name, formFieldStatus.formControl);
+                            formFieldsStatus.push(formFieldStatus);
+                        }
+                    }
+                    formStatus.fieldsStatus = formFieldsStatus;
+                    return formStatus
+                }));
     }
 
     private registerValueChange(formStatus: FormStatus) {

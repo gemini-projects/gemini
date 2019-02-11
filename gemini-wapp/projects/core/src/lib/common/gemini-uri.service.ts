@@ -1,5 +1,5 @@
 export class GeminiUriService {
-
+    readonly SEARCH_PARAMETER: string = "search";
     readonly API_URL: string;
     readonly COMPONENT_URL: string;
 
@@ -26,6 +26,10 @@ export class GeminiUriService {
 
     public getComponentEventUrl(component: string, event: string): string {
         return `${this.COMPONENT_URL}/${component}/${event}`
+    }
+
+    public getApiEntitiesUrl(entityName: string){
+        return `${this.API_URL}/${entityName.toLowerCase()}`
     }
 
     public getApiEntityUrl(entityName: string, entityKey: string): string {

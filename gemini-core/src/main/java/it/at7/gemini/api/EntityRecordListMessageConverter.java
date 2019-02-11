@@ -22,12 +22,12 @@ public class EntityRecordListMessageConverter extends MappingJackson2HttpMessage
 
     @Override
     public boolean canWrite(Class<?> clazz, MediaType mediaType) {
-        return super.canWrite(mediaType) && Wrappers.EntityRecordsListWrapper.class.isAssignableFrom(clazz);
+        return super.canWrite(mediaType) && GeminiWrappers.EntityRecordsList.class.isAssignableFrom(clazz);
     }
 
     @Override
     protected void writeInternal(Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
-        Wrappers.EntityRecordsListWrapper recordsWrapper = Wrappers.EntityRecordsListWrapper.class.cast(object);
+        GeminiWrappers.EntityRecordsList recordsWrapper = GeminiWrappers.EntityRecordsList.class.cast(object);
         Collection<EntityRecord> records = recordsWrapper.getRecords();
         List<Object> listOfFields = new ArrayList<>(records.size());
         for (EntityRecord record : records) {

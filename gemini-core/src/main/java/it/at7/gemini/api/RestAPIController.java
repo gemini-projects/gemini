@@ -26,6 +26,13 @@ import java.util.Map;
 @RequestMapping("/api/{entity}")
 public class RestAPIController {
     public static final String SEARCH_PARAMETER = "search";
+    public static final String GEMINI_CONTENT_TYPE = "Gemini-Content-Type";
+    public static final String GEMINI_ACCEPT_TYPE = "Gemini-Accept-Type";
+
+
+    public static final String GEMINI_SIMPLE_DATA_TYPE = "rest";
+    public static final String GEMINI_DATA_TYPE = "gemini-data-type";
+
 
     private EntityManager entityManager;
 
@@ -41,6 +48,34 @@ public class RestAPIController {
                              @RequestBody(required = false) Object body,
                              HttpServletRequest request,
                              HttpServletResponse response) throws GeminiException {
+
+        Object results = requestHandler(entity, body, request, response);
+        String geminiAcceptTypeHeader = request.getHeader(GEMINI_ACCEPT_TYPE);
+        if (needSimpleResponse(geminiAcceptTypeHeader)) {
+            return results;
+        }
+        return handleGeminiDataTypeResponse(results, request, response);
+    }
+
+    private Object handleGeminiDataTypeResponse(Object results, HttpServletRequest request, HttpServletResponse response) throws InvalidRequesException {
+        response.setHeader(GEMINI_CONTENT_TYPE, GEMINI_DATA_TYPE);
+        if (results instanceof EntityRecord) {
+            return GeminiWrappers.EntityRecordApiType.of((EntityRecord) results);
+        }
+        if (results instanceof GeminiWrappers.EntityRecordsList) {
+            return GeminiWrappers.EntityRecordListApiType.of((GeminiWrappers.EntityRecordsList) results);
+        }
+        throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
+    }
+
+    private boolean needSimpleResponse(String geminiAcceptTypeHeader) {
+        if (geminiAcceptTypeHeader == null || geminiAcceptTypeHeader.isEmpty() || geminiAcceptTypeHeader.equals(GEMINI_SIMPLE_DATA_TYPE)) {
+            return true;
+        }
+        return false;
+    }
+
+    private Object requestHandler(String entity, Object body, HttpServletRequest request, HttpServletResponse response) throws GeminiException {
         Entity e = checkEntity(entity.toUpperCase());
         UriComponents uriComponents = UriComponentsBuilder.fromUriString(request.getRequestURI()).build();
         List<String> paths = uriComponents.getPathSegments();
@@ -92,13 +127,13 @@ public class RestAPIController {
         throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
     }
 
-    private Object handleGetEntityList(Entity e, Map<String, String[]> parameters) throws GeminiException {
+    private GeminiWrappers.EntityRecordsList handleGetEntityList(Entity e, Map<String, String[]> parameters) throws GeminiException {
         String searchString = getSearchFromParameters(parameters.get(SEARCH_PARAMETER));
         FilterRequest filterRequest = FilterRequest.BUILDER()
                 .with(searchString)
                 .build();
         List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterRequest);
-        return Wrappers.EntityRecordsListWrapper.of(recordList);
+        return GeminiWrappers.EntityRecordsList.of(recordList);
     }
 
     private String getSearchFromParameters(String[] searchParams) {
@@ -128,7 +163,7 @@ public class RestAPIController {
             records.add(RecordConverters.entityRecordFromMap(e, record));
         }
         Collection<EntityRecord> entityRecords = entityManager.putIfAbsent(records);
-        return Wrappers.EntityRecordsListWrapper.of(entityRecords);
+        return GeminiWrappers.EntityRecordsList.of(entityRecords);
     }
 
 

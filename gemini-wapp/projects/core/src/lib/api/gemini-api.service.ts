@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {HttpClient, HttpErrorResponse} from "@angular/common/http";
+import {HttpClient, HttpErrorResponse, HttpParams} from "@angular/common/http";
 import {Observable, throwError} from "rxjs";
 import {catchError, retry} from "rxjs/operators";
 
@@ -14,7 +14,6 @@ export class GeminiApiService {
     }
 
     public getEntityRecord(entityName: string, entityKey: any): Observable<any> {
-
         return this.http.get(this.configService.getApiEntityUrl(entityName, entityKey))
             .pipe(
                 retry(3),
@@ -22,6 +21,15 @@ export class GeminiApiService {
             );
     }
 
+    public getEntitiesMatchingFilter(entityName: string, searchValue: any): Observable<any> {
+        let httpParams = new HttpParams();
+        httpParams.set(this.configService.SEARCH_PARAMETER, searchValue);
+        return this.http.get(this.configService.getApiEntitiesUrl(entityName))
+            .pipe(
+                retry(3),
+                catchError(this.handleError)
+            );
+    }
 
     private handleError(error: HttpErrorResponse) {
         if (error.error instanceof ErrorEvent) {

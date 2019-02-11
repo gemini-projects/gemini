@@ -9,6 +9,8 @@ import {GeminiApiService} from "../api";
     providedIn: 'root',
 })
 export class GeminiSchemaService {
+    private static ENTITY_NAME_OF_ENTITIES: string = "entity";
+    private static ENTITY_NAME_OF_FIELDS: string = "field";
 
     private entityCache: { [key: string]: EntitySchema };
 
@@ -17,12 +19,16 @@ export class GeminiSchemaService {
     }
 
     getEntitySchema(entityName: string): Observable<EntitySchema> {
-        return this.apiService.getEntityRecord("entity", entityName);
-       // return of({name: "Entity", displayname: "ENNN"});
+        return this.apiService.getEntityRecord(GeminiSchemaService.ENTITY_NAME_OF_ENTITIES, entityName);
+        // return of({name: "Entity", displayname: "ENNN"});
     }
 
-    getEntityFields(entityName: string): FieldSchema[] {
-        return [{
+    getEntityFields(entityName: string): Observable<FieldSchema[]> {
+        let filter: string = `entity==${entityName}`;
+        this.apiService.getEntitiesMatchingFilter(GeminiSchemaService.ENTITY_NAME_OF_FIELDS, filter)
+            .pipe()
+
+        return of([{
             name: "required text",
             type: FieldType.TEXT,
             requiredStrategy: GeminiValueStrategy.SIMPLE,
@@ -44,7 +50,7 @@ export class GeminiSchemaService {
             visibleStrategy: GeminiValueStrategy.SIMPLE,
             modifiableStrategy: GeminiValueStrategy.SIMPLE,
             visible: true
-        }]
+        }]);
     }
 
 }

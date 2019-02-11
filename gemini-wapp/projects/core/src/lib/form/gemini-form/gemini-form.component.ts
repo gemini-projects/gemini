@@ -13,8 +13,7 @@ import {FormStatus} from "../form-status";
 })
 export class GeminiFormComponent implements OnInit {
     @Input() entityName: string;
-
-    entitySchema: EntitySchema;
+    @Input() entitySchema: EntitySchema;
     formStatus: FormStatus;
 
     private schemaService: GeminiSchemaService;
@@ -26,7 +25,8 @@ export class GeminiFormComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.formStatus = this.formService.entitySchemaToForm(this.entityName);
+        this.formService.entitySchemaToForm(this.entityName)
+            .subscribe(fs => this.formStatus = fs)
     }
 
     onSubmit(event) {
