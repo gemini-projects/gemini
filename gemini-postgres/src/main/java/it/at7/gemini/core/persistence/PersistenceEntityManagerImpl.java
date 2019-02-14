@@ -146,7 +146,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
     private void addFilterRequestTo(QueryWithParams query, FilterRequest filterRequest) {
         if (!filterRequest.getSearchString().isEmpty()) {
-            // need to handle the WHERE
+            // TODO need to handle the WHERE
         }
     }
 

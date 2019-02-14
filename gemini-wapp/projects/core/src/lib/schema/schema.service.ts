@@ -4,6 +4,8 @@ import {FieldSchema, FieldType} from "./field-schema";
 import {GeminiValueStrategy} from "./gemini-value-strategy";
 import {Observable, of} from "rxjs";
 import {GeminiApiService} from "../api";
+import {map} from "rxjs/operators";
+import {EntityRecord} from "./EntityRecord";
 
 @Injectable({
     providedIn: 'root',
@@ -19,16 +21,26 @@ export class GeminiSchemaService {
     }
 
     getEntitySchema(entityName: string): Observable<EntitySchema> {
-        return this.apiService.getEntityRecord(GeminiSchemaService.ENTITY_NAME_OF_ENTITIES, entityName);
+        return this.apiService.getEntityRecord(GeminiSchemaService.ENTITY_NAME_OF_ENTITIES, entityName)
+            .pipe(
+                map((entityRecord: EntityRecord) => {
+
+                    return entityRecord.data as EntitySchema;
+                })
+            );
         // return of({name: "Entity", displayname: "ENNN"});
     }
 
     getEntityFields(entityName: string): Observable<FieldSchema[]> {
-        let filter: string = `entity==${entityName}`;
-        this.apiService.getEntitiesMatchingFilter(GeminiSchemaService.ENTITY_NAME_OF_FIELDS, filter)
-            .pipe()
+        return this.apiService.getEntityList(GeminiSchemaService.ENTITY_NAME_OF_ENTITIES, entityName, GeminiSchemaService.ENTITY_NAME_OF_FIELDS)
+            .pipe(
+                map((entityRecord: EntityRecord[]) => {
 
-        return of([{
+
+                    return [] as FieldSchema[];
+                }));
+
+        /* return of([{
             name: "required text",
             type: FieldType.TEXT,
             requiredStrategy: GeminiValueStrategy.SIMPLE,
@@ -50,7 +62,7 @@ export class GeminiSchemaService {
             visibleStrategy: GeminiValueStrategy.SIMPLE,
             modifiableStrategy: GeminiValueStrategy.SIMPLE,
             visible: true
-        }]);
+        }]); */
     }
 
 }

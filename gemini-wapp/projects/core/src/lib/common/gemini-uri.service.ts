@@ -35,4 +35,8 @@ export class GeminiUriService {
     public getApiEntityUrl(entityName: string, entityKey: string): string {
         return `${this.API_URL}/${entityName.toLowerCase()}/${entityKey}`
     }
+
+    public getApiEntityCollectionUrl(entityName: string, entityKey: string, entityCollection: string): string {
+        return `${this.API_URL}/${entityName.toLowerCase()}/${entityKey}/${entityCollection}`
+    }
 }

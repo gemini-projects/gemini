@@ -17,21 +17,16 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/{entity}")
 public class RestAPIController {
     public static final String SEARCH_PARAMETER = "search";
-    public static final String GEMINI_CONTENT_TYPE = "Gemini-Content-Type";
-    public static final String GEMINI_ACCEPT_TYPE = "Gemini-Accept-Type";
-
-
-    public static final String GEMINI_SIMPLE_DATA_TYPE = "rest";
-    public static final String GEMINI_DATA_TYPE = "gemini-data-type";
+    public static final String GEMINI_HEADER = "Gemini";
+    
+    public static final String GEMINI_SIMPLE_DATA_TYPE = "gemini.api.nometa";
+    public static final String GEMINI_DATA_TYPE = "gemini.api";
 
 
     private EntityManager entityManager;
@@ -50,15 +45,15 @@ public class RestAPIController {
                              HttpServletResponse response) throws GeminiException {
 
         Object results = requestHandler(entity, body, request, response);
-        String geminiAcceptTypeHeader = request.getHeader(GEMINI_ACCEPT_TYPE);
-        if (needSimpleResponse(geminiAcceptTypeHeader)) {
+        List<String> geminiHeaderValues = getGeminiHeader(request); // request.getHeader(GEMINI_ACCEPT_TYPE);
+        if (geminiClassicResponse(geminiHeaderValues)) {
             return results;
         }
         return handleGeminiDataTypeResponse(results, request, response);
     }
 
     private Object handleGeminiDataTypeResponse(Object results, HttpServletRequest request, HttpServletResponse response) throws InvalidRequesException {
-        response.setHeader(GEMINI_CONTENT_TYPE, GEMINI_DATA_TYPE);
+        response.setHeader(GEMINI_HEADER, GEMINI_DATA_TYPE);
         if (results instanceof EntityRecord) {
             return GeminiWrappers.EntityRecordApiType.of((EntityRecord) results);
         }
@@ -68,8 +63,13 @@ public class RestAPIController {
         throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
     }
 
-    private boolean needSimpleResponse(String geminiAcceptTypeHeader) {
-        if (geminiAcceptTypeHeader == null || geminiAcceptTypeHeader.isEmpty() || geminiAcceptTypeHeader.equals(GEMINI_SIMPLE_DATA_TYPE)) {
+    private List<String> getGeminiHeader(HttpServletRequest request) {
+        String header = request.getHeader(GEMINI_HEADER);
+        return header == null ? Collections.emptyList() : Arrays.asList(header.split(","));
+    }
+
+    private boolean geminiClassicResponse(List<String> geminiAcceptTypeHeader) {
+        if (geminiAcceptTypeHeader == null || geminiAcceptTypeHeader.isEmpty() || geminiAcceptTypeHeader.contains(GEMINI_SIMPLE_DATA_TYPE)) {
             return true;
         }
         return false;
