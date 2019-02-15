@@ -105,9 +105,9 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
-    public List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest) throws GeminiException {
+    public List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext) throws GeminiException {
         return transactionManager.executeInSingleTrasaction(transaction -> {
-            return persistenceEntityManager.getRecordsMatching(entity, filterRequest, transaction);
+            return persistenceEntityManager.getRecordsMatching(entity, filterContext, transaction);
         });
     }
 

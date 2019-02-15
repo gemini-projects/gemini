@@ -59,8 +59,8 @@ public class EntityRecord implements RecordBase {
 
     /**
      * Get values and fields for all the fields available in the Entity Schema. This means
-     * that if a new Entity DynamicRecord is created with only a subset of fields the remaining fields
-     * are extracted with a default value.
+     * that if a new Entity DynamicRecord is created withGeminiSearchString only a subset of fields the remaining fields
+     * are extracted withGeminiSearchString a default value.
      *
      * @return
      */

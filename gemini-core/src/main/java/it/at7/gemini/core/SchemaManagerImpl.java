@@ -289,7 +289,7 @@ public class SchemaManagerImpl implements SchemaManager {
         for (Map.Entry<String, EntityBuilder> entityEntry : entityBuilders.entrySet()) {
             EntityBuilder entityB = entityEntry.getValue();
 
-            // merging with interface if found
+            // merging withGeminiSearchString interface if found
             for (String implementsInteface : entityB.getRawEntity().getImplementsIntefaces()) {
                 // entity implements a common specification
                 EntityBuilder enitityImplementsInterface = interfaceBuilders.get(implementsInteface.toUpperCase());
@@ -298,7 +298,7 @@ public class SchemaManagerImpl implements SchemaManager {
                 }
             }
 
-            // continue with entity entries
+            // continue withGeminiSearchString entity entries
             for (RawEntity.Entry entry : entityB.getRawEntity().getEntries()) {
                 checkAndSetType(entityBuilders, entityB, entry);
             }

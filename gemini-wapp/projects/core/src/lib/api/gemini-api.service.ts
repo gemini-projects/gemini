@@ -28,7 +28,7 @@ export class GeminiApiService {
                 catchError(this.handleError));
     }
 
-    public getEntityList(entityName: string, entityKey: any, entityCollection: string): Observable<EntityRecord[]> {
+    public getEntityList(entityName: string, entityKey: any, entityCollection?: string): Observable<EntityRecord[]> {
         const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
         const options = {
             headers: httpHeaders

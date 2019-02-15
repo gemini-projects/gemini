@@ -52,7 +52,7 @@ public class Gemini {
         logger.info("Loading Modules");
         Map<String, Module> modulesMap = context.getBeansOfType(Module.class);
         for (Module module : modulesMap.values()) {
-            logger.info("Found module {} with dependecies {}", module.getName(), module.getDependencies());
+            logger.info("Found module {} withGeminiSearchString dependecies {}", module.getName(), module.getDependencies());
             stateManager.register(module);
         }
         this.modulesInOrder = modulesMap.entrySet().stream()

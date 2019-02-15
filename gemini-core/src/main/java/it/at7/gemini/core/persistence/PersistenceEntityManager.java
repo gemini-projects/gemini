@@ -18,10 +18,10 @@ public interface PersistenceEntityManager {
         return getRecordsMatching(entity, filterFieldValueType, DEFAULT, transaction);
     }
 
-    List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException;
 
-    default List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, Transaction transaction) throws GeminiException {
-        return getRecordsMatching(entity, filterRequest, DEFAULT, transaction);
+    default List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, Transaction transaction) throws GeminiException {
+        return getRecordsMatching(entity, filterContext, DEFAULT, transaction);
     }
 
     default Optional<EntityRecord> getRecordByLogicalKey(Entity entity, EntityRecord logicalKeyRecord, Transaction transaction) throws GeminiException {

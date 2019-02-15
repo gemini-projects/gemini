@@ -58,7 +58,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
     public void n1_saveEntity() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper(); // for json conversion
 
-        //==== basic object -- with default value
+        //==== basic object -- withGeminiSearchString default value
         Map<String, Object> json = new HashMap<>();
         json.put("text", "lk");
         json.put("numberLong", 10);
@@ -81,7 +81,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(content().json("{'errorcode':'MULTIPLE_LK_FOUND'}"));
 
 
-        //==== basic object -- with all basic types value
+        //==== basic object -- withGeminiSearchString all basic types value
         Map<String, Object> jsonAllBasicTypes = new HashMap<>();
         jsonAllBasicTypes.put("text", "lk-allBasicTypes");
         jsonAllBasicTypes.put("numberlong", 10);
@@ -105,7 +105,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                         .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1, 'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation', 'textArray': ['abc','def']}", true));
 
 
-        //==== object with entity reference (FK) - single logical key
+        //==== object withGeminiSearchString entity reference (FK) - single logical key
         Map<String, Object> domainJson = new HashMap<>();
         domainJson.put("code", "dm1");
         String domainJsonString = objectMapper.writeValueAsString(domainJson);
@@ -153,7 +153,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                                 "]"));
 
 
-        //==== test entity with FK of to a hierarchy domain (LK with FK)
+        //==== test entity withGeminiSearchString FK of to a hierarchy domain (LK withGeminiSearchString FK)
         Map<String, Object> domainHKJson = new HashMap<>();
         domainHKJson.put("code", "dmH1");
         domainHKJson.put("domain1", "dm1");
@@ -182,14 +182,14 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
     @Test
     public void n2_testGetLk() throws Exception {
 
-        //==== basic object -- with default value
+        //==== basic object -- withGeminiSearchString default value
         mockMvc.perform(get(API_PATH + "/TestDataType/lk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':10}"));
 
-        //==== basic object -- with default value -- gemini API data type
+        //==== basic object -- withGeminiSearchString default value -- gemini API data type
         mockMvc.perform(get(API_PATH + "/TestDataType/lk")
                 .header(GEMINI_ACCEPT_TYPE, GEMINI_DATA_TYPE)
                 .accept(APPLICATION_JSON))
@@ -199,7 +199,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                         .json("{'data': {'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':10}}"))
                 .andExpect(jsonPath("$.meta").exists());
 
-        //==== basic object -- with all basic types value
+        //==== basic object -- withGeminiSearchString all basic types value
         mockMvc.perform(get(API_PATH + "/TestDataType/lk-allBasicTypes")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -208,7 +208,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                         .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1,'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation', 'textArray': ['abc','def']}", true));
 
 
-        //==== object with entity reference (FK) - single logical key
+        //==== object withGeminiSearchString entity reference (FK) - single logical key
         mockMvc.perform(get(API_PATH + "/TestDataType/lkWithDomain")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -216,7 +216,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                         .json("{'bool':false,'text':'lkWithDomain','domain1':'dm1','numberDouble':0,'numberLong':11}"));
 
 
-        //==== test entity with FK of to a hierarchy domain (LK with FK)
+        //==== test entity withGeminiSearchString FK of to a hierarchy domain (LK withGeminiSearchString FK)
         mockMvc.perform(get(API_PATH + "/TestDataTypeWithHierachy/lkWithHKDomain")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -228,7 +228,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
     public void n3_testUpdate() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper(); // for json conversion
 
-        //==== basic object -- with default value
+        //==== basic object -- withGeminiSearchString default value
         Map<String, Object> json = new HashMap<>();
         json.put("numberlong", 100);
         String jsonString = objectMapper.writeValueAsString(json);
@@ -242,7 +242,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
 
 
         //==== update a domain and query the object that refers it
-        //==== object with entity reference (FK) - single logical key
+        //==== object withGeminiSearchString entity reference (FK) - single logical key
         Map<String, Object> domainJson = new HashMap<>();
         domainJson.put("code", "dm2");
         String domainJsonString = objectMapper.writeValueAsString(domainJson);
@@ -254,7 +254,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'code':'dm2'}"));
-        //==== object with entity reference (FK) - single logical key
+        //==== object withGeminiSearchString entity reference (FK) - single logical key
         mockMvc.perform(get(API_PATH + "/TestDataType/lkWithDomain")
                 .accept(APPLICATION_JSON))
                 .andDo(print())
@@ -267,7 +267,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
     @Test
     public void n4_testDelete() throws Exception {
 
-        //==== basic object -- with default value
+        //==== basic object -- withGeminiSearchString default value
         mockMvc.perform(delete(API_PATH + "/TestDataType/lk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -287,7 +287,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
         mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().is4xxClientError());
-        //==== object with entity reference (FK) - single logical key
+        //==== object withGeminiSearchString entity reference (FK) - single logical key
         mockMvc.perform(get(API_PATH + "/TestDataType/lkWithDomain")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())

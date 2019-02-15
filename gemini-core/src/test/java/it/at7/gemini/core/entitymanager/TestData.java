@@ -13,7 +13,7 @@ public class TestData {
     }
 
     /**
-     * DynamicRecord with primitive dataType
+     * DynamicRecord withGeminiSearchString primitive dataType
      */
     public static EntityRecord getTestDataTypeEntityRecord(String logicalKey) {
         SchemaManager schemaManager = Services.getSchemaManager();

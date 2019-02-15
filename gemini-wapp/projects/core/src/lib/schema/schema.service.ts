@@ -1,8 +1,7 @@
 import {Injectable} from '@angular/core';
 import {EntitySchema} from "./entity-schema";
-import {FieldSchema, FieldType} from "./field-schema";
-import {GeminiValueStrategy} from "./gemini-value-strategy";
-import {Observable, of} from "rxjs";
+import {FieldSchema} from "./field-schema";
+import {Observable} from "rxjs";
 import {GeminiApiService} from "../api";
 import {map} from "rxjs/operators";
 import {EntityRecord} from "./EntityRecord";
@@ -32,7 +31,8 @@ export class GeminiSchemaService {
     }
 
     getEntityFields(entityName: string): Observable<FieldSchema[]> {
-        return this.apiService.getEntityList(GeminiSchemaService.ENTITY_NAME_OF_ENTITIES, entityName, GeminiSchemaService.ENTITY_NAME_OF_FIELDS)
+        const search: string = `entity==${entityName}`;
+        return this.apiService.getEntitiesMatchingFilter(GeminiSchemaService.ENTITY_NAME_OF_FIELDS, search)
             .pipe(
                 map((entityRecord: EntityRecord[]) => {
 

@@ -273,7 +273,7 @@ public class UnitTestConfiguration {
             }
 
             @Override
-            public List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
+            public List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.get(entityName);
                 if (entityStorage == null) {

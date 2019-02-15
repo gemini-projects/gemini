@@ -2,7 +2,7 @@ package it.at7.gemini.api;
 
 import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.FilterRequest;
+import it.at7.gemini.core.FilterContext;
 import it.at7.gemini.core.RecordConverters;
 import it.at7.gemini.exceptions.EntityException;
 import it.at7.gemini.exceptions.GeminiException;
@@ -24,7 +24,7 @@ import java.util.*;
 public class RestAPIController {
     public static final String SEARCH_PARAMETER = "search";
     public static final String GEMINI_HEADER = "Gemini";
-    
+
     public static final String GEMINI_SIMPLE_DATA_TYPE = "gemini.api.nometa";
     public static final String GEMINI_DATA_TYPE = "gemini.api";
 
@@ -129,10 +129,10 @@ public class RestAPIController {
 
     private GeminiWrappers.EntityRecordsList handleGetEntityList(Entity e, Map<String, String[]> parameters) throws GeminiException {
         String searchString = getSearchFromParameters(parameters.get(SEARCH_PARAMETER));
-        FilterRequest filterRequest = FilterRequest.BUILDER()
-                .with(searchString)
+        FilterContext filterContext = FilterContext.BUILDER()
+                .withGeminiSearchString(searchString)
                 .build();
-        List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterRequest);
+        List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterContext);
         return GeminiWrappers.EntityRecordsList.of(recordList);
     }
 

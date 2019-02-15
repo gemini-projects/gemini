@@ -74,7 +74,7 @@ public abstract class EntityRefEntityManagerAbstTest {
         DynamicRecord entityRef = new DynamicRecord();
         entityRef.put("domain1", "lk1");
         List<EntityRecord> recordsMatching = Services.getEntityManager().getRecordsMatching(testDataTypeEntity, entityRef);
-        Assert.assertEquals(3, recordsMatching.size()); // we have inserted 3 record with lk domain
+        Assert.assertEquals(3, recordsMatching.size()); // we have inserted 3 record withGeminiSearchString lk domain
     }
 
 }

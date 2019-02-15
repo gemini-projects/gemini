@@ -38,5 +38,5 @@ public interface EntityManager {
 
     List<EntityRecord> getRecordsMatching(Entity entity, Set<DynamicRecord.FieldValue> filterFielValueType, Transaction transaction) throws GeminiException;
 
-    List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext) throws GeminiException;
 }

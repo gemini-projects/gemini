@@ -114,7 +114,7 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
                     return savedTarget;
                 });
 
-        // update the entity with another FK
+        // update the entity withGeminiSearchString another FK
         transactionManager.executeInSingleTrasaction(t -> {
             EntityRecord domain = new EntityRecord(domainEntity);
             domain.put("code", "D2");
@@ -133,7 +133,7 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
 
     //@Test(expected = AssertionError.class)
     public void n4_TestExpectAssertionError() throws SQLException, GeminiException {
-        // deleting the Domain D2... excpeting assertion errore when try to get a record with reference to the deleted domain
+        // deleting the Domain D2... excpeting assertion errore when try to get a record withGeminiSearchString reference to the deleted domain
         transactionManager.executeInSingleTrasaction(t -> {
             EntityRecord domain2 = new EntityRecord(domainEntity);
             domain2.put("code", "D2");

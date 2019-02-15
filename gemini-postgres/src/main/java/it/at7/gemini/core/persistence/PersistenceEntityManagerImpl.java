@@ -1,11 +1,16 @@
 package it.at7.gemini.core.persistence;
 
+import cz.jirutka.rsql.parser.RSQLParser;
+import cz.jirutka.rsql.parser.ast.Node;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.Field;
 import it.at7.gemini.schema.FieldType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -24,6 +29,14 @@ import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.oneToOn
 
 @Service
 public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
+    private static final Logger logger = LoggerFactory.getLogger(PersistenceEntityManagerImpl.class);
+
+    private FilterVisitor filterVisitor;
+
+    @Autowired
+    public PersistenceEntityManagerImpl(FilterVisitor filterVisitor) {
+        this.filterVisitor = filterVisitor;
+    }
 
     @Override
     public Optional<EntityRecord> getRecordByLogicalKey(EntityRecord record, Transaction transaction) throws GeminiException {
@@ -46,6 +59,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             checkInsertedRecord(recordId, record, insertedRecord);
             return insertedRecord.get();
         } catch (SQLException e) {
+            logger.error("createNewEntityRecord SQL Exception", e);
             throw GeminiGenericException.wrap(e);
         }
     }
@@ -126,28 +140,31 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
-    public List<EntityRecord> getRecordsMatching(Entity entity, FilterRequest filterRequest, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException {
+    public List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         try {
             QueryWithParams query = createSelectQueryFor(entity);
-            addFilterRequestTo(query, filterRequest);
+            addFilterRequestTo(query, filterContext, entity);
             return transactionImpl.executeQuery(query.sql, query.params, resultSet -> {
                 return fromResultSetToEntityRecord(resultSet, entity, resolutionContext, transaction);
             });
         } catch (SQLException e) {
+
             throw GeminiGenericException.wrap(e);
+        }
+    }
+
+    private void addFilterRequestTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
+        if (!filterContext.getGeminiSearchString().isEmpty()) {
+            Node rootNode = new RSQLParser().parse(filterContext.getGeminiSearchString());
+            String sqlFilter = rootNode.accept(filterVisitor, entity);
+            query.sql += "WHERE " + sqlFilter;
         }
     }
 
     private String createSelectQuerySQLFor(Entity entity) {
         String entityName = entity.getName().toUpperCase();
         return String.format("SELECT %1$s.* FROM %1$s ", entityName);
-    }
-
-    private void addFilterRequestTo(QueryWithParams query, FilterRequest filterRequest) {
-        if (!filterRequest.getSearchString().isEmpty()) {
-            // TODO need to handle the WHERE
-        }
     }
 
     private QueryWithParams createSelectQueryFor(Entity entity) {
@@ -181,7 +198,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             Field field = fvt.get();
             Object value = fvt.getValue();
             Object persistedValue = ins.get(field);
-            --> here we have some problems with entityReferences assert value.equals(persistedValue);
+            --> here we have some problems withGeminiSearchString entityReferences assert value.equals(persistedValue);
         } */
     }
 
@@ -215,7 +232,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
         List<EntityRecord> recordsMatching = getRecordsMatching(entity, logicalKeyValues, transaction);
         int size = recordsMatching.size();
-        Assert.isTrue(recordsMatching.isEmpty() || size == 1, String.format("Logical Key must have 0 or 1 records found %s - Database is not consistent with schema", size));
+        Assert.isTrue(recordsMatching.isEmpty() || size == 1, String.format("Logical Key must have 0 or 1 records found %s - Database is not consistent withGeminiSearchString schema", size));
         return size == 0 ? Optional.empty() : Optional.of(recordsMatching.get(0));
     }
 
