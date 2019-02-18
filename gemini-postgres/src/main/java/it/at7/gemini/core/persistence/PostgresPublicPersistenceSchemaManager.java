@@ -461,7 +461,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     }
 
     private RuntimeException sqlTypeException(Field field) {
-        return new RuntimeException(String.format("Type %s for field %s not Assigned to any PostrgresType", field.getType(), field.getName()));
+        return new RuntimeException(String.format("SearchType %s for field %s not Assigned to any PostrgresType", field.getType(), field.getName()));
     }
 
     private enum OPE {

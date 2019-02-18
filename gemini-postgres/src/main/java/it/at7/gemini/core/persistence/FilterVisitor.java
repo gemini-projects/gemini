@@ -2,6 +2,7 @@ package it.at7.gemini.core.persistence;
 
 import cz.jirutka.rsql.parser.ast.*;
 import it.at7.gemini.exceptions.EntityFieldException;
+import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +11,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class FilterVisitor implements RSQLVisitor<String, Entity> {
 
-    private BasicFieldTypeFilterVisitor basicFieldTypeFilterVisitor;
+    private GeminiTypeFilterVisitor geminiTypeFileterVisitor;
 
     @Autowired
-    public FilterVisitor(BasicFieldTypeFilterVisitor basicFieldTypeFilterVisitor) {
-        this.basicFieldTypeFilterVisitor = basicFieldTypeFilterVisitor;
+    public FilterVisitor(GeminiTypeFilterVisitor geminiTypeFileterVisitor) {
+        this.geminiTypeFileterVisitor = geminiTypeFileterVisitor;
     }
 
     @Override
@@ -32,41 +33,11 @@ public class FilterVisitor implements RSQLVisitor<String, Entity> {
         String selector = node.getSelector();
         try {
             EntityField field = entity.getField(selector);
-            return visitEntityField(field, node);
+            return geminiTypeFileterVisitor.visit(field, node);
         } catch (EntityFieldException e) {
             // TODO strict filter ? pass Context instead of Entity
-            return "";
+            throw new GeminiRuntimeException("Filter Not Supported", e);
         }
-    }
-
-    private String visitEntityField(EntityField field, ComparisonNode node) {
-        switch (field.getType()) {
-            case PK:
-                break;
-            case TEXT:
-            case NUMBER:
-            case LONG:
-            case DOUBLE:
-            case BOOL:
-                return basicFieldTypeFilterVisitor.visit(field, node);
-            case TIME:
-                break;
-            case DATE:
-                break;
-            case DATETIME:
-                break;
-            case ENTITY_REF:
-                break;
-            case TRANSL_TEXT:
-                break;
-            case GENERIC_ENTITY_REF:
-                break;
-            case TEXT_ARRAY:
-                break;
-            case RECORD:
-                break;
-        }
-        throw new UnsupportedOperationException(String.format("Unsupported filter for %s", field.getType()));
     }
 
     private String iterateAndApplyOperator(String operator, LogicalNode node, Entity entity) {

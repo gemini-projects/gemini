@@ -23,7 +23,7 @@ public class EntityField extends Field {
         super(fieldType, fieldName, entityRefName);
         Assert.notNull(entity, "EntityField must have a not null entity");
         /* if (fieldType == FieldType.ENTITY_COLLECTION_REF) {
-            Assert.isTrue(!isLogicalKey, String.format("Field Type %s not supported as Entity logiacl key", FieldType.ENTITY_COLLECTION_REF.name()));
+            Assert.isTrue(!isLogicalKey, String.format("Field SearchType %s not supported as Entity logiacl key", FieldType.ENTITY_COLLECTION_REF.name()));
         } */
         this.isLogicalKey = isLogicalKey;
         this.entity = entity;

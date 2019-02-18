@@ -19,8 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static it.at7.gemini.api.RestAPIController.GEMINI_ACCEPT_TYPE;
 import static it.at7.gemini.api.RestAPIController.GEMINI_DATA_TYPE;
+import static it.at7.gemini.api.RestAPIController.GEMINI_HEADER;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -191,7 +191,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
 
         //==== basic object -- withGeminiSearchString default value -- gemini API data type
         mockMvc.perform(get(API_PATH + "/TestDataType/lk")
-                .header(GEMINI_ACCEPT_TYPE, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
                 .accept(APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())

@@ -1,46 +1,64 @@
 package it.at7.gemini.core;
 
 public class FilterContext {
-    private final String geminiSearchString;
-    private final String persistenceTypeSearchString;
+    private final String searchString;
+    private final SearchType searchType;
 
-    public FilterContext(String geminiSearchString,
-                         String persistenceTypeSearchString) {
-        this.geminiSearchString = geminiSearchString;
-        this.persistenceTypeSearchString = persistenceTypeSearchString;
+    public FilterContext(SearchType searchType, String searchString) {
+        this.searchType = searchType;
+        this.searchString = searchString;
     }
 
-    public String getGeminiSearchString() {
-        return geminiSearchString;
+    public String getSearchString() {
+        return searchString;
     }
 
-    public String getPersistenceTypeSearchString() {
-        return persistenceTypeSearchString;
+    public SearchType getSearchType() {
+        return searchType;
     }
+
+    // ============ static binding to builder ===========
+
+    public static FilterContext withGeminiSearchString(String searchString){
+        return new Builder().withGeminiSearchString(searchString).build();
+    }
+
+
+    // ======================
+
+    public enum SearchType {
+        GEMINI,
+        PERSISTENCE
+    }
+
+    // ============== BUILDER ========== //
 
     public static class Builder {
         private String searchString;
-        private String persistenceTypeSearchString;
+        private SearchType searchType;
 
         public Builder() {
         }
 
         public Builder withGeminiSearchString(String searchString) {
+            this.searchType = SearchType.GEMINI;
             this.searchString = searchString;
             return this;
         }
 
-        public Builder withPersistenceTypeSearchString(String persistenceTypeSearchString) {
-            this.persistenceTypeSearchString = persistenceTypeSearchString;
+        public Builder withPersistenceTypeSearchString(String searchString) {
+            this.searchType = SearchType.PERSISTENCE;
+            this.searchString = searchString;
             return this;
         }
 
         public FilterContext build() {
-            return new FilterContext(searchString, persistenceTypeSearchString);
+            return new FilterContext(searchType, searchString);
         }
     }
 
     public static Builder BUILDER() {
         return new Builder();
     }
+
 }

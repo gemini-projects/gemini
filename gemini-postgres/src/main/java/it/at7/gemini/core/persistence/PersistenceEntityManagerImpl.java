@@ -155,11 +155,17 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private void addFilterRequestTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
-        if (!filterContext.getGeminiSearchString().isEmpty()) {
-            Node rootNode = new RSQLParser().parse(filterContext.getGeminiSearchString());
-            String sqlFilter = rootNode.accept(filterVisitor, entity);
-            query.sql += "WHERE " + sqlFilter;
+        String sqlFilter = "";
+        FilterContext.SearchType searchType = filterContext.getSearchType();
+        if (searchType == FilterContext.SearchType.GEMINI) {
+            Node rootNode = new RSQLParser().parse(filterContext.getSearchString());
+            sqlFilter = rootNode.accept(filterVisitor, entity);
         }
+        if (searchType == FilterContext.SearchType.PERSISTENCE) {
+            sqlFilter += filterContext.getSearchString();
+        }
+        query.sql += "WHERE " + sqlFilter;
+
     }
 
     private String createSelectQuerySQLFor(Entity entity) {

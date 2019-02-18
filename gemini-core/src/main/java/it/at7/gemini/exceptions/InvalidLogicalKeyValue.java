@@ -13,6 +13,6 @@ public class InvalidLogicalKeyValue extends RuntimeException {
         return new InvalidLogicalKeyValue(String.format("Logical Key %s not found", key));
     }
 
-    public static final InvalidLogicalKeyValue INVALID_VALUE_TYPE = new InvalidLogicalKeyValue("Invalid value for Logical Key Type");
+    public static final InvalidLogicalKeyValue INVALID_VALUE_TYPE = new InvalidLogicalKeyValue("Invalid value for Logical Key SearchType");
 
 }
