@@ -15,13 +15,15 @@ import static it.at7.gemini.schema.FieldType.*;
 @Service
 public class FilterVisitor implements RSQLVisitor<String, Entity> {
     private static final GeminiTypeFilterVisitor BASIC_TYPE_FILTER = new BasicTypeFilterVisitor();
+    private static final GeminiTypeFilterVisitor ENTITY_REF_TYPE_FILTER = new EntityRefTypeFilterVisitor();
 
 
     Map<FieldType, GeminiTypeFilterVisitor> geminiTypeVisitors = Map.of(
             TEXT, BASIC_TYPE_FILTER,
             LONG, BASIC_TYPE_FILTER,
             DOUBLE, BASIC_TYPE_FILTER,
-            NUMBER, BASIC_TYPE_FILTER
+            NUMBER, BASIC_TYPE_FILTER,
+            ENTITY_REF, ENTITY_REF_TYPE_FILTER
     );
 
     @Override

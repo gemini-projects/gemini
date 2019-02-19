@@ -15,7 +15,7 @@ import java.util.Optional;
 public abstract class FilterEntityManagerAbsTest {
 
     @Test
-    public void n1_testSingleStringFilter() throws GeminiException {
+    public void n1_testStringFilter() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
         Entity fieldEntity = entityManager.getEntity("FIELD");
 
@@ -57,6 +57,42 @@ public abstract class FilterEntityManagerAbsTest {
         Assert.assertTrue(module.isPresent());
 
         // todo other operators ??
+    }
+
+
+    @Test
+    public void n2_testEntityRefFilter() throws GeminiException {
+        EntityManager entityManager = Services.getEntityManager();
+        Entity fieldEntity = entityManager.getEntity("FIELD");
+
+        // single search
+        FilterContext filterContext = FilterContext.withGeminiSearchString("entity == ENTITY"); // all fields for entity = Entity
+        List<EntityRecord> entityFields = entityManager.getRecordsMatching(fieldEntity, filterContext);
+        Assert.assertTrue(!entityFields.isEmpty());
+        for (EntityRecord field : entityFields) {
+            EntityReferenceRecord ererf = field.get("entity");
+            String name = ererf.getLogicalKeyRecord().get("name");
+            Assert.assertEquals("ENTITY", name);
+        }
+
+        // OR search
+        filterContext = FilterContext.withGeminiSearchString("entity == ENTITY or entity == FIELD"); // all fields with name = name or module
+        List<EntityRecord> entityOrFieldFields = entityManager.getRecordsMatching(fieldEntity, filterContext);
+        Assert.assertTrue(!entityOrFieldFields.isEmpty());
+        Assert.assertTrue(entityOrFieldFields.size() > entityFields.size());
+        Optional<EntityRecord> entity = entityOrFieldFields.stream().filter(f -> {
+            EntityReferenceRecord ererf = f.get("entity");
+            return ererf.getLogicalKeyRecord().get("name").equals("ENTITY");
+        }).findFirst();
+        Assert.assertTrue(entity.isPresent());
+        Optional<EntityRecord> field = entityOrFieldFields.stream().filter(f -> {
+            EntityReferenceRecord ererf = f.get("entity");
+            return ererf.getLogicalKeyRecord().get("name").equals("FIELD");
+        }).findFirst();
+        Assert.assertTrue(field.isPresent());
+
+
+
     }
 
 }
