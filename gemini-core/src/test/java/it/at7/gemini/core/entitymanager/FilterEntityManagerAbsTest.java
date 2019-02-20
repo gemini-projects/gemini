@@ -76,7 +76,7 @@ public abstract class FilterEntityManagerAbsTest {
         }
 
         // OR search
-        filterContext = FilterContext.withGeminiSearchString("entity == ENTITY or entity == FIELD"); // all fields with name = name or module
+        filterContext = FilterContext.withGeminiSearchString("entity == ENTITY or entity == FIELD"); // all fields of entity = Entity or Field
         List<EntityRecord> entityOrFieldFields = entityManager.getRecordsMatching(fieldEntity, filterContext);
         Assert.assertTrue(!entityOrFieldFields.isEmpty());
         Assert.assertTrue(entityOrFieldFields.size() > entityFields.size());
@@ -91,8 +91,28 @@ public abstract class FilterEntityManagerAbsTest {
         }).findFirst();
         Assert.assertTrue(field.isPresent());
 
+        // AND search
+        filterContext = FilterContext.withGeminiSearchString("entity == ENTITY and name == name"); // all fields with name = name and entity = entity
+        List<EntityRecord> nameFieldForEntity = entityManager.getRecordsMatching(fieldEntity, filterContext);
+        Assert.assertEquals(1, nameFieldForEntity.size());
 
+        // IN operator (same test as or)
+        filterContext = FilterContext.withGeminiSearchString("entity=in=(ENTITY,FIELD)"); // all fields of entity = Entity or Field
+        entityOrFieldFields = entityManager.getRecordsMatching(fieldEntity, filterContext);
+        Assert.assertTrue(!entityOrFieldFields.isEmpty());
+        Assert.assertTrue(entityOrFieldFields.size() > entityFields.size());
+        entity = entityOrFieldFields.stream().filter(f -> {
+            EntityReferenceRecord ererf = f.get("entity");
+            return ererf.getLogicalKeyRecord().get("name").equals("ENTITY");
+        }).findFirst();
+        Assert.assertTrue(entity.isPresent());
+        field = entityOrFieldFields.stream().filter(f -> {
+            EntityReferenceRecord ererf = f.get("entity");
+            return ererf.getLogicalKeyRecord().get("name").equals("FIELD");
+        }).findFirst();
+        Assert.assertTrue(field.isPresent());
 
+        // todo other operators ??
     }
 
 }
