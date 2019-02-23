@@ -26,7 +26,10 @@ export class GeminiFormComponent implements OnInit {
 
     ngOnInit() {
         this.formService.entitySchemaToForm(this.entityName)
-            .subscribe(fs => this.formStatus = fs)
+            .subscribe(fs => {
+                console.log(fs);
+                this.formStatus = fs
+            })
     }
 
     onSubmit(event) {

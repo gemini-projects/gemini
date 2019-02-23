@@ -14,5 +14,6 @@ public class Config implements WebMvcConfigurer {
         converters.add(0, new EntityRecordMessageConverter());
         converters.add(1, new EntityRecordListMessageConverter());
         converters.add(2, new EntityRecordApiTypeMessageConverter());
+        converters.add(3, new EntityRecordListApiMessageConverter());
     }
 }

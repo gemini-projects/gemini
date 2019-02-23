@@ -1,4 +1,4 @@
-<form [formGroup]="formStatus.formGroup" (submit)="onSubmit($event)">
+<form *ngIf="formStatus" [formGroup]="formStatus.formGroup" (submit)="onSubmit($event)">
 
     <div *ngFor="let fieldStatus of formStatus.fieldsStatus;">
         <form-field-container [fieldStatus]="fieldStatus"

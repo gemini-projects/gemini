@@ -6,11 +6,11 @@ export class FieldSchema {
     entity?: any;
     type: FieldType;
 
-    visibleStrategy: GeminiValueStrategy;
+    visibleStrategy?: GeminiValueStrategy;
     visible?: boolean;
-    modifiableStrategy: GeminiValueStrategy;
+    modifiableStrategy?: GeminiValueStrategy;
     modifiable?: boolean;
-    requiredStrategy: GeminiValueStrategy;
+    requiredStrategy?: GeminiValueStrategy;
     required?: boolean;
 }
 

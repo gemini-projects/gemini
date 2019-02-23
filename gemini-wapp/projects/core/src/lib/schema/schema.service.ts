@@ -1,10 +1,11 @@
 import {Injectable} from '@angular/core';
 import {EntitySchema} from "./entity-schema";
-import {FieldSchema} from "./field-schema";
-import {Observable} from "rxjs";
+import {FieldSchema, FieldType} from "./field-schema";
+import {Observable, of} from "rxjs";
 import {GeminiApiService} from "../api";
 import {map} from "rxjs/operators";
 import {EntityRecord} from "./EntityRecord";
+import {GeminiValueStrategy} from "./gemini-value-strategy";
 
 @Injectable({
     providedIn: 'root',
@@ -23,21 +24,81 @@ export class GeminiSchemaService {
         return this.apiService.getEntityRecord(GeminiSchemaService.ENTITY_NAME_OF_ENTITIES, entityName)
             .pipe(
                 map((entityRecord: EntityRecord) => {
-
+                    // entity schema is one to one with api data
                     return entityRecord.data as EntitySchema;
                 })
             );
-        // return of({name: "Entity", displayname: "ENNN"});
     }
 
     getEntityFields(entityName: string): Observable<FieldSchema[]> {
-        const search: string = `entity==${entityName}`;
+        const search: string = `entity==${entityName.toUpperCase()}`;
+
+
         return this.apiService.getEntitiesMatchingFilter(GeminiSchemaService.ENTITY_NAME_OF_FIELDS, search)
             .pipe(
-                map((entityRecord: EntityRecord[]) => {
+                map((entityRecord: EntityRecord) => {
+
+                    //entityRecord;
+                    console.log(entityRecord);
+
+                    let fieldsEntityRec = entityRecord.data as EntityRecord[];
 
 
-                    return [] as FieldSchema[];
+                    let fielsSchemas : FieldSchema[] = fieldsEntityRec.map<FieldSchema>(fsr => {
+                        return fsr.data as FieldSchema
+                    });
+
+                    console.log(fielsSchemas);
+
+                    return fielsSchemas;
+
+                    // return [] as FieldSchema[ return [{
+                    //                         name: "required text",
+                    //                         type: FieldType.TEXT,
+                    //                         requiredStrategy: GeminiValueStrategy.SIMPLE,
+                    //                         visibleStrategy: GeminiValueStrategy.SIMPLE,
+                    //                         modifiableStrategy: GeminiValueStrategy.SIMPLE,
+                    //                         required: true,
+                    //                         visible: true
+                    //                     }, {
+                    //                         name: "not required Long",
+                    //                         type: FieldType.LONG,
+                    //                         requiredStrategy: GeminiValueStrategy.SIMPLE,
+                    //                         visibleStrategy: GeminiValueStrategy.SIMPLE,
+                    //                         modifiableStrategy: GeminiValueStrategy.SIMPLE,
+                    //                         visible: true
+                    //                     }, {
+                    //                         name: "not required Double",
+                    //                         type: FieldType.DOUBLE,
+                    //                         requiredStrategy: GeminiValueStrategy.SIMPLE,
+                    //                         visibleStrategy: GeminiValueStrategy.SIMPLE,
+                    //                         modifiableStrategy: GeminiValueStrategy.SIMPLE,
+                    //                         visible: true
+                    //                     }];];
+
+                    /* return [{
+                        name: "required text",
+                        type: FieldType.TEXT,
+                        requiredStrategy: GeminiValueStrategy.SIMPLE,
+                        visibleStrategy: GeminiValueStrategy.SIMPLE,
+                        modifiableStrategy: GeminiValueStrategy.SIMPLE,
+                        required: true,
+                        visible: true
+                    }, {
+                        name: "not required Long",
+                        type: FieldType.LONG,
+                        requiredStrategy: GeminiValueStrategy.SIMPLE,
+                        visibleStrategy: GeminiValueStrategy.SIMPLE,
+                        modifiableStrategy: GeminiValueStrategy.SIMPLE,
+                        visible: true
+                    }, {
+                        name: "not required Double",
+                        type: FieldType.DOUBLE,
+                        requiredStrategy: GeminiValueStrategy.SIMPLE,
+                        visibleStrategy: GeminiValueStrategy.SIMPLE,
+                        modifiableStrategy: GeminiValueStrategy.SIMPLE,
+                        visible: true
+                    }]; */
                 }));
 
         /* return of([{

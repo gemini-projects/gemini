@@ -6,7 +6,7 @@ import java.util.Collection;
 
 class GeminiWrappers {
     public static class EntityRecordsList {
-        Collection<EntityRecord> records;
+        private Collection<EntityRecord> records;
 
         public EntityRecordsList(Collection<EntityRecord> records) {
             this.records = records;

@@ -28,10 +28,15 @@ public class EntityRecordApiTypeMessageConverter extends MappingJackson2HttpMess
     protected void writeInternal(Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         GeminiWrappers.EntityRecordApiType record = GeminiWrappers.EntityRecordApiType.class.cast(object);
         EntityRecord entityRecord = record.get();
+        Map<String, Object> results = createGeminiApiEntityRecordMap(entityRecord);
+        super.writeInternal(results, type, outputMessage);
+    }
+
+    public static Map<String, Object> createGeminiApiEntityRecordMap(EntityRecord entityRecord) {
         Map<String, Object> results = new HashMap<>();
         Map<String, Object> recordMap = RecordConverters.toJSONMap(entityRecord);
         results.put("meta", "__TODOOOO___meta_data_here____");
         results.put("data", recordMap);
-        super.writeInternal(results, type, outputMessage);
+        return results;
     }
 }

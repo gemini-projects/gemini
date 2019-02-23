@@ -43,7 +43,7 @@ export class GeminiApiService {
         return new HttpHeaders(GeminiApiService.DEFAULT_HTTP_HEADERS);
     }
 
-    public getEntitiesMatchingFilter(entityName: string, searchValue: any): Observable<any> {
+    public getEntitiesMatchingFilter(entityName: string, searchValue: any): Observable<EntityRecord> {
         const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
         let httpParams = new HttpParams()
             .set(this.configService.SEARCH_PARAMETER, searchValue);
