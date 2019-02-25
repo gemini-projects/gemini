@@ -194,12 +194,15 @@ public class RestAPIController {
         return entityManager.get(e, logicalKeyValue);
     } */
 
-    private Entity checkEntity(String entity) throws EntityException {
-        Entity m = entityManager.getEntity(entity);
-        if (m == null) {
-            throw EntityException.ENTITY_NOT_FOUND(entity.toUpperCase());
+    private Entity checkEntity(String entityStr) throws EntityException {
+        Entity entity = entityManager.getEntity(entityStr);
+        if (entity == null) {
+            throw EntityException.ENTITY_NOT_FOUND(entityStr.toUpperCase());
         }
-        return m;
+        if (entity.isEmbedable()) {
+            throw EntityException.API_NOT_ALLOWED_ON_EMBEDABLE(entityStr.toUpperCase());
+        }
+        return entity;
     }
 
     private void ensurePathsAreConsistent(List<String> paths, Entity e) {

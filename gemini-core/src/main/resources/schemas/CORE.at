@@ -8,6 +8,7 @@ INTERFACE Domain {
 ENTITY Entity {
     TEXT            name *
     TEXT            module
+    BOOL            embedable
     TRANSL_TEXT     displayName
 }
 
@@ -18,6 +19,22 @@ ENTITY Field {
     Entity          refEntity
     BOOL            isLogicalKey
     TRANSL_TEXT     displayName
+    FieldEvents     events
+}
+
+ENTITY EventType IMPLEMENTS Domain
+
+ENTITY EMBEDABLE FieldControlEvent {
+    EventType      eventType
+    BOOL           value
+}
+
+ENTITY EMBEDABLE FieldEvents   {
+    # [Field]             dependencies
+    FieldControlEvent   visible
+    FieldControlEvent   modifiable
+    FieldControlEvent   required
+    EventType           valueEventType
 }
 
 ENTITY InitRecord {
@@ -36,8 +53,6 @@ ENTITY Translation {
     TEXT            value
 }
 
-
-ENTITY ValueStrategy IMPLEMENTS Domain
 
 ENTITY FieldResolution {
     Field   field *

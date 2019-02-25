@@ -270,6 +270,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
         //==== basic object -- withGeminiSearchString default value
         mockMvc.perform(delete(API_PATH + "/TestDataType/lk")
                 .accept(APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':100, 'date':''}", false)); // TODO need strict true
@@ -281,6 +282,7 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
         //==== delete a domain and query the object that refers it
         mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
                 .accept(APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'code':'dm2'}"));

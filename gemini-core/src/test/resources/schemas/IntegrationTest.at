@@ -29,3 +29,23 @@ ENTITY TestDataTypeWithHierachy {
     TestDomainHierarchy dmHierarchy
 }
 
+ENTITY EMBEDABLE EmbedableEntity {
+    TEXT            text
+    NUMBER          numberLong
+    NUMBER          numberDouble
+    DOUBLE          double
+    LONG            long
+    BOOL            bool
+    DATE            date
+    TIME            time
+    TRANSL_TEXT     transl_text
+    DATETIME        datetime
+    TestDomain1     domain1
+    [TEXT]          textArray
+}
+
+ENTITY TestDataTypeEmbeded {
+    TEXT code *
+    EmbedableEntity embeded
+}
+

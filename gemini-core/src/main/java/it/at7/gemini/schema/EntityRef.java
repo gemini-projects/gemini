@@ -5,5 +5,6 @@ public interface EntityRef {
     class FIELDS {
         public static final String NAME = "name";
         public static final String MODULE = "module";
+        public static final String EMBEDABLE = "embedable";
     }
 }

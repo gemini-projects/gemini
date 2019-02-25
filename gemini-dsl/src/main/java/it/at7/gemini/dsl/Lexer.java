@@ -10,6 +10,7 @@ public class Lexer {
     public enum TokenType {
         INTERFACE("INTERFACE"),
         ENTITY("ENTITY"),
+        EMBEDABLE("EMBEDABLE"),
         IMPLEMENTS("IMPLEMENTS"),
         L_BRACE("{"),
         R_BRACE("}"),

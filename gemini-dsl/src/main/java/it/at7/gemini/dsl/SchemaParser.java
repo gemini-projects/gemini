@@ -41,6 +41,10 @@ public class SchemaParser {
     private RawEntity parseEntity() throws SyntaxError {
         RawEntityBuilder builder = new RawEntityBuilder();
         nextToken();
+        if (currentToken.equals(EMBEDABLE)) {
+            builder.isEmbedable();
+            nextToken();
+        }
         expect(TokenType.WORD);
         builder.addName(lexer.getVal());
         nextToken();

@@ -27,7 +27,7 @@ public class SchemaParserTest {
         Set<RawEntity> rawEntities = rawSchema.getRawEntities();
         assertEquals(2, rawEntities.size());
 
-        Map<String, RawEntity> rawModelsByName = rawSchema.getRawEntitisByName();
+        Map<String, RawEntity> rawModelsByName = rawSchema.getRawEntitiesByName();
         RawEntity user = rawModelsByName.get("USER");
         Optional<RawEntity.Entry> code = user.getEntries().stream().filter(RawEntity.Entry::isLogicalKey).findAny();
         assertTrue(code.isPresent());
@@ -53,12 +53,34 @@ public class SchemaParserTest {
         Set<RawEntity> rawEntityInterfaces = rawSchema.getRawEntityInterfaces();
         assertEquals(1, rawEntityInterfaces.size());
 
-        Map<String, RawEntity> rawModelsByName = rawSchema.getRawEntitisByName();
+        Map<String, RawEntity> rawModelsByName = rawSchema.getRawEntitiesByName();
         RawEntity user = rawModelsByName.get("TEST");
         Optional<RawEntity.Entry> test = user.getEntries().stream().filter(RawEntity.Entry::isLogicalKey).findAny();
         assertTrue(test.isPresent());
         RawEntity.Entry entry = test.get();
         assertEquals("test", entry.getName());
+    }
+
+
+    @Test
+    public void testEmbedableEntityParse() throws SyntaxError {
+        String dsl = "ENTITY EMBEDABLE Embedable {" +
+                "   TEXT    code " +
+                " NUMBER    value" +
+                " }" +
+                " " +
+                " ENTITY TestEmb  {" +
+                "   TEXT test *" +
+                "   Embedable embeded" +
+                " }";
+        StringReader reader = new StringReader(dsl);
+        RawSchema rawSchema = SchemaParser.parse(reader);
+        Set<RawEntity> rawEntities = rawSchema.getRawEntities();
+        assertEquals(2, rawEntities.size());
+
+        Map<String, RawEntity> rawEntitisByName = rawSchema.getRawEntitiesByName();
+        RawEntity embedable = rawEntitisByName.get("EMBEDABLE");
+        assertTrue(embedable.isEmbedable());
     }
 
 }

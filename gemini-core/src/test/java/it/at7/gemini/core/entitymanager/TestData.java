@@ -31,4 +31,12 @@ public class TestData {
         return entityRecord;
     }
 
+    public static EntityRecord getEmbedable_singlelk_EntityRecord(String domainLogicalKey){
+        SchemaManager schemaManager = Services.getSchemaManager();
+        Entity et = schemaManager.getEntity("TestDataTypeEmbeded");
+        EntityRecord entityRecord = new EntityRecord(et);
+        entityRecord.put("code", domainLogicalKey);
+        return entityRecord;
+    }
+
 }

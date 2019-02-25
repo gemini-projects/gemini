@@ -26,13 +26,15 @@ public class Entity {
     private final LogicalKey logicalKey;
     private final EntityField idField;
     private final Map<String, EntityField> schemaMapFields;
+    private final boolean embedable;
     private Object idValue;
 
-    public Entity(Module module, String name, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
+    public Entity(Module module, String name, boolean embedable, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
         Assert.notNull(module, "Module must be not null");
         Assert.notNull(name, "Entity name must be not null");
         this.module = module;
         this.name = name;
+        this.embedable = embedable;
         this.defaultRecord = defaultRecord == null ? new HashMap<>() : (Map<String, Object>) defaultRecord;
         fieldsBuilders.forEach(f -> f.setEntity(this));
         this.schemaFields = fieldsBuilders.stream().map(EntityFieldBuilder::build).collect(toSet());
@@ -66,6 +68,10 @@ public class Entity {
 
     public Module getModule() {
         return module;
+    }
+
+    public boolean isEmbedable() {
+        return embedable;
     }
 
     public EntityField getField(String fieldName) throws EntityFieldException {
@@ -102,6 +108,7 @@ public class Entity {
         Map<String, Object> values = copyDefaultRecord();
         values.put("name", name);
         values.put("module", module.getName());
+        values.put("embedable", embedable );
         Entity entity = Services.getSchemaManager().getEntity(ENTITY);
         assert entity != null;
         return RecordConverters.entityRecordFromMap(entity, values);
@@ -127,13 +134,14 @@ public class Entity {
         if (o == null || getClass() != o.getClass()) return false;
         Entity entity = (Entity) o;
         return Objects.equals(module, entity.module) &&
-                Objects.equals(name, entity.name);
+                Objects.equals(name, entity.name) &&
+                Objects.equals(embedable, entity.embedable);
     }
 
     @Override
     public int hashCode() {
         // no ID Value / Fields in Equals
-        return Objects.hash(module, name);
+        return Objects.hash(module, name, embedable);
     }
 
     private Map<String, Object> copyDefaultRecord() {

@@ -16,14 +16,6 @@ public class Field {
     private final String entityRefName;
     //private final String entityCollectionRefField;
 
-
-    public Field(Field field) {
-        this.fieldType = field.fieldType;
-        this.fieldName = field.fieldName;
-        this.entityRefName = field.entityRefName;
-        // this.entityCollectionRefField = field.entityCollectionRefField;
-    }
-
     public Field(FieldType fieldType, String fieldName) {
         this(fieldType, fieldName, null);
     }

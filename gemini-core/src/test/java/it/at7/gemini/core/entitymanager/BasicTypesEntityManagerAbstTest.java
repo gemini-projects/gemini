@@ -27,7 +27,11 @@ public abstract class BasicTypesEntityManagerAbstTest {
         // put withGeminiSearchString a simple logical key (string) -- others values are default
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
-        assertEquals("logKey", testEntity.get("text")); // real field
+        testDefaulValues(testEntity, "logKey");
+    }
+
+    public static void testDefaulValues(EntityRecord testEntity, String lk){
+        assertEquals(lk, testEntity.get("text")); // real field
         assertEquals("", testEntity.get("transl_text")); // real field
         assertEquals(0, (long) testEntity.get("numberLong")); // default
         assertEquals(0, (long) testEntity.get("numberDouble")); // default

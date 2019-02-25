@@ -8,10 +8,7 @@ import it.at7.gemini.dsl.entities.RawEntity;
 import it.at7.gemini.dsl.entities.RawSchema;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
-import it.at7.gemini.schema.Entity;
-import it.at7.gemini.schema.EntityField;
-import it.at7.gemini.schema.Field;
-import it.at7.gemini.schema.FieldType;
+import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.entityType;
 import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.oneToOneType;
 import static java.util.stream.Collectors.toList;
 
@@ -30,12 +28,16 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     private static final Logger logger = LoggerFactory.getLogger(PostgresPublicPersistenceSchemaManager.class);
 
     @Override
-    public void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, SQLException, IOException {
-        TransactionImpl transactionImpl = (TransactionImpl) transaction;
-        for (Module module : modules.values()) {
-            if (module.editable()) {
-                synchronizeRuntimeModules((RuntimeModule) module, transactionImpl);
+    public void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, IOException {
+        try {
+            TransactionImpl transactionImpl = (TransactionImpl) transaction;
+            for (Module module : modules.values()) {
+                if (module.editable()) {
+                    synchronizeRuntimeModules((RuntimeModule) module, transactionImpl);
+                }
             }
+        } catch (SQLException e) {
+            throw GeminiGenericException.wrap(e);
         }
     }
 
@@ -52,48 +54,61 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     }
 
     @Override
-    public void deleteUnnecessaryEntites(Collection<Entity> entities, Transaction transaction) throws SQLException {
-        TransactionImpl transactionImpl = (TransactionImpl) transaction;
-        // NB - we are using fields that should be existed in entity/fields (generalize ? )
-        List<Long> entitiesID = entities.stream().map(Entity::getIDValue).map(Long.class::cast).collect(toList());
-        String sql = String.format("SELECT name FROM entity WHERE %s NOT IN (:ids)", Field.ID_NAME);
-        HashMap<String, Object> parameters = new HashMap<>();
-        parameters.put("ids", entitiesID);
-        transactionImpl.executeQuery(sql, parameters, rs -> {
-            while (rs.next()) {
-                String name = rs.getString(1);
-                transactionImpl.executeUpdate(String.format("DROP TABLE IF EXISTS %s", name));
-            }
-        });
-        String deleteEntitiesSql = String.format("DELETE FROM entity WHERE %s NOT IN (:ids)", Field.ID_NAME);
-        String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE entity NOT IN (:ids)");
-        transactionImpl.executeUpdate(deleteEntitiesSql, parameters);
-        transactionImpl.executeUpdate(deleteEntitiesFieldsSql, parameters);
-    }
-
-    @Override
-    public boolean entityStorageExists(Entity entity, Transaction transaction) throws SQLException, GeminiException {
-        TransactionImpl transactionImpl = (TransactionImpl) transaction;
-        return entityStorageExists(entity.getName(), transactionImpl);
-    }
-
-    @Override
-    public void deleteUnnecessaryFields(Entity entity, Set<EntityField> fields, Transaction transaction) throws SQLException {
-        TransactionImpl transactionImpl = (TransactionImpl) transaction;
-        List<Long> fieldsID = fields.stream().map(EntityField::getIDValue).map(Long.class::cast).collect(toList());
-        if (!fieldsID.isEmpty()) {
-            String sql = String.format("SELECT name FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
+    public void deleteUnnecessaryEntites(Collection<Entity> entities, Transaction transaction) throws GeminiException {
+        try {
+            TransactionImpl transactionImpl = (TransactionImpl) transaction;
+            // NB - we are using fields that should be existed in entity/fields (generalize ? )
+            List<Long> entitiesID = entities.stream().map(Entity::getIDValue).map(Long.class::cast).collect(toList());
+            String sql = String.format("SELECT name FROM entity WHERE %s NOT IN (:ids)", Field.ID_NAME);
             HashMap<String, Object> parameters = new HashMap<>();
-            parameters.put("ids", fieldsID);
-            parameters.put("entityId", entity.getIDValue());
+            parameters.put("ids", entitiesID);
             transactionImpl.executeQuery(sql, parameters, rs -> {
                 while (rs.next()) {
-                    String columnName = rs.getString(1);
-                    transactionImpl.executeUpdate(String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s", entity.getName(), columnName));
+                    String name = rs.getString(1);
+                    transactionImpl.executeUpdate(String.format("DROP TABLE IF EXISTS %s", name));
                 }
             });
-            String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
+            String deleteEntitiesSql = String.format("DELETE FROM entity WHERE %s NOT IN (:ids)", Field.ID_NAME);
+            String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE entity NOT IN (:ids)");
+            transactionImpl.executeUpdate(deleteEntitiesSql, parameters);
             transactionImpl.executeUpdate(deleteEntitiesFieldsSql, parameters);
+        } catch (SQLException e) {
+            logger.error("deleteUnnecessaryEntites Failed", e);
+            throw new GeminiGenericException(e);
+        }
+    }
+
+    @Override
+    public boolean entityStorageExists(Entity entity, Transaction transaction) throws GeminiException {
+        TransactionImpl transactionImpl = (TransactionImpl) transaction;
+        try {
+            return entityStorageExists(entity.getName(), transactionImpl);
+        } catch (SQLException e) {
+            throw GeminiGenericException.wrap(e);
+        }
+    }
+
+    @Override
+    public void deleteUnnecessaryFields(Entity entity, Set<EntityField> fields, Transaction transaction) throws GeminiException {
+        try {
+            TransactionImpl transactionImpl = (TransactionImpl) transaction;
+            List<Long> fieldsID = fields.stream().map(EntityField::getIDValue).map(Long.class::cast).collect(toList());
+            if (!fieldsID.isEmpty()) {
+                String sql = String.format("SELECT name FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
+                HashMap<String, Object> parameters = new HashMap<>();
+                parameters.put("ids", fieldsID);
+                parameters.put("entityId", entity.getIDValue());
+                transactionImpl.executeQuery(sql, parameters, rs -> {
+                    while (rs.next()) {
+                        String columnName = rs.getString(1);
+                        transactionImpl.executeUpdate(String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s", entity.getName(), columnName));
+                    }
+                });
+                String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
+                transactionImpl.executeUpdate(deleteEntitiesFieldsSql, parameters);
+            }
+        } catch (SQLException e) {
+            throw GeminiGenericException.wrap(e);
         }
     }
 
@@ -152,8 +167,9 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 Set<RawEntity> rawEntities = new HashSet<>();
                 transaction.executeQuery(entitySql, params, rs -> {
                     while (rs.next()) {
-                        long entityId = rs.getLong(1);
-                        String entityName = rs.getString(2);
+                        long entityId = rs.getLong(Field.ID_NAME);
+                        String entityName = rs.getString(EntityRef.FIELDS.NAME);
+                        boolean embedable = rs.getBoolean(EntityRef.FIELDS.EMBEDABLE);
                         String fieldSql = String.format("SELECT * FROM field WHERE entity = " + entityId);
                         List<RawEntity.Entry> entires = new ArrayList<>();
                         transaction.executeQuery(fieldSql, rsF -> {
@@ -161,7 +177,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                                 entires.add(new RawEntity.Entry(rsF.getString("type"), rsF.getString("name"), rsF.getBoolean("islogicalkey")));
                             }
                         });
-                        rawEntities.add(new RawEntity(entityName, entires, Collections.EMPTY_LIST)); // TODO interface on runtime
+                        rawEntities.add(new RawEntity(entityName, embedable, entires, Collections.EMPTY_LIST)); // TODO interface on runtime
                     }
                 });
                 RawSchema rawSchema = new RawSchema(rawEntities);
@@ -170,7 +186,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         }
     }
 
-    private boolean entityStorageExists(String name, TransactionImpl transaction) throws SQLException, GeminiException {
+    private boolean entityStorageExists(String name, TransactionImpl transaction) throws GeminiException, SQLException {
         // we use raw jdbc connection
         String sqlTableExists = "" +
                 "   SELECT EXISTS ( " +
@@ -185,7 +201,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         return transaction.executeQuery(sqlTableExists, parameters, this::exists);
     }
 
-    private void createEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException {
+    private void createEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException, GeminiException {
         logger.info("{}: creating Entity {}", entity.getModule().getName(), entity.getName());
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("CREATE TABLE " + entity.getName().toLowerCase() + " ( ");
@@ -203,7 +219,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     }
 
 
-    private void updateEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException {
+    private void updateEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException, GeminiException {
         logger.info("{}: check/update Fields for {}", entity.getModule().getName(), entity.getName());
         for (EntityField field : entity.getSchemaEntityFields()) {
             if (typeNotNeedColumns(field.getType())) {
@@ -250,7 +266,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         }
     }
 
-    private void checkOrCreatePKDomainForModel(String modelName, TransactionImpl transaction) throws SQLException {
+    private void checkOrCreatePKDomainForModel(String modelName, TransactionImpl transaction) throws SQLException, GeminiException {
         String sqlDomainExists = "" +
                 "   SELECT EXISTS ( " +
                 "       SELECT 1" +
@@ -268,7 +284,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         });
     }
 
-    private void checkOrCreteLogicalKeyUniqueIndex(String name, Entity.LogicalKey logicalKey, TransactionImpl transaction) throws SQLException {
+    private void checkOrCreteLogicalKeyUniqueIndex(String name, Entity.LogicalKey logicalKey, TransactionImpl transaction) throws SQLException, GeminiException {
         String indexName = "LK_Unique_" + name.toLowerCase();
         String sdlIndexExist = "select" +
                 "    t.relname as table_name," +
@@ -332,7 +348,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         return modelName.toLowerCase() + "_pk";
     }
 
-    private void checkOrUpdateBasicTypeColumn(Entity entity, Field field, TransactionImpl transaction) throws SQLException {
+    private void checkOrUpdateBasicTypeColumn(Entity entity, Field field, TransactionImpl transaction) throws SQLException, GeminiException {
         String sqlColumnsCheck = "" +
                 "   SELECT *" +
                 "   FROM information_schema.columns" +
@@ -414,7 +430,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
 
     private String field(Field field, boolean isAlterColumn) {
         FieldType type = field.getType();
-        if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
+        if (oneToOneType(type) || entityType(type)) {
             return field.getName().toLowerCase() + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
         }
         throw new RuntimeException(String.format("%s - Field od type %s Not Implemented", field.getName(), field.getType())); // TODO
@@ -425,7 +441,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
             return field.getName().toLowerCase();
         }
-        throw new RuntimeException(String.format("%s - Field Not Implemented", field.getName())); // TODO
+        throw new RuntimeException(String.format("%s - Unique Field Not Implemented", field.getName()));
     }
 
     private String getSqlPrimitiveType(Field field) {
@@ -450,6 +466,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case DATETIME:
                 return "TIMESTAMP";
             case ENTITY_REF:
+            case ENTITY_EMBEDED:
                 Entity entityRef = field.getEntityRef();
                 return pkForeignKeyDomainFromModel(entityRef.getName()); // it is also a domain
             case TEXT_ARRAY:
@@ -466,6 +483,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
 
     private enum OPE {
         UPDATE,
-        DELETE
+        DELETE;
     }
 }

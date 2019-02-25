@@ -15,7 +15,7 @@ import java.util.Set;
 
 public interface PersistenceSchemaManager {
 
-    void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, SQLException, IOException;
+    void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, IOException;
 
     default void handleSchemaStorage(Transaction transaction, Entity entity) throws GeminiException {
         handleSchemaStorage(transaction, List.of(entity));
@@ -23,12 +23,12 @@ public interface PersistenceSchemaManager {
 
     void handleSchemaStorage(Transaction transaction, Collection<Entity> entities) throws GeminiException;
 
-    void deleteUnnecessaryEntites(Collection<Entity> entities, Transaction transaction) throws SQLException;
+    void deleteUnnecessaryEntites(Collection<Entity> entities, Transaction transaction) throws GeminiException;
 
-    void deleteUnnecessaryFields(Entity entity, Set<EntityField> fields, Transaction transaction) throws SQLException;
+    void deleteUnnecessaryFields(Entity entity, Set<EntityField> fields, Transaction transaction) throws GeminiException;
 
-    void invokeCreateEntityStorageBefore(Entity entity, Transaction transaction) throws SQLException, GeminiException;
+    void invokeCreateEntityStorageBefore(Entity entity, Transaction transaction) throws GeminiException;
 
-    boolean entityStorageExists(Entity entity, Transaction transaction) throws SQLException, GeminiException;
+    boolean entityStorageExists(Entity entity, Transaction transaction) throws  GeminiException;
 
 }

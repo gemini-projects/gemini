@@ -39,7 +39,7 @@ public class RawSchema {
         return rawEntityInterfaces;
     }
 
-    public Map<String, RawEntity> getRawEntitisByName() {
+    public Map<String, RawEntity> getRawEntitiesByName() {
         return getRawEntities().stream().collect(Collectors.toMap(RawEntity::getName, e -> e));
     }
 

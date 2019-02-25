@@ -6,17 +6,23 @@ import java.util.Objects;
 
 public class RawEntity {
     private final String name;
+    private final boolean embedable;
     private final List<Entry> entries;
     private List<String> implementsIntefaces;
 
-    public RawEntity(String name, List<Entry> entries, List<String> implementsIntefaces) {
+    public RawEntity(String name, boolean embedable, List<Entry> entries, List<String> implementsIntefaces) {
         this.name = name;
+        this.embedable = embedable;
         this.entries = Collections.unmodifiableList(entries);
         this.implementsIntefaces = Collections.unmodifiableList(implementsIntefaces);
     }
 
     public String getName() {
         return name;
+    }
+
+    public boolean isEmbedable() {
+        return embedable;
     }
 
     public List<Entry> getEntries() {
@@ -32,7 +38,7 @@ public class RawEntity {
         StringBuilder stB = new StringBuilder();
         stB.append("ENTITY ");
         stB.append(name);
-        if(!implementsIntefaces.isEmpty()){
+        if (!implementsIntefaces.isEmpty()) {
             stB.append(" IMPLEMENTS ");
             implementsIntefaces.forEach(i -> {
                 stB.append("\t");

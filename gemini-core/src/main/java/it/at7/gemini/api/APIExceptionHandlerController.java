@@ -32,6 +32,7 @@ public class APIExceptionHandlerController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception exception) {
+
         return new ResponseEntity<>(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "CRITICAL_EXCEPTION", exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

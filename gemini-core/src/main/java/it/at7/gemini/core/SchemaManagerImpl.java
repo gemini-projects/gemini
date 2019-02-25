@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import static it.at7.gemini.schema.FieldType.ENTITY_EMBEDED;
 import static it.at7.gemini.schema.FieldType.ENTITY_REF;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
@@ -114,7 +115,7 @@ public class SchemaManagerImpl implements SchemaManager {
         RawSchema rawSchema = schemas.get(module);
         RuntimeModule rtm = RuntimeModule.class.cast(module);
         List<RawEntity.Entry> entries = entity.getSchemaEntityFields().stream().map(ef -> new RawEntity.Entry(ef.getType().name(), ef.getName(), ef.isLogicalKey())).collect(toList());
-        rawSchema.addOrUpdateRawEntity(new RawEntity(entity.getName(), entries, Collections.EMPTY_LIST));
+        rawSchema.addOrUpdateRawEntity(new RawEntity(entity.getName(), false /**/, entries, Collections.EMPTY_LIST));
         entities.putIfAbsent(entity.getName(), entity);
         try {
             rawSchema.persist(rtm.getSchemaLocation());
@@ -310,6 +311,8 @@ public class SchemaManagerImpl implements SchemaManager {
             Entity entity = entityBuilder.build();
             entities.put(entityBuilder.getName(), entity);
         }
+
+        // TODO CHECK embeded fields should not be logicalKey
         return entities;
     }
 
@@ -330,7 +333,12 @@ public class SchemaManagerImpl implements SchemaManager {
             // try to get a static reference for entity
             EntityBuilder entityForType = entityBuilders.get(type);
             if (entityForType != null) {
-                entityBuilder.addField(ENTITY_REF, entry, entityForType.getName());
+                boolean embedable = entityForType.getRawEntity().isEmbedable();
+                if(!embedable) {
+                    entityBuilder.addField(ENTITY_REF, entry, entityForType.getName());
+                } else {
+                    entityBuilder.addField(ENTITY_EMBEDED, entry, entityForType.getName());
+                }
                 return;
             }
 

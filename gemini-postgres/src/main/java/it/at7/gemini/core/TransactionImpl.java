@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
+import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterUtils;
 import org.springframework.jdbc.core.namedparam.ParsedSql;
@@ -19,7 +21,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -104,11 +105,11 @@ public class TransactionImpl implements Transaction {
         }
     }
 
-    public void executeQuery(String sql, CallbackThrowingSqlException<ResultSet> callback) throws SQLException {
+    public void executeQuery(String sql, CallbackThrowingSqlException<ResultSet> callback) throws GeminiException, SQLException {
         executeQuery(sql, null, callback);
     }
 
-    public void executeQuery(String sql, @Nullable Map<String, Object> parameters, CallbackThrowingSqlException<ResultSet> callback) throws SQLException {
+    public void executeQuery(String sql, @Nullable Map<String, Object> parameters, CallbackThrowingSqlException<ResultSet> callback) throws GeminiException, SQLException {
         try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
             ResultSet resultSet = ps.executeQuery();
             callback.accept(resultSet);
@@ -147,7 +148,7 @@ public class TransactionImpl implements Transaction {
 
     @FunctionalInterface
     public interface CallbackThrowingSqlException<T> {
-        void accept(T t) throws SQLException;
+        void accept(T t) throws SQLException, GeminiException;
     }
 
 

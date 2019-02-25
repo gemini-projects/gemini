@@ -52,7 +52,7 @@ public class UnitTestConfiguration {
     public PersistenceSchemaManager persistenceSchemaManager() {
         return new PersistenceSchemaManager() {
             @Override
-            public void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, SQLException, IOException {
+            public void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, IOException {
 
             }
 
@@ -62,22 +62,22 @@ public class UnitTestConfiguration {
             }
 
             @Override
-            public void deleteUnnecessaryEntites(Collection<Entity> entities, Transaction transaction) throws SQLException {
+            public void deleteUnnecessaryEntites(Collection<Entity> entities, Transaction transaction) throws GeminiException {
 
             }
 
             @Override
-            public void deleteUnnecessaryFields(Entity entity, Set<EntityField> fields, Transaction transaction) throws SQLException {
+            public void deleteUnnecessaryFields(Entity entity, Set<EntityField> fields, Transaction transaction) throws GeminiException {
 
             }
 
             @Override
-            public void invokeCreateEntityStorageBefore(Entity entity, Transaction transaction) throws SQLException, GeminiException {
+            public void invokeCreateEntityStorageBefore(Entity entity, Transaction transaction) throws GeminiException {
 
             }
 
             @Override
-            public boolean entityStorageExists(Entity entity, Transaction transaction) throws SQLException, GeminiException {
+            public boolean entityStorageExists(Entity entity, Transaction transaction) throws GeminiException {
                 return true;
             }
         };
@@ -210,13 +210,15 @@ public class UnitTestConfiguration {
                 for (EntityField entityReferenceField : entityReferenceFields) {
                     Entity refEntity = entityReferenceField.getEntity();
                     Map<Key, EntityRecord> entityRefStore = store.get(refEntity.getName().toUpperCase());
-                    for (EntityRecord refERec : entityRefStore.values()) {
-                        EntityReferenceRecord eref = refERec.get(entityReferenceField);
-                        if (eref != null) {
-                            if (eref.getLogicalKeyRecord() != null &&
-                                    eref.getLogicalKeyRecord().getFieldValues()
-                                            .equals(RecordConverters.dynamicRecordFromMap(entity.getLogicalKey().getLogicalKeySet(), key.primitiveKey).getFieldValues())) {
-                                refERec.put(entityReferenceField, record);
+                    if (entityRefStore != null) {
+                        for (EntityRecord refERec : entityRefStore.values()) {
+                            EntityReferenceRecord eref = refERec.get(entityReferenceField);
+                            if (eref != null) {
+                                if (eref.getLogicalKeyRecord() != null &&
+                                        eref.getLogicalKeyRecord().getFieldValues()
+                                                .equals(RecordConverters.dynamicRecordFromMap(entity.getLogicalKey().getLogicalKeySet(), key.primitiveKey).getFieldValues())) {
+                                    refERec.put(entityReferenceField, record);
+                                }
                             }
                         }
                     }
@@ -244,28 +246,30 @@ public class UnitTestConfiguration {
             public int updateEntityRecordsMatchingFilter(Entity entity, Collection<EntityRecord.EntityFieldValue> filterFieldValueType, Collection<EntityRecord.EntityFieldValue> updateWith, Transaction transaction) throws GeminiException {
                 int updated = 0;
                 Map<Key, EntityRecord> entityStorage = store.get(entity.getName().toUpperCase());
-                for (EntityRecord er : entityStorage.values()) {
-                    boolean equals = true;
-                    for (EntityRecord.EntityFieldValue entityFieldValue : filterFieldValueType) {
-                        EntityField entityField = entityFieldValue.getEntityField();
-                        Object entityValue = er.get(entityField);
-                        Object filterValue = entityFieldValue.getValue();
-                        if (!filterValue.equals(entityValue)) {
-                            equals = false;
-                            continue;
-                        }
-                    }
-                    if (!equals) {
-                        for (EntityRecord.EntityFieldValue updateValue : updateWith) {
-                            EntityField entityField = updateValue.getEntityField();
-                            Object value = updateValue.getValue();
-                            if (entityField.getType().equals(FieldType.ENTITY_REF)) {
-                                EntityReferenceRecord rR = (EntityReferenceRecord) value;
-                                if (rR.hasPrimaryKey() && rR.getPrimaryKey().equals(0L)) {
-                                    value = null;
-                                }
+                if (entityStorage != null) {
+                    for (EntityRecord er : entityStorage.values()) {
+                        boolean equals = true;
+                        for (EntityRecord.EntityFieldValue entityFieldValue : filterFieldValueType) {
+                            EntityField entityField = entityFieldValue.getEntityField();
+                            Object entityValue = er.get(entityField);
+                            Object filterValue = entityFieldValue.getValue();
+                            if (!filterValue.equals(entityValue)) {
+                                equals = false;
+                                continue;
                             }
-                            er.put(updateValue.getEntityField(), value);
+                        }
+                        if (!equals) {
+                            for (EntityRecord.EntityFieldValue updateValue : updateWith) {
+                                EntityField entityField = updateValue.getEntityField();
+                                Object value = updateValue.getValue();
+                                if (entityField.getType().equals(FieldType.ENTITY_REF)) {
+                                    EntityReferenceRecord rR = (EntityReferenceRecord) value;
+                                    if (rR.hasPrimaryKey() && rR.getPrimaryKey().equals(0L)) {
+                                        value = null;
+                                    }
+                                }
+                                er.put(updateValue.getEntityField(), value);
+                            }
                         }
                     }
                 }

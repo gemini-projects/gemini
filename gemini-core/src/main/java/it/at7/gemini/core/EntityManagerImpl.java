@@ -149,7 +149,7 @@ public class EntityManagerImpl implements EntityManager {
             case FIELD:
                 EntityField fieldFromRecord = getEntityFieldFromRecord(record);
                 if (!checkFieldisNew(fieldFromRecord)) {
-                    throw EntityException.ENTITY_FIELD_FOUND(fieldFromRecord);
+                    throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(fieldFromRecord);
                 }
                 schemaManager.addNewRuntimeEntityField(fieldFromRecord, transaction);
         }
@@ -239,7 +239,7 @@ public class EntityManagerImpl implements EntityManager {
             case FIELD:
                 EntityField fieldFromRecord = getEntityFieldFromRecord(record);
                 if (!checkFieldisNew(fieldFromRecord)) {
-                    throw EntityException.ENTITY_FIELD_FOUND(fieldFromRecord);
+                    throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(fieldFromRecord);
                 }
                 schemaManager.deleteRuntimeEntityField(fieldFromRecord, transaction);
         }

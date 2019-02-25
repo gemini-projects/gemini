@@ -103,6 +103,12 @@ public class FieldConverters {
                 }
                 assert pkValue != null;
                 return pkValue;
+            case ENTITY_EMBEDED:
+                assert objValue != null; // handled before
+                if (EntityRecord.class.isAssignableFrom(objValue.getClass())) {
+                    // no need to convert
+                    return objValue;
+                }
             case TEXT_ARRAY:
                 if (String[].class.isAssignableFrom(objValue.getClass())) {
                     return objValue;

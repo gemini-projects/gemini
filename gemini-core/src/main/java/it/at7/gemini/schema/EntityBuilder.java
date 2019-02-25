@@ -56,6 +56,6 @@ public class EntityBuilder {
     }
 
     public Entity build() {
-        return new Entity(module, entityName, fieldsBuilders, defaultRecord);
+        return new Entity(module, entityName, rawEntity.isEmbedable(), fieldsBuilders, defaultRecord);
     }
 }

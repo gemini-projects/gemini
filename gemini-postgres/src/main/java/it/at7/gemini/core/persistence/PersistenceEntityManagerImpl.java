@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.at7.gemini.core.FieldConverters.logicalKeyFromObject;
+import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.entityType;
 import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.oneToOneType;
 
 @Service
@@ -55,7 +56,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         QueryWithParams queryWithParams = makeInsertQuery(record, transaction);
         try {
             long recordId = transactionImpl.executeInsert(queryWithParams.sql, queryWithParams.params);
-            Optional<EntityRecord> insertedRecord = getRecordByLogicalKey(record, transaction);
+            Optional<EntityRecord> insertedRecord = getRecordById(record.getEntity(), recordId, transactionImpl);
             checkInsertedRecord(recordId, record, insertedRecord);
             return insertedRecord.get();
         } catch (SQLException e) {
@@ -149,9 +150,22 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return fromResultSetToEntityRecord(resultSet, entity, resolutionContext, transaction);
             });
         } catch (SQLException e) {
-
             throw GeminiGenericException.wrap(e);
         }
+    }
+
+    private Optional<EntityRecord> getRecordById(Entity entity, long recordId, TransactionImpl transactionImpl) throws GeminiException, SQLException {
+        QueryWithParams query = createSelectQueryFor(entity);
+        addIdCondition(entity, recordId, query);
+        return transactionImpl.executeQuery(query.sql, query.params, resultSet -> {
+            List<EntityRecord> entityRecords = fromResultSetToEntityRecord(resultSet, entity, null, transactionImpl);
+            assert entityRecords.size() <= 1;
+            return Optional.of(entityRecords.get(0));
+        });
+    }
+
+    private void addIdCondition(Entity entity, long recordId, QueryWithParams query) {
+        query.sql += String.format("WHERE %s.%s = %d", entity.getName().toUpperCase(), entity.getIdEntityField().getName(), recordId);
     }
 
     private void addFilterRequestTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
@@ -216,9 +230,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
             // todo stiamo razzando via la roba non voluta
 
-            Object valueRec = fromFieldToPrimitiveValue(fieldValue, transaction);
+            Object valueRec = fromFieldToPrimitiveValue(fieldValue, /* TODO  */ Map.of(), transaction);
             EntityRecord.EntityFieldValue persistedFVT = persistedEntityRecord.getEntityFieldValue(field);
-            Object persistedValue = fromFieldToPrimitiveValue(persistedFVT, transaction);
+            Object persistedValue = fromFieldToPrimitiveValue(persistedFVT, /* TODO  */ Map.of(), transaction);
             if (!((valueRec == null && persistedValue == null) || valueRec.equals(persistedValue))) {
                 return false;
             }
@@ -269,19 +283,26 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 if (type.equals(FieldType.ENTITY_REF)) {
                     EntityReferenceRecord entityReferenceRecord = null;
                     Object pkValue = rs.getObject(fieldName);
-                    Entity entityRef = field.getEntityRef();
                     if (pkValue != null && (Number.class.isAssignableFrom(pkValue.getClass()) && ((Long) pkValue) != 0)) {
                         entityReferenceRecord = new EntityReferenceRecord(field.getEntityRef());
                         entityReferenceRecord.addPKValue(pkValue);
-                        DynamicRecord.FieldValue fieldValue = EntityRecord.EntityFieldValue.create(entityRef.getIdEntityField(), pkValue);
-                        List<EntityRecord> recordsMatching = getRecordsMatching(entityRef, Set.of(fieldValue), transaction);
-                        assert recordsMatching.size() == 1;
-                        EntityRecord lkEntityRecord = recordsMatching.get(0);
-                        for (Field entityLkField : entityRef.getLogicalKey().getLogicalKeyList()) {
+                        EntityRecord lkEntityRecord = getEntityRecordByPersistedID(transaction, field, pkValue);
+
+                        // TODO put the entity instead of the entityreference ??
+                        for (Field entityLkField : field.getEntityRef().getLogicalKey().getLogicalKeyList()) {
                             entityReferenceRecord.addLogicalKeyValue(entityLkField, lkEntityRecord.get(entityLkField));
                         }
                     }
                     er.put(field, entityReferenceRecord);
+                    handled = true;
+                }
+                if (type.equals(FieldType.ENTITY_EMBEDED)) {
+                    Object pkValue = rs.getObject(fieldName);
+                    EntityRecord recordEmbeded = null;
+                    if (pkValue != null && (Number.class.isAssignableFrom(pkValue.getClass()) && ((Long) pkValue) != 0)) {
+                        recordEmbeded = getEntityRecordByPersistedID(transaction, field, pkValue);
+                    }
+                    er.put(field, recordEmbeded);
                     handled = true;
                 }
                 /* if (type.equals(FieldType.ENTITY_COLLECTION_REF)) {
@@ -301,15 +322,27 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return ret;
     }
 
+    private EntityRecord getEntityRecordByPersistedID(Transaction transaction, EntityField field, Object pkValue) throws GeminiException {
+        Entity entityRef = field.getEntityRef();
+        DynamicRecord.FieldValue fieldValue = EntityRecord.EntityFieldValue.create(entityRef.getIdEntityField(), pkValue);
+        List<EntityRecord> recordsMatching = getRecordsMatching(entityRef, Set.of(fieldValue), transaction);
+        assert recordsMatching.size() == 1;
+        return recordsMatching.get(0);
+    }
+
     private QueryWithParams makeInsertQuery(EntityRecord record, Transaction transaction) throws GeminiException {
         Entity entity = record.getEntity();
+
+        Map<EntityField, EntityRecord> embededEntityRecords = checkAndCreateEmbededEntity(record, transaction);
+
         String sql = String.format("INSERT INTO %s", entity.getName().toLowerCase());
         Map<String, Object> params = new HashMap<>();
         List<? extends DynamicRecord.FieldValue> sortedFields = sortFields(record.getAllSchemaEntityFieldValues());
         boolean first = true;
+        // TODO Unsupported ope
         for (DynamicRecord.FieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
-            if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
+            if (oneToOneType(type) || entityType(type)) {
                 sql += first ? "(" : ",";
                 first = false;
                 sql += field.getField().getName().toLowerCase();
@@ -319,16 +352,28 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         first = true;
         for (DynamicRecord.FieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
-            if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
+            if (oneToOneType(type) || entityType(type)) {
                 String columnName = field.getField().getName().toLowerCase();
                 sql += first ? "(" : ",";
                 first = false;
                 sql += ":" + columnName;
-                params.put(columnName, fromFieldToPrimitiveValue(field, transaction));
+                params.put(columnName, fromFieldToPrimitiveValue(field, embededEntityRecords, transaction));
             }
         }
         sql += ")";
         return new QueryWithParams(sql, params);
+    }
+
+    private Map<EntityField, EntityRecord> checkAndCreateEmbededEntity(EntityRecord record, Transaction transaction) throws GeminiException {
+        Map<EntityField, EntityRecord> results = new HashMap<>();
+        for (EntityField entityField : record.getEntityFields()) {
+            if (entityField.getType().equals(FieldType.ENTITY_EMBEDED)) {
+                EntityRecord embededRec = record.get(entityField);
+                embededRec = createNewEntityRecord(embededRec, transaction);
+                results.put(entityField, embededRec);
+            }
+        }
+        return results;
     }
 
     private QueryWithParams makeModifyQuery(EntityRecord record, Transaction transaction) throws GeminiException {
@@ -343,7 +388,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += String.format(" %s = :%s", columnName, columnName);
                 sql += i == sortedFields.size() - 1 ? " " : " , ";
-                params.put(columnName, fromFieldToPrimitiveValue(field, transaction));
+                params.put(columnName, fromFieldToPrimitiveValue(field, /* TODO  */ Map.of(), transaction));
             }
         }
         sql += String.format(" WHERE %s = %s", Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class));
@@ -364,7 +409,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += String.format(" %s = :%s", columnName, columnName);
                 sql += i == sortedUpdateWith.size() - 1 ? " " : " , ";
-                params.put(columnName, fromFieldToPrimitiveValue(fieldValueType, transaction));
+                params.put(columnName, fromFieldToPrimitiveValue(fieldValueType, /* TODO  */ Map.of(), transaction));
             }
         }
         sql += " WHERE ";
@@ -380,7 +425,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
                 sql += String.format(" %s = :%s", columnName, paramName);
                 sql += i == sortedFilterWith.size() - 1 ? " " : " , ";
-                params.put(paramName, fromFieldToPrimitiveValue(fieldValueType, transaction));
+                params.put(paramName, fromFieldToPrimitiveValue(fieldValueType, /* TODO  */ Map.of(), transaction));
             }
         }
         return new QueryWithParams(sql, params);
@@ -405,7 +450,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
     private String handleSingleColumnSelectBasicType(String entityName, Map<String, Object> params, DynamicRecord.FieldValue fieldValue, Transaction transaction) throws SQLException, GeminiException {
         String colName = fieldValue.getField().getName();
-        Object value = fromFieldToPrimitiveValue(fieldValue, transaction);
+        Object value = fromFieldToPrimitiveValue(fieldValue, /* TODO  */ Map.of(), transaction);
         String res = String.format(" %s.%s = :%2$s ", entityName, colName);
         params.put(colName, value);
         return res;
@@ -418,7 +463,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
 
-    private Object fromFieldToPrimitiveValue(DynamicRecord.FieldValue fieldValue, Transaction transaction) throws GeminiException {
+    private Object fromFieldToPrimitiveValue(DynamicRecord.FieldValue fieldValue, Map<EntityField, EntityRecord> embededEntityRecords, Transaction transaction) throws GeminiException {
         Object value = fieldValue.getValue();
         Field field = fieldValue.getField();
         FieldType type = field.getType();
@@ -454,6 +499,10 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return entityRecord.get(entityRef.getIdEntityField());
             }
         }
+        if (type.equals(FieldType.ENTITY_EMBEDED)) {
+            EntityRecord embededEntity = embededEntityRecords.get(field);
+            return embededEntity.get(embededEntity.getEntity().getIdEntityField());
+        }
         throw new RuntimeException(String.format("Not implemented %s", field.getType()));
     }
 
@@ -480,6 +529,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return 0;
             case TEXT_ARRAY:
                 return new String[]{};
+            case ENTITY_EMBEDED:
+                return 0;
             case RECORD:
                 break;
         }
