@@ -9,4 +9,9 @@ public class RestAPIControllerPostgresSingleEntityTest extends RestAPIController
     public static void setup() {
         setupWebMockMvc(IntegrationTestMain.initializeFullIntegrationWebApp());
     }
+
+    @Override
+    public boolean onlyWithPersistence() {
+        return true;
+    }
 }

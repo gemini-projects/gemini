@@ -465,20 +465,23 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             if (refRecord.hasPrimaryKey()) {
                 return refRecord.getPrimaryKey();
             } else {
-                assert refRecord.hasLogicalKey();
-                DynamicRecord lkValue = refRecord.getLogicalKeyRecord();
-                Entity entityRef = field.getEntityRef();
-                Set<DynamicRecord.FieldValue> lkFieldValuesType = lkValue.getFieldValues(entityRef.getLogicalKey().getLogicalKeySet());
+                if (refRecord.hasLogicalKey()) {
+                    DynamicRecord lkValue = refRecord.getLogicalKeyRecord();
+                    Entity entityRef = field.getEntityRef();
+                    Set<DynamicRecord.FieldValue> lkFieldValuesType = lkValue.getFieldValues(entityRef.getLogicalKey().getLogicalKeySet());
 
-                List<EntityRecord> lkRecords = getEntityRecordsMatching(entityRef, lkFieldValuesType, transaction);
-                if (lkRecords.isEmpty()) {
-                    throw EntityRecordException.LK_NOTFOUND(entityRef, lkFieldValuesType);
+                    List<EntityRecord> lkRecords = getEntityRecordsMatching(entityRef, lkFieldValuesType, transaction);
+                    if (lkRecords.isEmpty()) {
+                        throw EntityRecordException.LK_NOTFOUND(entityRef, lkFieldValuesType);
+                    }
+                    if (lkRecords.size() != 1) {
+                        throw EntityRecordException.MULTIPLE_LK_FOUND(refRecord);
+                    }
+                    EntityRecord entityRecord = lkRecords.get(0);
+                    return entityRecord.get(entityRef.getIdEntityField());
                 }
-                if (lkRecords.size() != 1) {
-                    throw EntityRecordException.MULTIPLE_LK_FOUND(refRecord);
-                }
-                EntityRecord entityRecord = lkRecords.get(0);
-                return entityRecord.get(entityRef.getIdEntityField());
+                assert refRecord.equals(EntityReferenceRecord.NO_REFERENCE);
+                return 0L;
             }
         }
         if (type.equals(FieldType.ENTITY_EMBEDED)) {

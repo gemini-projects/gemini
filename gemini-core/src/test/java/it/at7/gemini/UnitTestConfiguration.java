@@ -112,7 +112,29 @@ public class UnitTestConfiguration {
 
             @Override
             public List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFieldValueType, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
-                return List.of();
+                String entityName = entity.getName().toUpperCase();
+                Map<Key, EntityRecord> entityStorage = store.get(entityName);
+                if (entityStorage == null) {
+                    return new ArrayList<>();
+                }
+                List<EntityRecord> result = new ArrayList<>();
+                for (EntityRecord value : entityStorage.values()) {
+                    boolean equals = true;
+                    for (DynamicRecord.FieldValue fieldValue : filterFieldValueType) {
+                        Object storedValue = value.get(fieldValue.getField());
+                        Object filterValue = fieldValue.getValue();
+
+                        // TODO this code does not work
+                        if(storedValue != null && filterValue!= null && !storedValue.equals(filterValue)){
+                            equals = false;
+                            break;
+                        }
+                    }
+                    if(equals){
+                        result.add(value);
+                    }
+                }
+                return result;
             }
 
             @Override

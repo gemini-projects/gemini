@@ -277,26 +277,32 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
         mockMvc.perform(get(API_PATH + "/TestDataType/lk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().is4xxClientError());
+    }
 
-/* TODO resolution fix the strategy
-        //==== delete a domain and query the object that refers it
-        mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
-                .accept(APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content()
-                        .json("{'code':'dm2'}"));
-        mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
-                .accept(APPLICATION_JSON))
-                .andExpect(status().is4xxClientError());
+    @Test
+    public void n5_testDeleteWithResolution() throws Exception {
+        if (onlyWithPersistence()) {
+            //==== delete a domain and query the object that refers it
+            mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
+                    .accept(APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(content()
+                            .json("{'code':'dm2'}"));
+            mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
+                    .accept(APPLICATION_JSON))
+                    .andExpect(status().is4xxClientError());
 
-        //==== object withGeminiSearchString entity reference (FK) - single logical key
-        mockMvc.perform(get(API_PATH + "/TestDataType/lkWithDomain")
-                .accept(APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content()
-                        .json("{'bool':false,'text':'lkWithDomain','domain1':{},'numberDouble':0,'numberLong':11}"));
+            //==== object withGeminiSearchString entity reference (FK) - single logical key
+            mockMvc.perform(get(API_PATH + "/TestDataType/lkWithDomain")
+                    .accept(APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content()
+                            .json("{'bool':false,'text':'lkWithDomain','domain1':{},'numberDouble':0,'numberLong':11}"));
+        }
+    }
 
-             */
+    public boolean onlyWithPersistence() {
+        return false;
     }
 }

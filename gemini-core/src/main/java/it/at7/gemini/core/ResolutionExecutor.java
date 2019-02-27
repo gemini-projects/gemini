@@ -44,11 +44,13 @@ public class ResolutionExecutor {
             EntityReferenceRecord entityReferenceRecord = EntityReferenceRecord.fromPKValue(entityRecord.getEntity(), id);
             entityReferenceRecord.addLogicalKeyValues(logicalKeyValue);
             EntityRecord.EntityFieldValue targetFieldValue = new EntityRecord.EntityFieldValue(field, entityReferenceRecord);
+            List<EntityRecord> recordsToResolve = persistenceEntityManager.getEntityRecordsMatching(field.getEntity(), Set.of(targetFieldValue), transaction);
             switch (resolutionType) {
                 case EMPTY:
-                    EntityRecord.EntityFieldValue emptyValue = new EntityRecord.EntityFieldValue(field, EntityReferenceRecord.fromPKValue(entityRecord.getEntity(), 0L));
-                    // TODO resolution
-                    // persistenceEntityManager.updateEntityRecordsMatchingFilter(field.getEntity(), Set.of(targetFieldValue), Set.of(emptyValue), transaction);
+                    for (EntityRecord record : recordsToResolve) {
+                        record.put(field, EntityReferenceRecord.NO_REFERENCE);
+                        persistenceEntityManager.createOrUpdateEntityRecord(record, transaction);
+                    }
                     break;
 
             }
