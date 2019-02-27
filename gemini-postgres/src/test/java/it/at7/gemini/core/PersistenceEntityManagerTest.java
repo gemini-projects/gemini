@@ -59,27 +59,27 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
             savedEntity.put("numberLong", 88);
             savedEntity.put("numberDouble", 88.88);
             savedEntity.put("bool", true);
-            EntityRecord newSavedEntity = persistenceEntityManager.updateEntityRecord(savedEntity, t);
+            EntityRecord newSavedEntity = persistenceEntityManager.updateEntityRecordByID(savedEntity, t);
             assertEquals("textUpdatedKey", newSavedEntity.get("text"));
             assertEquals(Long.valueOf(88), newSavedEntity.get("numberLong"));
             assertEquals(Double.valueOf(88.88), newSavedEntity.get("numberDouble"));
             assertEquals(true, newSavedEntity.get("bool"));
-            Optional<EntityRecord> updated = persistenceEntityManager.getRecordByLogicalKey(savedEntity, t);
+            Optional<EntityRecord> updated = persistenceEntityManager.getEntityRecordByLogicalKey(savedEntity, t);
             assertTrue(updated.isPresent()); // and only one
         });
 
 
         // first record (lk) no longer exists - we have updated also the key
         transactionManager.executeInSingleTrasaction(t -> {
-            Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getRecordByLogicalKey(newrec, t);
+            Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(newrec, t);
             assertFalse(recordByLogicalKey.isPresent());
         });
 
 
         // delete the record
         transactionManager.executeInSingleTrasaction(t -> {
-            persistenceEntityManager.deleteEntity(savedEntity, t);
-            Optional<EntityRecord> deletedRecord = persistenceEntityManager.getRecordByLogicalKey(newrec, t);
+            persistenceEntityManager.deleteEntityRecordByID(savedEntity, t);
+            Optional<EntityRecord> deletedRecord = persistenceEntityManager.getEntityRecordByLogicalKey(newrec, t);
             assertFalse(deletedRecord.isPresent());
         });
     }
@@ -90,7 +90,7 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
         EntityRecord newrec = new EntityRecord(dataTypeEntity);
         transactionManager.executeInSingleTrasaction(t -> {
             newrec.put("numberLong", 88);
-            persistenceEntityManager.updateEntityRecord(newrec, t);
+            persistenceEntityManager.updateEntityRecordByID(newrec, t);
         });
     }
 
@@ -121,7 +121,7 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
             EntityRecord savedDomain = persistenceEntityManager.createNewEntityRecord(domain, t);
 
             savedEntity.put("domain1", "D2");
-            EntityRecord updatedRecord = persistenceEntityManager.updateEntityRecord(savedEntity, t);
+            EntityRecord updatedRecord = persistenceEntityManager.updateEntityRecordByID(savedEntity, t);
             EntityReferenceRecord domain1 = updatedRecord.get("domain1");
             assertTrue(domain1.hasPrimaryKey());
             assertEquals("D2", domain1.getLogicalKeyRecord().get("code"));
@@ -137,17 +137,17 @@ public class PersistenceEntityManagerTest extends GeminiTestBase {
         transactionManager.executeInSingleTrasaction(t -> {
             EntityRecord domain2 = new EntityRecord(domainEntity);
             domain2.put("code", "D2");
-            Optional<EntityRecord> domain2OnDb = persistenceEntityManager.getRecordByLogicalKey(domain2, t);
+            Optional<EntityRecord> domain2OnDb = persistenceEntityManager.getEntityRecordByLogicalKey(domain2, t);
             assertTrue(domain2OnDb.isPresent());
 
-            persistenceEntityManager.deleteEntity(domain2OnDb.get(), t);
+            persistenceEntityManager.deleteEntityRecordByID(domain2OnDb.get(), t);
 
             EntityRecord targetEntity = new EntityRecord(dataTypeEntity);
             targetEntity.put("text", "textString");
             targetEntity.put("domain1", "D2");
 
             // db inconsistency - TODO
-            persistenceEntityManager.getRecordByLogicalKey(targetEntity, t);
+            persistenceEntityManager.getEntityRecordByLogicalKey(targetEntity, t);
         });
     }
 }

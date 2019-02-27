@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.*;
 
 @Configuration
@@ -112,18 +111,23 @@ public class UnitTestConfiguration {
             }
 
             @Override
-            public List<EntityRecord> getRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFieldValueType, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
+            public List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFieldValueType, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
                 return List.of();
             }
 
             @Override
-            public Optional<EntityRecord> getRecordByLogicalKey(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
+            public Optional<EntityRecord> getEntityRecordByLogicalKey(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
                 return getRecordByLogicalKeyInner(entity, logicalKey);
             }
 
             @Override
-            public Optional<EntityRecord> getRecordByLogicalKey(EntityRecord record, Transaction transaction) throws GeminiException {
+            public Optional<EntityRecord> getEntityRecordByLogicalKey(EntityRecord record, Transaction transaction) throws GeminiException {
                 return getRecordByLogicalKeyInner(record.getEntity(), record.getLogicalKeyValue());
+            }
+
+            @Override
+            public Optional<EntityRecord> getEntityRecordById(Entity entity, long recordId, Transaction transaction) throws GeminiException {
+                return Optional.empty();
             }
 
             private Optional<EntityRecord> getRecordByLogicalKeyInner(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey) {
@@ -176,7 +180,7 @@ public class UnitTestConfiguration {
                         if (value != null) {
                             Entity entityRef = entityField.getEntityRef();
                             EntityReferenceRecord entityReferenceRecord = (EntityReferenceRecord) value;
-                            Optional<EntityRecord> recordByLogicalKey = getRecordByLogicalKey(entityRef, entityReferenceRecord.getLogicalKeyRecord(), transaction);
+                            Optional<EntityRecord> recordByLogicalKey = getEntityRecordByLogicalKey(entityRef, entityReferenceRecord.getLogicalKeyRecord(), transaction);
                             EntityRecord entityRefRecord = recordByLogicalKey.get();
                             record.put(entityField.getName().toLowerCase(), entityRefRecord);
                         }
@@ -186,11 +190,11 @@ public class UnitTestConfiguration {
                 ids.put(entityName, lastId);
                 record.put(entity.getIdEntityField(), lastId);
                 entityStorage.put(key, record);
-                return getRecordByLogicalKey(record, transaction).get();
+                return getEntityRecordByLogicalKey(record, transaction).get();
             }
 
             @Override
-            public EntityRecord updateEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
+            public EntityRecord updateEntityRecordByID(EntityRecord record, Transaction transaction) throws GeminiException {
                 Entity entity = record.getEntity();
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.get(entityName);
@@ -227,7 +231,7 @@ public class UnitTestConfiguration {
             }
 
             @Override
-            public void deleteEntity(EntityRecord record, Transaction transaction) {
+            public void deleteEntityRecordByID(EntityRecord record, Transaction transaction) {
                 Entity entity = record.getEntity();
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.get(entityName);
@@ -242,7 +246,7 @@ public class UnitTestConfiguration {
                 return entityRecord;
             }
 
-            @Override
+           /* @Override
             public int updateEntityRecordsMatchingFilter(Entity entity, Collection<EntityRecord.EntityFieldValue> filterFieldValueType, Collection<EntityRecord.EntityFieldValue> updateWith, Transaction transaction) throws GeminiException {
                 int updated = 0;
                 Map<Key, EntityRecord> entityStorage = store.get(entity.getName().toUpperCase());
@@ -274,10 +278,10 @@ public class UnitTestConfiguration {
                     }
                 }
                 return updated;
-            }
+            } */
 
             @Override
-            public List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
+            public List<EntityRecord> getEntityRecordsMatching(Entity entity, FilterContext filterContext, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.get(entityName);
                 if (entityStorage == null) {

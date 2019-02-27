@@ -19,6 +19,10 @@ public interface EntityManager {
 
     EntityRecord putOrUpdate(EntityRecord rec) throws GeminiException;
 
+    default EntityRecord update(EntityRecord rec)throws GeminiException{
+        return update(rec, rec.getLogicalKeyValue());
+    }
+
     EntityRecord update(EntityRecord rec, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
 
     default EntityRecord delete(EntityRecord entityRecord) throws GeminiException {
@@ -26,6 +30,10 @@ public interface EntityManager {
     }
 
     EntityRecord delete(Entity e, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
+
+    default EntityRecord get(EntityRecord entityRecord) throws GeminiException {
+        return get(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
+    }
 
     EntityRecord get(Entity e, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
 

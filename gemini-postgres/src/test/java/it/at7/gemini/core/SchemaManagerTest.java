@@ -38,7 +38,7 @@ public class SchemaManagerTest extends GeminiTestBase {
         transactionManager.executeInSingleTrasaction(t -> {
             Map<String, Object> entityLogicalKey = Map.of(EntityRef.FIELDS.NAME, "ENTITY");
             EntityRecord entityRecordWithLogicalKey = RecordConverters.entityRecordFromMap(entityEntity, entityLogicalKey);
-            Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getRecordByLogicalKey(entityEntity, entityRecordWithLogicalKey, t);
+            Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(entityEntity, entityRecordWithLogicalKey, t);
             assertTrue(recordByLogicalKey.isPresent());
             EntityRecord entityRecord = recordByLogicalKey.get();
             assertEquals("ENTITY", entityRecord.get(EntityRef.FIELDS.NAME));
@@ -47,7 +47,7 @@ public class SchemaManagerTest extends GeminiTestBase {
                     FieldRef.FIELDS.NAME, "name",
                     FieldRef.FIELDS.ENTITY, "ENTITY");
             EntityRecord lkNameFieldRecord = RecordConverters.entityRecordFromMap(fieldEntity, nameFieldLogicalKey);
-            Optional<EntityRecord> fieldRecordByLogicalKey = persistenceEntityManager.getRecordByLogicalKey(fieldEntity, lkNameFieldRecord, t);
+            Optional<EntityRecord> fieldRecordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(fieldEntity, lkNameFieldRecord, t);
             assertTrue(fieldRecordByLogicalKey.isPresent());
             EntityRecord nameFieldRecord = fieldRecordByLogicalKey.get();
             assertEquals("name", nameFieldRecord.get(FieldRef.FIELDS.NAME));

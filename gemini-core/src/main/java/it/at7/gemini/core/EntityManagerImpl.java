@@ -100,20 +100,20 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public List<EntityRecord> getRecordsMatching(Entity entity, Set<DynamicRecord.FieldValue> filterFielValueType, Transaction transaction) throws GeminiException {
-        return persistenceEntityManager.getRecordsMatching(entity, filterFielValueType, transaction);
+        return persistenceEntityManager.getEntityRecordsMatching(entity, filterFielValueType, transaction);
 
     }
 
     @Override
     public List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext) throws GeminiException {
         return transactionManager.executeInSingleTrasaction(transaction -> {
-            return persistenceEntityManager.getRecordsMatching(entity, filterContext, transaction);
+            return persistenceEntityManager.getEntityRecordsMatching(entity, filterContext, transaction);
         });
     }
 
 
     private EntityRecord putIfAbsent(EntityRecord record, Transaction transaction) throws GeminiException {
-        Optional<EntityRecord> rec = persistenceEntityManager.getRecordByLogicalKey(record, transaction);
+        Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
             handleInsertSchemaCoreEntities(record, transaction);
             // can insert the entity record
@@ -123,7 +123,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private EntityRecord putOrUpdate(EntityRecord record, Transaction transaction) throws GeminiException {
-        Optional<EntityRecord> rec = persistenceEntityManager.getRecordByLogicalKey(record, transaction);
+        Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
             handleInsertSchemaCoreEntities(record, transaction);
             // can insert the entity record
@@ -131,7 +131,7 @@ public class EntityManagerImpl implements EntityManager {
         } else {
             EntityRecord persistedRecord = rec.get();
             persistedRecord.update(record);
-            return persistenceEntityManager.updateEntityRecord(persistedRecord, transaction);
+            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
         }
     }
 
@@ -199,23 +199,23 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private EntityRecord update(EntityRecord record, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
-        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getRecordByLogicalKey(record.getEntity(), logicalKey, transaction);
+        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(record.getEntity(), logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             // can update
             EntityRecord persistedRecord = persistedRecordOpt.get();
             persistedRecord.update(record);
-            return persistenceEntityManager.updateEntityRecord(persistedRecord, transaction);
+            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
         }
         throw EntityRecordException.LK_NOTFOUND(record.getEntity(), logicalKey);
     }
 
     private EntityRecord delete(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
-        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getRecordByLogicalKey(entity, logicalKey, transaction);
+        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             EntityRecord persistedRecord = persistedRecordOpt.get();
             handleDeleteSchemaCoreEntities(persistedRecord, transaction);
             handleDeleteResolution(persistedRecord, transaction);
-            persistenceEntityManager.deleteEntity(persistedRecord, transaction);
+            persistenceEntityManager.deleteEntityRecordByID(persistedRecord, transaction);
             return persistedRecord;
         }
         throw EntityRecordException.LK_NOTFOUND(entity, logicalKey);
@@ -246,7 +246,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private EntityRecord get(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
-        Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getRecordByLogicalKey(entity, logicalKey, transaction);
+        Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (recordByLogicalKey.isPresent()) {
             return recordByLogicalKey.get();
         }

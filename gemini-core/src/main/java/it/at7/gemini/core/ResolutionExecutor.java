@@ -47,12 +47,13 @@ public class ResolutionExecutor {
             switch (resolutionType) {
                 case EMPTY:
                     EntityRecord.EntityFieldValue emptyValue = new EntityRecord.EntityFieldValue(field, EntityReferenceRecord.fromPKValue(entityRecord.getEntity(), 0L));
-                    persistenceEntityManager.updateEntityRecordsMatchingFilter(field.getEntity(), Set.of(targetFieldValue), Set.of(emptyValue), transaction);
+                    // TODO resolution
+                    // persistenceEntityManager.updateEntityRecordsMatchingFilter(field.getEntity(), Set.of(targetFieldValue), Set.of(emptyValue), transaction);
                     break;
 
             }
             // EntityRecord.RecordConverters.logicalKeyFromObject(fieldResolutionEntity, )
-            // entityManager.getRecordsMatching(fieldResolutionEntity, Set.of(),)
+            // entityManager.getEntityRecordsMatching(fieldResolutionEntity, Set.of(),)
 
         }
     }
@@ -66,7 +67,7 @@ public class ResolutionExecutor {
         fieldResolutionRec.put(FieldResolutionDef.FIELDS.FIELD, fieldRecord);
         fieldResolutionRec.put(FieldResolutionDef.FIELDS.CODE, "DELETE");
         try {
-            Optional<EntityRecord> resRecordOpt = persistenceEntityManager.getRecordByLogicalKey(fieldResolutionEntity, fieldResolutionRec.getLogicalKeyValue(), transaction);
+            Optional<EntityRecord> resRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(fieldResolutionEntity, fieldResolutionRec.getLogicalKeyValue(), transaction);
             if (!resRecordOpt.isPresent()) {
                 return FieldResolutionDef.VALUE.EMPTY;
             }

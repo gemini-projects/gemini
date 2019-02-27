@@ -5,3 +5,4 @@
 - Resolution Type - (forse da coambiare anche tutta la gestione dei riferimenti ?)
 - Gestione Array di tipo Riferimento
 - Gestione entità collegate (collezioni)
+- FIX resolution delete (cascade)

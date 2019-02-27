@@ -204,7 +204,7 @@ public class SchemaManagerImpl implements SchemaManager {
                     initVersionRec.set(InitRecordDef.FIELDS.ENTITY, entity.getName());
                     initVersionRec.set(InitRecordDef.FIELDS.VERSION_NAME, version.getVersionName());
                     initVersionRec.set(InitRecordDef.FIELDS.VERSION_NUMBER, version.getVersionProgressive());
-                    Optional<EntityRecord> optRecord = persistenceEntityManager.getRecordByLogicalKey(initVersionRec, transaction);
+                    Optional<EntityRecord> optRecord = persistenceEntityManager.getEntityRecordByLogicalKey(initVersionRec, transaction);
 
                     if (!optRecord.isPresent()) {
                         logger.info(String.format("Handling records for entity %s and version %s - %d", entity.getName(), version.getVersionName(), version.getVersionProgressive()));

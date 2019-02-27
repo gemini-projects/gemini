@@ -410,6 +410,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case DATETIME:
                 throw new RuntimeException("UNSUPPORTED OPE");
             case ENTITY_REF:
+            case ENTITY_EMBEDED:
                 Entity entityRef = field.getEntityRef();
                 assert entityRef != null;
                 String name = pkForeignKeyDomainFromModel(entityRef.getName());
