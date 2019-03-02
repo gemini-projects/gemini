@@ -15,12 +15,11 @@ public class SchemaRawRecordBuilder {
         this.versionedRecordsList = new HashMap<>();
     }
 
-    public SchemaRawRecordBuilder setDefaultRecord(long versionProgressive, Object def) {
+    public void setDefaultRecord(Object def) {
         if (this.def != null) {
             throw new RuntimeException(String.format("Two DEFAULT definition not allowed for: %s", entity));
         }
         this.def = def;
-        return this;
     }
 
     public void addRecord(String versionName, long versionProgressive, Object record) {

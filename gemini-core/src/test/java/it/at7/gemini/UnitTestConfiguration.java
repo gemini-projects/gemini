@@ -125,12 +125,12 @@ public class UnitTestConfiguration {
                         Object filterValue = fieldValue.getValue();
 
                         // TODO this code does not work
-                        if(storedValue != null && filterValue!= null && !storedValue.equals(filterValue)){
+                        if (storedValue != null && filterValue != null && !storedValue.equals(filterValue)) {
                             equals = false;
                             break;
                         }
                     }
-                    if(equals){
+                    if (equals) {
                         result.add(value);
                     }
                 }
@@ -264,7 +264,18 @@ public class UnitTestConfiguration {
             }
 
             @Override
-            public EntityRecord createOrUpdateEntityRecord(EntityRecord entityRecord, Transaction transaction) {
+            public EntityRecord createOrUpdateEntityRecord(EntityRecord entityRecord, Transaction transaction) throws GeminiException {
+                Optional<EntityRecord> recordByLogicalKey = getEntityRecordByLogicalKey(entityRecord, transaction);
+                if (recordByLogicalKey.isPresent()) {
+                    EntityRecord persistedEntityRecord = recordByLogicalKey.get();
+                     /*EntityField idField = entityRecord.getEntity().getIdEntityField();
+                    Object persistedID = persistedEntityRecord.get(idField);
+                    entityRecord.put(idField, persistedID);
+                    return updateEntityRecordByID(entityRecord, transaction); */
+
+                } else {
+                    return createNewEntityRecord(entityRecord, transaction);
+                }
                 return entityRecord;
             }
 

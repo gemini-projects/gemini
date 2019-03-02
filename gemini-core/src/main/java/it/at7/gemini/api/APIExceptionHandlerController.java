@@ -2,6 +2,8 @@ package it.at7.gemini.api;
 
 import it.at7.gemini.exceptions.EntityRecordException;
 import it.at7.gemini.exceptions.GeminiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice("it.at7.gemini.api")
 public class APIExceptionHandlerController {
+    public static final Logger logger = LoggerFactory.getLogger(APIExceptionHandlerController.class);
 
     @ExceptionHandler(EntityRecordException.class)
     public ResponseEntity<?> handleEntityFoundException(EntityRecordException exception) {
@@ -32,7 +35,7 @@ public class APIExceptionHandlerController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception exception) {
-
+        logger.error("APIExceptionHandlerController", exception);
         return new ResponseEntity<>(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "CRITICAL_EXCEPTION", exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

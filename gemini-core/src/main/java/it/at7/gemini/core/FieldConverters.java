@@ -85,8 +85,6 @@ public class FieldConverters {
                 }
                 return LocalDateTime.parse(stValue, DATETIME_FORMATTER_INPUT);
             case ENTITY_REF:
-                assert objValue != null; // handled before
-                EntityField entityField = EntityField.class.cast(field);
                 if (EntityReferenceRecord.class.isAssignableFrom(objValue.getClass())) {
                     // no need to convert
                     return objValue;
@@ -99,7 +97,7 @@ public class FieldConverters {
                     assert fieldEntity.equals(objValueEntity);
                     pkValue = logicalKeyFromEntityRecord(entityRecord);
                 } else {
-                    pkValue = logicalKeyFromObject(entityField.getEntityRef(), objValue);
+                    pkValue = logicalKeyFromObject(field.getEntityRef(), objValue);
                 }
                 assert pkValue != null;
                 return pkValue;
@@ -109,6 +107,13 @@ public class FieldConverters {
                     // no need to convert
                     return objValue;
                 }
+                Entity entityRef = field.getEntityRef();
+                // need to check that the logicalKeyValue is right value
+                if (Map.class.isAssignableFrom(objValue.getClass())) {
+                    Map<String, Object> mapValue = (Map<String, Object>) objValue;
+                    return RecordConverters.entityRecordFromMap(entityRef, mapValue);
+                }
+                break; // Unsupported OPE
             case TEXT_ARRAY:
                 if (String[].class.isAssignableFrom(objValue.getClass())) {
                     return objValue;
@@ -117,10 +122,10 @@ public class FieldConverters {
                     String[] st = new String[((Collection) objValue).size()];
                     return ((Collection) objValue).toArray(st);
                 }
-                throw new RuntimeException("Unsupported Operation");
+                break; // Unsupported OPE
             case GENERIC_ENTITY_REF:
             case RECORD:
-                throw new RuntimeException("Unsupported Operation");
+                break; // Unsupported OPE
         }
         throw new RuntimeException(String.format("Unsupported Operation: %s", field.toString()));
     }

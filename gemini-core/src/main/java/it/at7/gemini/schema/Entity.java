@@ -88,8 +88,8 @@ public class Entity {
     }
 
     @Nullable // TODO this method probably may be removed
-    public Object getDefaultEntityRecord() {
-        return RecordConverters.entityRecordFromMap(Services.getSchemaManager().getEntity("ENTITY"), copyDefaultRecord());
+    public EntityRecord getDefaultEntityRecord() {
+        return RecordConverters.entityRecordFromMap(this, copyDefaultRecord());
     }
 
     public Set<EntityField> getSchemaEntityFields() {

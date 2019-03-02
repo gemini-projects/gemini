@@ -31,9 +31,12 @@ public class RecordParser {
             String entityName = expect(ENTITYNAME);
             SchemaRawRecordBuilder schemaRawRecordBuilder = builders.computeIfAbsent(entityName.toUpperCase(), SchemaRawRecordBuilder::new);
             StringBuilder jsonBuilder = new StringBuilder();
-            boolean def = checkDefault();
-            String versionName = expect(VERSIONNAME); // DEFAULT in case of default record
-            long versionProgressive = Long.parseLong(expect(VERSIONPROGRESSIVE));
+            String versionNameOrDefault = expect(VERSIONNAME); // DEFAULT in case of default record
+            long versionProgressive = 0; boolean def = true;
+            if(!versionNameOrDefault.equals("DEFAULT")) {
+                def = false;
+                versionProgressive = Long.parseLong(expect(VERSIONPROGRESSIVE));
+            }
             while ((line = reader.readLine()) != null) {
                 this.scanner = new Scanner(line);
                 if (!has(ENTITYRECORD)) {
@@ -49,15 +52,15 @@ public class RecordParser {
                 Object singleRecord = new ObjectMapper().readValue(jsonString,
                         new TypeReference<Map<String, Object>>() {
                         });
-                if (def) schemaRawRecordBuilder.setDefaultRecord(versionProgressive, singleRecord);
-                else schemaRawRecordBuilder.addRecord(versionName, versionProgressive, singleRecord);
+                if (def) schemaRawRecordBuilder.setDefaultRecord(singleRecord);
+                else schemaRawRecordBuilder.addRecord(versionNameOrDefault, versionProgressive, singleRecord);
             } else {
                 assert jsonString.charAt(0) == '[';
                 List<Object> listRecord = new ObjectMapper().readValue(jsonString,
                         new TypeReference<List<Map<String, Object>>>() {
                         });
-                assert !def;
-                schemaRawRecordBuilder.addRecords(versionName, versionProgressive, listRecord);
+                assert !def; // array not allowed for DEFAULT
+                schemaRawRecordBuilder.addRecords(versionNameOrDefault, versionProgressive, listRecord);
             }
         }
         return builders.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, b -> b.getValue().build()));

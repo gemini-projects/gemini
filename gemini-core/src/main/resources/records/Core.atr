@@ -1,3 +1,26 @@
+ENTITY-RECORD FieldEvents DEFAULT
+{
+     "visible" : {
+        "eventType": "NO_EVENT",
+        "value": true
+     },
+     "modifiable" : {
+        "eventType": "NO_EVENT",
+        "value": true
+     },
+     "required" : {
+        "eventType": "NO_EVENT",
+        "value": false
+     },
+     "valueEventType" : "NO_EVENT"
+}
+
+ENTITY-RECORD EventType V 1
+{
+    "code" : "NO_EVENT",
+    "description": "No event triggered"
+}
+
 ENTITY-RECORD FieldResolution V 1
 [{
    "field": {
@@ -23,3 +46,4 @@ ENTITY-RECORD Language V 1
     "code": "EN",
     "description": "English"
 }]
+

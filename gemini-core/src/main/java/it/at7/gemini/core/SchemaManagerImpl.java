@@ -124,25 +124,30 @@ public class SchemaManagerImpl implements SchemaManager {
         }
     }
 
-    private void handleSchemasEntityRecords(Collection<Entity> entities, Transaction transaction) throws SQLException, GeminiException {
+    private Map<String, List<EntityRecord>> handleSchemasEntityRecords(Collection<Entity> entities, Transaction transaction) throws SQLException, GeminiException {
+        Map<String, List<EntityRecord>> fieldsRecordByEntityName = new HashMap<>();
         for (Entity entity : entities) {
             updateENTITYRecord(transaction, entity);
         }
         persistenceSchemaManager.deleteUnnecessaryEntites(entities, transaction);
         for (Entity entity : entities) {
-            updateEntityFieldsRecords(transaction, entity);
+            fieldsRecordByEntityName.put(entity.getName().toUpperCase(), updateEntityFieldsRecords(transaction, entity));
         }
+        return fieldsRecordByEntityName;
     }
 
-    private void updateEntityFieldsRecords(Transaction transaction, Entity entity) throws SQLException, GeminiException {
+    private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, Entity entity) throws SQLException, GeminiException {
+        List<EntityRecord> fieldRecords = new ArrayList<>();
         Set<EntityField> fields = entity.getSchemaEntityFields();
         for (EntityField field : fields) {
             logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
             EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();
             fieldEntityRecord = persistenceEntityManager.createOrUpdateEntityRecord(fieldEntityRecord, transaction);
             field.setFieldIDValue(fieldEntityRecord.get(fieldEntityRecord.getEntity().getIdEntityField()));
+            fieldRecords.add(fieldEntityRecord);
         }
         persistenceSchemaManager.deleteUnnecessaryFields(entity, fields, transaction);
+        return fieldRecords;
     }
 
     private void updateENTITYRecord(Transaction transaction, Entity entity) throws SQLException, GeminiException {
@@ -174,17 +179,36 @@ public class SchemaManagerImpl implements SchemaManager {
         try (Transaction transaction = transactionManager.openTransaction()) {
             persistenceSchemaManager.beforeLoadSchema(modules, transaction);
             loadModuleSchemas(modules.values());
-            Map<Module, Map<String, SchemaRawRecords>> schemaRawRecordsMap = loadModuleRecords(modules.values());
+            Map<String, Map<String, SchemaRawRecords>> schemaRawRecordsMap = loadModuleRecords(modules.values());
             this.entities = checkSchemasAndCreateObjectEntities(schemaRawRecordsMap);
             Map<String, List<SchemaRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
                     .flatMap(m -> m.entrySet().stream())
                     .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
 
             persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
-            handleSchemasEntityRecords(entities.values(), transaction);
-            createProvidedEntityRecords(recordsByEntity, transaction);
+            Map<String, List<EntityRecord>> fieldRecordsByEntityName = handleSchemasEntityRecords(entities.values(), transaction);// entity records for entity / field / core entities
+            createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
+            setDefaultsForFields(fieldRecordsByEntityName, transaction);
             transaction.commit();
         }
+    }
+
+    private void setDefaultsForFields(Map<String, List<EntityRecord>> fieldRecordsByEntityName, Transaction transaction) throws GeminiException {
+        Entity fieldevents = this.entities.get("FIELDEVENTS");
+        assert fieldevents != null;
+        EntityRecord fieldEntityRecord = fieldevents.getDefaultEntityRecord();
+        for (Map.Entry<String, List<EntityRecord>> entrySet : fieldRecordsByEntityName.entrySet()) {
+            String entityName = entrySet.getKey();
+            for (EntityRecord fieldRecord : entrySet.getValue()) {
+                boolean needDefault = fieldRecord.get("events") == null;
+                logger.info(String.format("Handling default fields for entity %s and field %s - default %b", entityName, fieldRecord.get("name"), needDefault));
+                if (needDefault) {
+                    fieldRecord.put("events", fieldEntityRecord);
+                    persistenceEntityManager.updateEntityRecordByID(fieldRecord, transaction);
+                }
+            }
+        }
+
     }
 
     @Override
@@ -193,6 +217,7 @@ public class SchemaManagerImpl implements SchemaManager {
     }
 
     private void createProvidedEntityRecords(Map<String, List<SchemaRawRecords>> recordsByEntity, Transaction transaction) throws GeminiException {
+        // TODO topological order
         for (Map.Entry<String, List<SchemaRawRecords>> e : recordsByEntity.entrySet()) {
             String key = e.getKey();
             Entity entity = entities.get(key);
@@ -234,15 +259,15 @@ public class SchemaManagerImpl implements SchemaManager {
         }
     }
 
-    private Map<Module, Map<String, SchemaRawRecords>> loadModuleRecords(Collection<Module> modules) throws IOException, SyntaxError {
-        Map<Module, Map<String, SchemaRawRecords>> schemaRawRecords = new HashMap<>();
+    private Map<String, Map<String, SchemaRawRecords>> loadModuleRecords(Collection<Module> modules) throws IOException, SyntaxError {
+        Map<String, Map<String, SchemaRawRecords>> schemaRawRecords = new HashMap<>();
         for (Module module : modules) {
             String location = module.getSchemaRecordResourceLocation();
             Resource resource = applicationContext.getResource(location);
             if (resource.exists()) {
                 InputStream schemaRecordStream = resource.getInputStream();
                 Map<String, SchemaRawRecords> records = RecordParser.parse(new InputStreamReader(schemaRecordStream));
-                schemaRawRecords.put(module, records);
+                schemaRawRecords.put(module.getName(), records);
             } else {
                 logger.info("No records definition found for module {}: location {}", module.getName(), location);
             }
@@ -250,7 +275,7 @@ public class SchemaManagerImpl implements SchemaManager {
         return schemaRawRecords;
     }
 
-    private Map<String, Entity> checkSchemasAndCreateObjectEntities(Map<Module, Map<String, SchemaRawRecords>> schemaRawRecordsMap) {
+    private Map<String, Entity> checkSchemasAndCreateObjectEntities(Map<String, Map<String, SchemaRawRecords>> schemaRawRecordsMap) {
         /* TODO entità estendibii per modulo
             caricare ogni modulo a se stante.. con le entità.. poi fare il merge delle
             entries (ognuna contenente il modulo da dove viene)
@@ -276,7 +301,7 @@ public class SchemaManagerImpl implements SchemaManager {
             }
 
             // for entities we have also records
-            Map<String, SchemaRawRecords> rawRecordsByEntity = schemaRawRecordsMap.getOrDefault(module, Map.of());
+            Map<String, SchemaRawRecords> rawRecordsByEntity = schemaRawRecordsMap.getOrDefault(module.getName(), Map.of());
             SchemaRawRecords schemaRawRecords = rawRecordsByEntity.get(entityName.toUpperCase());
             if (schemaRawRecords != null) {
                 Object defRecord = schemaRawRecords.getDef();
@@ -334,7 +359,7 @@ public class SchemaManagerImpl implements SchemaManager {
             EntityBuilder entityForType = entityBuilders.get(type);
             if (entityForType != null) {
                 boolean embedable = entityForType.getRawEntity().isEmbedable();
-                if(!embedable) {
+                if (!embedable) {
                     entityBuilder.addField(ENTITY_REF, entry, entityForType.getName());
                 } else {
                     entityBuilder.addField(ENTITY_EMBEDED, entry, entityForType.getName());

@@ -373,7 +373,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
     private QueryWithParams makeModifyQueryFormID(EntityRecord record, Transaction transaction) throws GeminiException {
         Entity entity = record.getEntity();
-        Map<EntityField, EntityRecord> embededEntityRecords = checkAndModifyEmbededEntity(record, transaction);
+        Map<EntityField, EntityRecord> embededEntityRecords = checkAndModifyEmbededEntyRecords(record, transaction);
         String sql = String.format("UPDATE %s SET ", entity.getName().toLowerCase());
         Map<String, Object> params = new HashMap<>();
         List<? extends DynamicRecord.FieldValue> sortedFields = sortFields(record.getOnlyModifiedEntityFieldValue());
@@ -391,12 +391,16 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return new QueryWithParams(sql, params);
     }
 
-    private Map<EntityField, EntityRecord> checkAndModifyEmbededEntity(EntityRecord record, Transaction transaction) throws GeminiException {
+    private Map<EntityField, EntityRecord> checkAndModifyEmbededEntyRecords(EntityRecord record, Transaction transaction) throws GeminiException {
         Map<EntityField, EntityRecord> results = new HashMap<>();
         for (EntityField entityField : record.getEntityFields()) {
             if (entityField.getType().equals(FieldType.ENTITY_EMBEDED)) {
                 EntityRecord embededRec = record.get(entityField);
-                embededRec = updateEntityRecordByID(embededRec, transaction);
+                if(embededRec.getID() != null) {
+                    embededRec = updateEntityRecordByID(embededRec, transaction);
+                } else {
+                    embededRec = createNewEntityRecord(embededRec, transaction);
+                }
                 results.put(entityField, embededRec);
             }
         }

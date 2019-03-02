@@ -161,6 +161,9 @@ public class RecordConverters {
             case ENTITY_REF:
                 convertEntityRefToJSONValue(convertedMap, field, value);
                 break;
+            case ENTITY_EMBEDED:
+                convertEntityEmbededTOJsonValue(convertedMap, field, value);
+                break;
             default:
                 throw new RuntimeException(String.format("No conversion found for fieldtype %s", fieldType));
         }
@@ -183,6 +186,16 @@ public class RecordConverters {
             convertedMap.put(fieldNameLC, toMap(eRValue));
         }
 
+    }
+
+    private static void convertEntityEmbededTOJsonValue(Map<String, Object> convertedMap, Field field, Object value) {
+        String fieldName = field.getName();
+        if (EntityRecord.class.isAssignableFrom(value.getClass())) {
+            EntityRecord eRValue = (EntityRecord) value;
+            convertedMap.put(fieldName, toMap(eRValue));
+        } else {
+            throw new RuntimeException(String.format("Unsupported OPE"));
+        }
     }
 
     private static Object toLogicalKey(EntityReferenceRecord pkRefRec) {
