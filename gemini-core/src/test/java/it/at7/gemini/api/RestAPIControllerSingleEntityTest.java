@@ -3,10 +3,7 @@ package it.at7.gemini.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.at7.gemini.UnitTestBase;
 import it.at7.gemini.exceptions.GeminiException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -30,29 +27,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @AutoConfigureMockMvc
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RestAPIControllerSingleEntityTest extends UnitTestBase {
-
-    //==== GEMINI TEST PREAMBOLE - WEBAPP APPLICANTION CONTEXT ====/
-    static private MockMvc mockMvc;
-    static ConfigurableApplicationContext webApp;
-
-    @BeforeClass
-    public static void setup() throws SQLException, GeminiException {
-        setupWebMockMvc(setupFullWebAPP(RestAPIControllerSingleEntityTest.class));
-    }
-
-    @AfterClass
-    public static void clean() {
-        ConfigurableApplicationContext parent = (ConfigurableApplicationContext) webApp.getParent();
-        parent.close();
-        webApp.close();
-    }
-
-    public static void setupWebMockMvc(ConfigurableApplicationContext wApp) {
-        webApp = wApp;
-        mockMvc = webAppContextSetup((WebApplicationContext) wApp).build();
-    }
-    //=============================================================/
+public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
 
     @Test
     public void n1_saveEntity() throws Exception {
@@ -281,28 +256,23 @@ public class RestAPIControllerSingleEntityTest extends UnitTestBase {
 
     @Test
     public void n5_testDeleteWithResolution() throws Exception {
-        if (onlyWithPersistence()) {
-            //==== delete a domain and query the object that refers it
-            mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
-                    .accept(APPLICATION_JSON))
-                    .andDo(print())
-                    .andExpect(status().isOk())
-                    .andExpect(content()
-                            .json("{'code':'dm2'}"));
-            mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
-                    .accept(APPLICATION_JSON))
-                    .andExpect(status().is4xxClientError());
+        //==== delete a domain and query the object that refers it
+        mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
+                .accept(APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .json("{'code':'dm2'}"));
+        mockMvc.perform(delete(API_PATH + "/TestDomain1/dm2")
+                .accept(APPLICATION_JSON))
+                .andExpect(status().is4xxClientError());
 
-            //==== object withGeminiSearchString entity reference (FK) - single logical key
-            mockMvc.perform(get(API_PATH + "/TestDataType/lkWithDomain")
-                    .accept(APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(content()
-                            .json("{'bool':false,'text':'lkWithDomain','domain1':{},'numberDouble':0,'numberLong':11}"));
-        }
+        //==== object withGeminiSearchString entity reference (FK) - single logical key
+        mockMvc.perform(get(API_PATH + "/TestDataType/lkWithDomain")
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .json("{'bool':false,'text':'lkWithDomain','domain1':{},'numberDouble':0,'numberLong':11}"));
     }
 
-    public boolean onlyWithPersistence() {
-        return false;
-    }
 }
