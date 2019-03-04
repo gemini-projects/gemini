@@ -5,9 +5,10 @@ import it.at7.gemini.core.persistence.PersistenceSchemaManager;
 import it.at7.gemini.dsl.RecordParser;
 import it.at7.gemini.dsl.SchemaParser;
 import it.at7.gemini.dsl.SyntaxError;
+import it.at7.gemini.dsl.entities.EntityRawRecordBuilder;
 import it.at7.gemini.dsl.entities.RawEntity;
 import it.at7.gemini.dsl.entities.RawSchema;
-import it.at7.gemini.dsl.entities.SchemaRawRecords;
+import it.at7.gemini.dsl.entities.EntityRawRecords;
 import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
@@ -179,9 +180,9 @@ public class SchemaManagerImpl implements SchemaManager {
         try (Transaction transaction = transactionManager.openTransaction()) {
             persistenceSchemaManager.beforeLoadSchema(modules, transaction);
             loadModuleSchemas(modules.values());
-            Map<String, Map<String, SchemaRawRecords>> schemaRawRecordsMap = loadModuleRecords(modules.values());
+            Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap = loadModuleRecords(modules.values());
             this.entities = checkSchemasAndCreateObjectEntities(schemaRawRecordsMap);
-            Map<String, List<SchemaRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
+            Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
                     .flatMap(m -> m.entrySet().stream())
                     .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
 
@@ -216,15 +217,15 @@ public class SchemaManagerImpl implements SchemaManager {
         return Collections.unmodifiableCollection(entities.values());
     }
 
-    private void createProvidedEntityRecords(Map<String, List<SchemaRawRecords>> recordsByEntity, Transaction transaction) throws GeminiException {
+    private void createProvidedEntityRecords(Map<String, List<EntityRawRecords>> recordsByEntity, Transaction transaction) throws GeminiException {
         // TODO topological order
-        for (Map.Entry<String, List<SchemaRawRecords>> e : recordsByEntity.entrySet()) {
+        for (Map.Entry<String, List<EntityRawRecords>> e : recordsByEntity.entrySet()) {
             String key = e.getKey();
             Entity entity = entities.get(key);
-            List<SchemaRawRecords> rawRecords = e.getValue();
-            for (SchemaRawRecords rr : rawRecords) {
-                Map<String, SchemaRawRecords.VersionedRecords> versionedRecords = rr.getVersionedRecords();
-                for (SchemaRawRecords.VersionedRecords version : versionedRecords.values()) {
+            List<EntityRawRecords> rawRecords = e.getValue();
+            for (EntityRawRecords rr : rawRecords) {
+                Map<String, EntityRawRecords.VersionedRecords> versionedRecords = rr.getVersionedRecords();
+                for (EntityRawRecords.VersionedRecords version : versionedRecords.values()) {
                     EntityRecord initVersionRec = new EntityRecord(entities.get(InitRecordDef.NAME));
                     initVersionRec.set(InitRecordDef.FIELDS.ENTITY, entity.getName());
                     initVersionRec.set(InitRecordDef.FIELDS.VERSION_NAME, version.getVersionName());
@@ -259,23 +260,68 @@ public class SchemaManagerImpl implements SchemaManager {
         }
     }
 
-    private Map<String, Map<String, SchemaRawRecords>> loadModuleRecords(Collection<Module> modules) throws IOException, SyntaxError {
-        Map<String, Map<String, SchemaRawRecords>> schemaRawRecords = new HashMap<>();
+    private Map<String, Map<String, EntityRawRecords>> loadModuleRecords(Collection<Module> modules) throws IOException, SyntaxError {
+        Map<String, Map<String, EntityRawRecords>> schemaRawRecords = new HashMap<>();
         for (Module module : modules) {
             String location = module.getSchemaRecordResourceLocation();
             Resource resource = applicationContext.getResource(location);
+            Map<String, EntityRawRecords> allRecords = new HashMap<>();
             if (resource.exists()) {
+                logger.info("Found module records definition found for module {}: location {}", module.getName(), location);
                 InputStream schemaRecordStream = resource.getInputStream();
-                Map<String, SchemaRawRecords> records = RecordParser.parse(new InputStreamReader(schemaRecordStream));
-                schemaRawRecords.put(module.getName(), records);
+                allRecords = RecordParser.parse(new InputStreamReader(schemaRecordStream));
             } else {
-                logger.info("No records definition found for module {}: location {}", module.getName(), location);
+                logger.info("No module records definition found for module {}: location {}", module.getName(), location);
             }
+            RawSchema rawSchema = schemas.get(module);
+            for (RawEntity rawEntity : rawSchema.getRawEntities()) {
+                String entityName = rawEntity.getName().toLowerCase();
+                String capitalizedEntityName = entityName.substring(0, 1).toUpperCase() + entityName.substring(1);
+                String entityLocation = module.getEntityRecordResourceLocation(capitalizedEntityName);
+                Resource entityResource = applicationContext.getResource(entityLocation);
+                if (entityResource.exists()) {
+                    logger.info("Found entity records definition found for module/entity {}/{}: location {}", module.getName(), capitalizedEntityName, entityLocation);
+                    InputStream entityRecordStream = entityResource.getInputStream();
+                    Map<String, EntityRawRecords> records = RecordParser.parse(new InputStreamReader(entityRecordStream));
+                    mergeModuleRecordsWithSpecificEntityRecords(allRecords, records);
+                } else {
+                    logger.info("No entity records definition found for module/entity {}/{}: location {}", module.getName(), capitalizedEntityName, entityLocation);
+                }
+            }
+            schemaRawRecords.put(module.getName(), allRecords);
         }
         return schemaRawRecords;
     }
 
-    private Map<String, Entity> checkSchemasAndCreateObjectEntities(Map<String, Map<String, SchemaRawRecords>> schemaRawRecordsMap) {
+    private void mergeModuleRecordsWithSpecificEntityRecords(Map<String, EntityRawRecords> allRecords, Map<String, EntityRawRecords> records) {
+        Set<String> allRecordsKeySet = allRecords.keySet();
+        Set<String> recordsKeyset = records.keySet();
+        HashSet<String> keyset = new HashSet<>();
+        keyset.addAll(allRecordsKeySet);
+        keyset.addAll(recordsKeyset);
+        for (String entity : keyset) {
+            EntityRawRecords moduleDefinitions = allRecords.get(entity);
+            EntityRawRecords entityDefinitions = records.get(entity);
+            if (moduleDefinitions == null && entityDefinitions != null) {
+                // simply need to add the specific definitions
+                allRecords.put(entity, entityDefinitions);
+            }
+            if (moduleDefinitions != null && entityDefinitions != null) {
+                // NEED to merge here
+                EntityRawRecordBuilder mergedBuilder = new EntityRawRecordBuilder(entity);
+                mergedBuilder.setDefaultRecord(entityDefinitions.getDef() == null ? moduleDefinitions.getDef() : entityDefinitions.getDef());
+                Map<String, EntityRawRecords.VersionedRecords> moduleRecs = moduleDefinitions.getVersionedRecords();
+                Map<String, EntityRawRecords.VersionedRecords> entityRecs = entityDefinitions.getVersionedRecords();
+                mergedBuilder.addRecord(moduleRecs.values());
+                mergedBuilder.addRecord(entityRecs.values());
+                allRecords.put(entity, mergedBuilder.build());
+            }
+            // NO OPERATION for this type of check
+            // if( moduleDefinitions != null && entityDefinitions == null)
+        }
+    }
+
+    private Map<String, Entity> checkSchemasAndCreateObjectEntities(Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap) {
         /* TODO entità estendibii per modulo
             caricare ogni modulo a se stante.. con le entità.. poi fare il merge delle
             entries (ognuna contenente il modulo da dove viene)
@@ -301,10 +347,10 @@ public class SchemaManagerImpl implements SchemaManager {
             }
 
             // for entities we have also records
-            Map<String, SchemaRawRecords> rawRecordsByEntity = schemaRawRecordsMap.getOrDefault(module.getName(), Map.of());
-            SchemaRawRecords schemaRawRecords = rawRecordsByEntity.get(entityName.toUpperCase());
-            if (schemaRawRecords != null) {
-                Object defRecord = schemaRawRecords.getDef();
+            Map<String, EntityRawRecords> rawRecordsByEntity = schemaRawRecordsMap.getOrDefault(module.getName(), Map.of());
+            EntityRawRecords entityRawRecords = rawRecordsByEntity.get(entityName.toUpperCase());
+            if (entityRawRecords != null) {
+                Object defRecord = entityRawRecords.getDef();
                 entityB.setDefaultRecord(defRecord);
             }
             entityBuilders.put(entityName, entityB);

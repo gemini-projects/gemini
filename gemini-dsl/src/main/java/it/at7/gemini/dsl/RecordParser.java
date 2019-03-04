@@ -2,8 +2,8 @@ package it.at7.gemini.dsl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.at7.gemini.dsl.entities.SchemaRawRecords;
-import it.at7.gemini.dsl.entities.SchemaRawRecordBuilder;
+import it.at7.gemini.dsl.entities.EntityRawRecords;
+import it.at7.gemini.dsl.entities.EntityRawRecordBuilder;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -22,14 +22,17 @@ public class RecordParser {
         this.reader = new LineNumberReader(reader);
     }
 
-    public Map<String, SchemaRawRecords> parse() throws SyntaxError, IOException {
-        Map<String, SchemaRawRecordBuilder> builders = new HashMap<>();
+    public Map<String, EntityRawRecords> parse() throws SyntaxError, IOException {
+        Map<String, EntityRawRecordBuilder> recordsByEntityName = new HashMap<>();
         String line = reader.readLine();
+        if(line == null){
+            return Map.of();
+        }
         this.scanner = new Scanner(line);
         while (has(ENTITYRECORD)) {
             expect(ENTITYRECORD);
             String entityName = expect(ENTITYNAME);
-            SchemaRawRecordBuilder schemaRawRecordBuilder = builders.computeIfAbsent(entityName.toUpperCase(), SchemaRawRecordBuilder::new);
+            EntityRawRecordBuilder entityRawRecordBuilder = recordsByEntityName.computeIfAbsent(entityName.toUpperCase(), EntityRawRecordBuilder::new);
             StringBuilder jsonBuilder = new StringBuilder();
             String versionNameOrDefault = expect(VERSIONNAME); // DEFAULT in case of default record
             long versionProgressive = 0; boolean def = true;
@@ -52,18 +55,18 @@ public class RecordParser {
                 Object singleRecord = new ObjectMapper().readValue(jsonString,
                         new TypeReference<Map<String, Object>>() {
                         });
-                if (def) schemaRawRecordBuilder.setDefaultRecord(singleRecord);
-                else schemaRawRecordBuilder.addRecord(versionNameOrDefault, versionProgressive, singleRecord);
+                if (def) entityRawRecordBuilder.setDefaultRecord(singleRecord);
+                else entityRawRecordBuilder.addRecord(versionNameOrDefault, versionProgressive, singleRecord);
             } else {
                 assert jsonString.charAt(0) == '[';
                 List<Object> listRecord = new ObjectMapper().readValue(jsonString,
                         new TypeReference<List<Map<String, Object>>>() {
                         });
                 assert !def; // array not allowed for DEFAULT
-                schemaRawRecordBuilder.addRecords(versionNameOrDefault, versionProgressive, listRecord);
+                entityRawRecordBuilder.addRecords(versionNameOrDefault, versionProgressive, listRecord);
             }
         }
-        return builders.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, b -> b.getValue().build()));
+        return recordsByEntityName.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, b -> b.getValue().build()));
     }
 
     private boolean checkDefault() {
@@ -83,7 +86,7 @@ public class RecordParser {
         return scanner.hasNext(token.pattern);
     }
 
-    public static Map<String, SchemaRawRecords> parse(Reader r) throws SyntaxError, IOException {
+    public static Map<String, EntityRawRecords> parse(Reader r) throws SyntaxError, IOException {
         return new RecordParser(r).parse();
     }
 

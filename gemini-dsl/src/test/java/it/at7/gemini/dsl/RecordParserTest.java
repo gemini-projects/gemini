@@ -1,6 +1,6 @@
 package it.at7.gemini.dsl;
 
-import it.at7.gemini.dsl.entities.SchemaRawRecords;
+import it.at7.gemini.dsl.entities.EntityRawRecords;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,13 +15,13 @@ public class RecordParserTest {
     public void testRecordParser() throws SyntaxError, IOException {
         ClassLoader classLoader = getClass().getClassLoader();
         InputStream resourceAsStream = classLoader.getResourceAsStream("records.atr");
-        Map<String, SchemaRawRecords> recordByEntity = RecordParser.parse(new InputStreamReader(resourceAsStream));
+        Map<String, EntityRawRecords> recordByEntity = RecordParser.parse(new InputStreamReader(resourceAsStream));
 
-        SchemaRawRecords user = recordByEntity.get("USER");
+        EntityRawRecords user = recordByEntity.get("USER");
         Assert.assertEquals("USER", user.getEntity());
 
-        Map<String, SchemaRawRecords.VersionedRecords> versionedRecords = user.getVersionedRecords();
-        SchemaRawRecords.VersionedRecords initVersion = versionedRecords.get("VERSION");
+        Map<String, EntityRawRecords.VersionedRecords> versionedRecords = user.getVersionedRecords();
+        EntityRawRecords.VersionedRecords initVersion = versionedRecords.get("VERSION");
         Assert.assertNotNull(initVersion);
         Assert.assertEquals(1, initVersion.getVersionProgressive());
         Assert.assertEquals(1, initVersion.getRecords().size());
@@ -32,9 +32,9 @@ public class RecordParserTest {
         Assert.assertTrue(Map.class.isAssignableFrom(record.get("map").getClass()));
         Assert.assertEquals(1, ((Map<String, Object>) record.get("map")).get("a"));
 
-        SchemaRawRecords array = recordByEntity.get("ARRAY");
-        Map<String, SchemaRawRecords.VersionedRecords> arrayVersionedRecord = array.getVersionedRecords();
-        SchemaRawRecords.VersionedRecords v1 = arrayVersionedRecord.get("V");
+        EntityRawRecords array = recordByEntity.get("ARRAY");
+        Map<String, EntityRawRecords.VersionedRecords> arrayVersionedRecord = array.getVersionedRecords();
+        EntityRawRecords.VersionedRecords v1 = arrayVersionedRecord.get("V");
         Assert.assertEquals(2, v1.getRecords().size()
         );
     }

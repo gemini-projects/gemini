@@ -1,14 +1,16 @@
 package it.at7.gemini.dsl.entities;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 import java.util.Map;
 
-public class SchemaRawRecords {
+public class EntityRawRecords {
     private final String entity;
     private final Object def;
     private final Map<String, VersionedRecords> records;
 
-    public SchemaRawRecords(String entity, Object def, Map<String, VersionedRecords> records) {
+    public EntityRawRecords(String entity, Object def, Map<String, VersionedRecords> records) {
         this.entity = entity;
         this.def = def;
         this.records = records;
@@ -18,6 +20,7 @@ public class SchemaRawRecords {
         return entity;
     }
 
+    @Nullable
     public Object getDef() {
         return def;
     }

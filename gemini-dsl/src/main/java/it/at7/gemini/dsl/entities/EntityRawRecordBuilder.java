@@ -1,15 +1,16 @@
 package it.at7.gemini.dsl.entities;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SchemaRawRecordBuilder {
+public class EntityRawRecordBuilder {
     private final String entity;
     private Object def;
-    private Map<String, SchemaRawRecords.VersionedRecords> versionedRecordsList;
+    private Map<String, EntityRawRecords.VersionedRecords> versionedRecordsList;
 
-    public SchemaRawRecordBuilder(String entity) {
+    public EntityRawRecordBuilder(String entity) {
         this.entity = entity;
         this.def = null;
         this.versionedRecordsList = new HashMap<>();
@@ -26,18 +27,23 @@ public class SchemaRawRecordBuilder {
         addRecords(versionName, versionProgressive, List.of(record));
     }
 
-    public SchemaRawRecordBuilder addRecords(String versionName, long versionProgressive, List<Object> listRecord) {
+    public void addRecord(Collection<EntityRawRecords.VersionedRecords> values) {
+        for (EntityRawRecords.VersionedRecords value : values) {
+            addRecords(value.getVersionName(), value.getVersionProgressive(), value.getRecords());
+        }
+    }
+
+    public EntityRawRecordBuilder addRecords(String versionName, long versionProgressive, List<Object> listRecord) {
         if (versionedRecordsList.containsKey(versionName.toUpperCase())) {
             throw new RuntimeException(String.format("Two Entity Records definitions with the same version Name are not allowed: %s - %s", entity, versionName));
         }
-        SchemaRawRecords.VersionedRecords vr = new SchemaRawRecords.VersionedRecords(versionName, versionProgressive, listRecord);
+        EntityRawRecords.VersionedRecords vr = new EntityRawRecords.VersionedRecords(versionName, versionProgressive, listRecord);
         this.versionedRecordsList.put(versionName, vr);
         return this;
     }
 
-    public SchemaRawRecords build() {
-        return new SchemaRawRecords(entity, def, versionedRecordsList);
+    public EntityRawRecords build() {
+        return new EntityRawRecords(entity, def, versionedRecordsList);
     }
-
 
 }

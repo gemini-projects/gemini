@@ -1,0 +1,20 @@
+ENTITY-RECORD Field V 12
+{
+    "name": "name",
+    "entity": "ENTITY",
+    "events": {
+         "visible" : {
+            "eventType": "NO_EVENT",
+            "value": true
+         },
+         "modifiable" : {
+            "eventType": "NO_EVENT",
+            "value": false
+         },
+         "required" : {
+            "eventType": "NO_EVENT",
+            "value": true
+         },
+         "valueEventType" : "NO_EVENT"
+     }
+}

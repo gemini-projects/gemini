@@ -32,4 +32,9 @@ public interface Module extends StateListener {
         String pattern = "/records/%s.atr";
         return String.format(pattern, getName());
     }
+
+    default String getEntityRecordResourceLocation(String entityName) {
+        String pattern = "/records/%s.atr";
+        return String.format(pattern, entityName);
+    }
 }
