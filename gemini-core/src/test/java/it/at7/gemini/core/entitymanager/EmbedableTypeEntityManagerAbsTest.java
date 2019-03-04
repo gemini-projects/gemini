@@ -87,13 +87,37 @@ public abstract class EmbedableTypeEntityManagerAbsTest {
     }
 
     @Test
-    public void n5_deleteEmbeded() throws GeminiException {
+    public void n5_updateEmbededWithoutGettingFirst() throws GeminiException {
+        EntityRecord recWithLK = TestData.getEmbedable_singlelk_EntityRecord("logKey-withSomeEbdValues");
+        EntityRecord fullRecord = Services.getEntityManager().get(recWithLK);
+        EntityRecord embededRecord = fullRecord.get("embeded");
+        Object idOrig = embededRecord.getID();
+
+
+        // update directly an available record with embeded subrecors..
+        // if we don't get it we don't have the ID filled.. so the software shold not recreate the embeded field
+        // lets change only the numberLong for the already existent embeded entity
+        Entity embedableEntity = Services.getSchemaManager().getEntity("EmbedableEntity");
+        EntityRecord embedable = new EntityRecord(embedableEntity);
+        embedable.put("text", "logKey-allBasicTypes");
+        embedable.put("numberLong", 20);
+        recWithLK.put("embeded", embedable);
+
+        EntityRecord updatedRecord = Services.getEntityManager().update(recWithLK);
+        EntityRecord embededRecord2 = updatedRecord.get("embeded");
+        assertEquals(20, (long) embededRecord2.get("numberLong"));
+        Object idUpdated = embededRecord2.getID();
+        idOrig.equals(idUpdated);
+    }
+
+    @Test
+    public void n6_deleteEmbeded() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
         EntityRecord recWithLK = TestData.getEmbedable_singlelk_EntityRecord("logKey-withSomeEbdValues");
         EntityRecord fullRecord = entityManager.get(recWithLK);
         EntityRecord deleted = entityManager.delete(fullRecord);
         EntityRecord deletedEmbeded = deleted.get("embeded");
-        assertEquals(11, (long) deletedEmbeded.get("numberLong")); // updated on test n3
+        assertEquals(20, (long) deletedEmbeded.get("numberLong")); // updated on test n5
 
         Services.getTransactionManager().executeInSingleTrasaction(t -> {
             Optional<EntityRecord> deletedRecord = Services.getPersistenceEntityManager().getEntityRecordById(deleted.getEntity(), (long) deleted.getID(), t);
