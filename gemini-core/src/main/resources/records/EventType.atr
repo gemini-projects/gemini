@@ -1,0 +1,5 @@
+ENTITY-RECORD EventType V 1
+{
+    "code" : "NO_EVENT",
+    "description": "No event triggered"
+}

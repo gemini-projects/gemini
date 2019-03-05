@@ -1,6 +1,4 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {FormControl} from "@angular/forms";
-import {FormFieldBase} from "../form-fields/form-field-base";
 import {EntitySchema} from "../../schema/entity-schema";
 import {GeminiSchemaService} from "../../schema/schema.service";
 import {FormService} from "../form.service";
@@ -27,21 +25,11 @@ export class GeminiFormComponent implements OnInit {
     ngOnInit() {
         this.formService.entitySchemaToForm(this.entityName)
             .subscribe(fs => {
-                console.log(fs);
                 this.formStatus = fs
             })
     }
 
     onSubmit(event) {
         console.log(this.formStatus);
-    }
-
-
-    private computeSyncFormValidator(control: FormControl, field: FormFieldBase<any>) {
-
-    }
-
-    private computeAsynFormValidator(control: FormControl, field: FormFieldBase<any>) {
-
     }
 }

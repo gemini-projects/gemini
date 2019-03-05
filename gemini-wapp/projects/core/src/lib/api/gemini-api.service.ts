@@ -51,7 +51,7 @@ export class GeminiApiService {
             headers: httpHeaders,
             params: httpParams
         };
-        return this.http.get(this.configService.getApiEntitiesUrl(entityName), options)
+        return this.http.get<EntityRecord>(this.configService.getApiEntitiesUrl(entityName), options)
             .pipe(
                 retry(3),
                 catchError(this.handleError)

@@ -15,12 +15,6 @@ ENTITY-RECORD FieldEvents DEFAULT
      "valueEventType" : "NO_EVENT"
 }
 
-ENTITY-RECORD EventType V 1
-{
-    "code" : "NO_EVENT",
-    "description": "No event triggered"
-}
-
 ENTITY-RECORD FieldResolution V 1
 [{
    "field": {

@@ -32,98 +32,15 @@ export class GeminiSchemaService {
 
     getEntityFields(entityName: string): Observable<FieldSchema[]> {
         const search: string = `entity==${entityName.toUpperCase()}`;
-
-
         return this.apiService.getEntitiesMatchingFilter(GeminiSchemaService.ENTITY_NAME_OF_FIELDS, search)
             .pipe(
                 map((entityRecord: EntityRecord) => {
-
-                    //entityRecord;
-                    console.log(entityRecord);
-
                     let fieldsEntityRec = entityRecord.data as EntityRecord[];
-
-
-                    let fielsSchemas : FieldSchema[] = fieldsEntityRec.map<FieldSchema>(fsr => {
+                    let fielsSchemas: FieldSchema[] = fieldsEntityRec.map<FieldSchema>(fsr => {
                         return fsr.data as FieldSchema
                     });
-
-                    console.log(fielsSchemas);
-
                     return fielsSchemas;
-
-                    // return [] as FieldSchema[ return [{
-                    //                         name: "required text",
-                    //                         type: FieldType.TEXT,
-                    //                         requiredStrategy: GeminiValueStrategy.SIMPLE,
-                    //                         visibleStrategy: GeminiValueStrategy.SIMPLE,
-                    //                         modifiableStrategy: GeminiValueStrategy.SIMPLE,
-                    //                         required: true,
-                    //                         visible: true
-                    //                     }, {
-                    //                         name: "not required Long",
-                    //                         type: FieldType.LONG,
-                    //                         requiredStrategy: GeminiValueStrategy.SIMPLE,
-                    //                         visibleStrategy: GeminiValueStrategy.SIMPLE,
-                    //                         modifiableStrategy: GeminiValueStrategy.SIMPLE,
-                    //                         visible: true
-                    //                     }, {
-                    //                         name: "not required Double",
-                    //                         type: FieldType.DOUBLE,
-                    //                         requiredStrategy: GeminiValueStrategy.SIMPLE,
-                    //                         visibleStrategy: GeminiValueStrategy.SIMPLE,
-                    //                         modifiableStrategy: GeminiValueStrategy.SIMPLE,
-                    //                         visible: true
-                    //                     }];];
-
-                    /* return [{
-                        name: "required text",
-                        type: FieldType.TEXT,
-                        requiredStrategy: GeminiValueStrategy.SIMPLE,
-                        visibleStrategy: GeminiValueStrategy.SIMPLE,
-                        modifiableStrategy: GeminiValueStrategy.SIMPLE,
-                        required: true,
-                        visible: true
-                    }, {
-                        name: "not required Long",
-                        type: FieldType.LONG,
-                        requiredStrategy: GeminiValueStrategy.SIMPLE,
-                        visibleStrategy: GeminiValueStrategy.SIMPLE,
-                        modifiableStrategy: GeminiValueStrategy.SIMPLE,
-                        visible: true
-                    }, {
-                        name: "not required Double",
-                        type: FieldType.DOUBLE,
-                        requiredStrategy: GeminiValueStrategy.SIMPLE,
-                        visibleStrategy: GeminiValueStrategy.SIMPLE,
-                        modifiableStrategy: GeminiValueStrategy.SIMPLE,
-                        visible: true
-                    }]; */
                 }));
-
-        /* return of([{
-            name: "required text",
-            type: FieldType.TEXT,
-            requiredStrategy: GeminiValueStrategy.SIMPLE,
-            visibleStrategy: GeminiValueStrategy.SIMPLE,
-            modifiableStrategy: GeminiValueStrategy.SIMPLE,
-            required: true,
-            visible: true
-        }, {
-            name: "not required Long",
-            type: FieldType.LONG,
-            requiredStrategy: GeminiValueStrategy.SIMPLE,
-            visibleStrategy: GeminiValueStrategy.SIMPLE,
-            modifiableStrategy: GeminiValueStrategy.SIMPLE,
-            visible: true
-        }, {
-            name: "not required Double",
-            type: FieldType.DOUBLE,
-            requiredStrategy: GeminiValueStrategy.SIMPLE,
-            visibleStrategy: GeminiValueStrategy.SIMPLE,
-            modifiableStrategy: GeminiValueStrategy.SIMPLE,
-            visible: true
-        }]); */
     }
 
 }

@@ -35,8 +35,6 @@ export class EntityLayoutComponent {
                     this.errorMsgs = [{severity: 'error', summary: 'Error', detail: error}]
                 }
             );
-
-        // todo conversion from field schema to form fields
     }
 
     newEntityRecord() {

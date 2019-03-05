@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {FieldSchema, FieldType} from "../schema/field-schema";
+import {EventType, FieldEvents, FieldSchema, FieldType} from "../schema/field-schema";
 import {FormBuilder, ValidatorFn, Validators} from "@angular/forms";
 import {GeminiValueStrategy} from "../schema/gemini-value-strategy";
 import {FormStatus} from "./form-status";
@@ -27,7 +27,7 @@ export class FormService {
                     let formGroup = formStatus.formGroup = this.fb.group({});
                     let formFieldsStatus: FormFieldStatus[] = [];
 
-                    this.registerValueChange(formStatus);
+                    this.registerFormValueChanges(formStatus);
 
                     for (let field of fieldSchemas) {
                         let formFieldStatus = this.createFormFieldStatus(field);
@@ -41,31 +41,37 @@ export class FormService {
                 }));
     }
 
-    private registerValueChange(formStatus: FormStatus) {
+    private registerFormValueChanges(formStatus: FormStatus) {
         // formStatus.formGroup.valueChanges.subscribe(value => console.log(value));
     }
 
     private createFormFieldStatus(field: FieldSchema): FormFieldStatus {
         let formFielStatus = new FormFieldStatus();
         formFielStatus.fieldSchema = field;
+        let events: FieldEvents = field.events;
 
         //==== FieldVisibility - preliminary check to avoid unnecessary logic ===
-        if (field.visibleStrategy == GeminiValueStrategy.SIMPLE && !field.visible) {
+        if (events.visible.eventType == EventType.NO_EVENT && !events.visible.value) {
             return;
         }
         // ===================
 
+        // get the component
         formFielStatus.formControl = this.fb.control(null);
         formFielStatus.formComponent = this.getFieldComponent(formFielStatus);
+
+        if (formFielStatus.formComponent == null) {
+            return null;
+        }
 
         this.computeGeminiValueStrategy(formFielStatus, "visible");
 
 
-        this.computeSyncValidator(formFielStatus);
+        // this.computeSyncValidator(formFielStatus);
 
-        if (field.modifiableStrategy == GeminiValueStrategy.SIMPLE) {
+        /* if (field.modifiableStrategy == GeminiValueStrategy.SIMPLE) {
             formFielStatus.modifiable = field.modifiable;
-        }
+        } */
 
         return formFielStatus;
     }
@@ -127,12 +133,12 @@ export class FormService {
         return null;
     }
 
-    private computeSyncValidator(formFielStatus: FormFieldStatus) {
+    /* private computeSyncValidator(formFielStatus: FormFieldStatus) {
         let fieldSchema = formFielStatus.fieldSchema;
         let validators: ValidatorFn[] = [];
         if (fieldSchema.requiredStrategy === GeminiValueStrategy.SIMPLE && fieldSchema.required) {
             validators.push(Validators.required);
         }
         formFielStatus.formControl.setValidators(validators);
-    }
+    }*/
 }
