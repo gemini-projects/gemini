@@ -406,9 +406,10 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case BOOL:
                 return data_type.equals("boolean");
             case TIME:
+                return data_type.contains("time");
             case DATE:
             case DATETIME:
-                throw new RuntimeException("UNSUPPORTED OPE");
+                return data_type.contains("timestamp");
             case ENTITY_REF:
             case ENTITY_EMBEDED:
                 Entity entityRef = field.getEntityRef();
@@ -417,6 +418,8 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 return data_type.equals("bigint") && name.equals(domain_name);
             case RECORD:
                 break;
+            case TEXT_ARRAY:
+                return data_type.contains("ARRAY");
         }
         throw new RuntimeException(String.format("Field %s not handled for drop/create dirty column", type));
     }
