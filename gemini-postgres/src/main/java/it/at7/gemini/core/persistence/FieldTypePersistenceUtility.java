@@ -46,6 +46,7 @@ public class FieldTypePersistenceUtility {
             case ENTITY_REF:
             case ENTITY_EMBEDED:
             case GENERIC_ENTITY_REF:
+            case ENTITY_REF_ARRAY:
                 return true;
         }
         return false;

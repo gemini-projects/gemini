@@ -28,7 +28,7 @@ allprojects {
     targetCompatibility = 1.9
 
     dependencies {
-        compile 'org.jetbrains:annotations:16.0.2'
+        compile 'org.jetbrains:annotations:17.0.0'
         testCompile 'org.springframework.boot:spring-boot-starter-test'
     }
 

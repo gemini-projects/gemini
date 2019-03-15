@@ -6,9 +6,9 @@ import it.at7.gemini.dsl.RecordParser;
 import it.at7.gemini.dsl.SchemaParser;
 import it.at7.gemini.dsl.SyntaxError;
 import it.at7.gemini.dsl.entities.EntityRawRecordBuilder;
+import it.at7.gemini.dsl.entities.EntityRawRecords;
 import it.at7.gemini.dsl.entities.RawEntity;
 import it.at7.gemini.dsl.entities.RawSchema;
-import it.at7.gemini.dsl.entities.EntityRawRecords;
 import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
@@ -27,8 +27,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import static it.at7.gemini.schema.FieldType.ENTITY_EMBEDED;
-import static it.at7.gemini.schema.FieldType.ENTITY_REF;
+import static it.at7.gemini.schema.FieldType.*;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
@@ -413,12 +412,19 @@ public class SchemaManagerImpl implements SchemaManager {
                 return;
             }
 
-            /*  TODO entity collections must be revisited
-
-            // try to get a static collection reference for entity
-            if (handleEntityCollectionRef(entityBuilders, entityBuilder, entry)) {
-                return;
-            } */
+            // try to get an array of entity ref (NB arrays of basic types are handled with aliases)
+            if (type.charAt(0) == '[' && type.charAt(type.length() - 1) == ']') {
+                String entityRef = type.substring(1, type.length() - 1);
+                EntityBuilder entityForRefType = entityBuilders.get(entityRef);
+                if (entityForRefType != null) {
+                    // TODO handle embedable entity ref
+                    boolean embedable = entityForRefType.getRawEntity().isEmbedable();
+                    if (!embedable) {
+                        entityBuilder.addField(ENTITY_REF_ARRAY, entry, entityForRefType.getName());
+                        return;
+                    }
+                }
+            }
 
             throw new FieldTypeNotKnown(entityBuilder.getName(), type, entry);
         } else {

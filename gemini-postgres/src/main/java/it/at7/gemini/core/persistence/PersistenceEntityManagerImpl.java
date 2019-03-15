@@ -231,7 +231,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private boolean sameOf(EntityRecord entityRecord, EntityRecord persistedEntityRecord, Transaction transaction) throws GeminiException {
-        if((entityRecord != null && persistedEntityRecord == null) || (entityRecord == null && persistedEntityRecord != null)){
+        if ((entityRecord != null && persistedEntityRecord == null) || (entityRecord == null && persistedEntityRecord != null)) {
             return true; // base case
         }
 
@@ -334,6 +334,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                         throw new RuntimeException(String.format("Field %s of type %s not handled - strategy must be implemented", field.getName(), field.getType()));
                     }
                 } */
+                if (type.equals(FieldType.ENTITY_REF_ARRAY)) {
+
+                }
                 if (!handled) {
                     throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
                 }
@@ -559,6 +562,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return new String[]{};
             case ENTITY_EMBEDED:
                 return 0;
+            case ENTITY_REF_ARRAY:
+                return null;
             case RECORD:
                 break;
         }
