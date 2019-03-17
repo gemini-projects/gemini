@@ -108,7 +108,8 @@ public class Entity {
         Map<String, Object> values = copyDefaultRecord();
         values.put("name", name);
         values.put("module", module.getName());
-        values.put("embedable", embedable );
+        values.put("embedable", embedable);
+        values.put("displayName", name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase());
         Entity entity = Services.getSchemaManager().getEntity(ENTITY);
         assert entity != null;
         return RecordConverters.entityRecordFromMap(entity, values);

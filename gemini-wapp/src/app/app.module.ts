@@ -1,16 +1,19 @@
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {NgModule} from '@angular/core';
-import {HttpClientModule} from '@angular/common/http';
+import {HttpClient, HttpClientModule} from '@angular/common/http';
 
-
+import {CoreModule} from "@gemini/core";
 import {AppComponent} from './app.component';
-
 import {UiModule} from './ui/ui.module';
 import {AppRoutingModule} from './app-routing.module';
-import {CoreModule} from "@gemini/core";
 import {environment} from '../environments/environment'
+import {TranslateLoader, TranslateModule, TranslateService} from "@ngx-translate/core";
+import {MultiTranslateHttpLoader} from "ngx-translate-multi-http-loader";
 
+export function createTranslateLoader(http: HttpClient) {
+    return new MultiTranslateHttpLoader(http, environment.TRANSLATIONS.PATHS);
+}
 
 @NgModule({
     declarations: [
@@ -21,10 +24,22 @@ import {environment} from '../environments/environment'
         UiModule,
         AppRoutingModule,
         HttpClientModule,
-        CoreModule.forRoot(environment)
+        CoreModule.forRoot(environment),
+        TranslateModule.forRoot({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: (createTranslateLoader),
+                deps: [HttpClient]
+            },
+            isolate: true
+        })
     ],
     providers: [],
     bootstrap: [AppComponent]
 })
 export class AppModule {
+    constructor(translate: TranslateService) {
+        translate.use(environment.TRANSLATIONS.DEFAULT_LANGUAGE);
+    }
+
 }

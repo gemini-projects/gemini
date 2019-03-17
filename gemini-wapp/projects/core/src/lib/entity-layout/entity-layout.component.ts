@@ -3,6 +3,7 @@ import {Component, Input} from '@angular/core';
 import {GeminiSchemaService} from "../schema/schema.service";
 import {EntitySchema} from "../schema/entity-schema";
 import {FormService} from "../form/form.service";
+import {ActivatedRoute} from "@angular/router";
 
 @Component({
     selector: 'entity-layout',
@@ -10,24 +11,24 @@ import {FormService} from "../form/form.service";
     styleUrls: ['./entity-layout.component.scss']
 })
 export class EntityLayoutComponent {
-    private schemaService: GeminiSchemaService;
-    private formService: FormService;
-
     errorMsgs: [any];
-
     newEntityRecordEnabled: boolean;
     entitySchema: EntitySchema;
 
-    constructor(schemaService: GeminiSchemaService, formService: FormService) {
-        this.schemaService = schemaService;
-        this.formService = formService;
+    _entityName;
+    constructor(private schemaService: GeminiSchemaService,
+                private formService: FormService,
+                private route: ActivatedRoute) {
         this.newEntityRecordEnabled = false;
+        route.params.subscribe(val => {
+            this.name = val.name
+        });
     }
 
     @Input()
     set name(name: string) {
-        let entityName = name.trim();
-        this.schemaService.getEntitySchema(entityName)
+        this._entityName = name.trim();
+        this.schemaService.getEntitySchema(this._entityName)
             .subscribe(es => {
                     this.entitySchema = es
                 },
@@ -37,12 +38,8 @@ export class EntityLayoutComponent {
             );
     }
 
-    newEntityRecord() {
-        this.newEntityRecordEnabled = true;
-    }
-
-    closeNewEntityRecord() {
-        this.newEntityRecordEnabled = false;
+    get name() {
+        return this._entityName;
     }
 }
 

@@ -3,9 +3,13 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false,
-  API_URL: "/api",
-  COMPONENT_URL: "/_components"
+    production: false,
+    API_URL: "/api",
+    COMPONENT_URL: "/_components",
+    TRANSLATIONS: {
+        DEFAULT_LANGUAGE: "it",
+        PATHS: [{prefix: "./assets/translate/core/", suffix: ".json"}]
+    }
 };
 
 /*

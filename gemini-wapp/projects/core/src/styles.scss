@@ -1,12 +1,118 @@
-// -- Prime NG reset
+// -- Variables
+$color-icon-button: #6a6a6d;
+
+
+// -- Prime NG reset --
 
 body .ui-inputtext {
-  padding: 0.1em;
+  padding: 0.3em;
+  font-size: 13px;
+}
+
+.ui-tooltip {
+}
+
+.ui-tooltip-arrow {
+  border-top-color: #a6a6a6 !important;
+}
+
+.ui-tooltip-text {
+  font-size: 0.8rem;
+  padding: 7px !important;
+  background-color: white !important;
+  color: $color-icon-button !important;
 }
 
 // -- END -- Prime NG reset --
 
-.gemini-form-field-container {
-  width: 100%;
-  margin-bottom: 0.5rem;
+
+%flex-column {
+  display: flex;
+  flex-direction: column;
 }
+
+.gemini-portlet {
+  @extend %flex-column;
+  flex-grow: 1;
+  box-shadow: 0px 0px 13px 0px rgba(82, 63, 105, 0.05);
+  background-color: #ffffff;
+  margin-bottom: 30px;
+  border-radius: 4px;
+
+  &__head {
+    $pHead: &;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    position: relative;
+    padding: 0 25px;
+    border-bottom: 1px solid #ebedf2;
+    min-height: 50px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+
+    &-label {
+      display: flex;
+      align-items: center;
+
+      #{$pHead}-title {
+        margin: 0;
+        padding: 0;
+        font-size: 1rem;
+        font-weight: 400;
+        color: #3d4465;
+      }
+    }
+
+    &-toolbar {
+      display: flex;
+      align-items: center;
+      align-content: flex-end;
+
+      button {
+        margin-right: 10px;
+      }
+    }
+  }
+
+  &__body {
+    @extend %flex-column;
+    padding: 25px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+}
+
+
+.gemini-subheader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  max-width: 100%;
+  padding: 1rem 0;
+
+  &__main {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  &__title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #434349;
+    margin: 0 1rem 0 0;
+  }
+
+  &__icon_group {
+    .ui-button {
+      // width: 26px !important;
+      // height: 26px !important;
+
+      .pi {
+        font-size: 14px !important;
+      }
+    }
+  }
+}
+

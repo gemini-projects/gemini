@@ -151,7 +151,7 @@ public class SchemaManagerImpl implements SchemaManager {
         return fieldRecords;
     }
 
-    private void updateENTITYRecord(Transaction transaction, Entity entity) throws SQLException, GeminiException {
+    private void updateENTITYRecord(Transaction transaction, Entity entity) throws GeminiException {
         logger.info("{}: creating/updating EntityRecord for {}", entity.getModule().getName(), entity.getName());
         EntityRecord entityRecord = entity.toInitializationEntityRecord();
         entityRecord = persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction);

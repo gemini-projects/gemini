@@ -2,7 +2,31 @@
     <p-messages [(value)]="errorMsgs" [closable]="false" severity="error"></p-messages>
 </div>
 
-<div *ngIf="entitySchema" class="gemini-portlet">
+<div *ngIf="entitySchema">
+
+    <div class="gemini-subheader">
+        <div class="gemini-subheader__main">
+            <h3 class="gemini-subheader__title">{{entitySchema.displayName | titlecase}}</h3>
+            <div class="gemini-subheader__icon_group">
+                <button [routerLink]="['/entity', name,'new']"
+                   routerLinkActive="active" class="ui-button-secondary"
+                   pButton icon="pi pi-plus" iconPos="right"
+                   label="Nuovo ">
+                </button>
+
+            </div>
+        </div>
+        <div class="gemini-subheader__body">
+            todo visibilità qua
+        </div>
+    </div>
+
+    <router-outlet></router-outlet>
+</div>
+
+
+<!-- <div *ngIf="entitySchema" class="gemini-portlet">
+    <router-outlet></router-outlet>
     <div class="gemini-portlet__head">
         <div class="gemini-portlet__head-label">
             <h3 class="gemini-portlet__head-title">
@@ -26,5 +50,5 @@
     <div *ngIf="newEntityRecordEnabled" class="gemini-portlet__body">
         <gemini-form [entityName]="entitySchema.name"></gemini-form>
     </div>
-    
-</div>
+
+</div> -->

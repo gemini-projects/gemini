@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {FormFieldComponent} from "../form-field-component.interface";
+import {FormFieldComponentDef} from "../form-field-component.interface";
 import {FormFieldStatus, InputFieldData} from "../../form-field-status";
 import {FormStatus} from "../../form-status";
 
@@ -8,7 +8,7 @@ import {FormStatus} from "../../form-status";
     templateUrl: './input-field.component.html',
     styleUrls: ['./input-field.component.scss']
 })
-export class InputComponent implements FormFieldComponent, OnInit {
+export class InputComponent implements FormFieldComponentDef, OnInit {
     @Input() fieldStatus: FormFieldStatus;
     @Input() formStatus: FormStatus;
 

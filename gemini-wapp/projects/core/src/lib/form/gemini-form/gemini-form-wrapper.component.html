@@ -1,0 +1,9 @@
+<form *ngIf="formStatus" [formGroup]="formStatus.formGroup"
+      class="p-grid">
+
+    <div *ngFor="let fieldStatus of formStatus.fieldsStatus;" class="p-col-12 p-md-6 p-lg-3">
+        <form-field-container [fieldStatus]="fieldStatus"
+                              [formStatus]="formStatus"></form-field-container>
+    </div>
+
+</form>

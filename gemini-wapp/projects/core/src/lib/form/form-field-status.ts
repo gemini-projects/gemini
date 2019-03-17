@@ -4,16 +4,11 @@ import {Type} from "@angular/core";
 
 export class FormFieldStatus {
     fieldSchema: FieldSchema;
-
-    visible: boolean;
-    modifiable: boolean;
     formControl: FormControl;
-    formComponent: FormFieldComponent;
-
-
+    formComponent: FormFieldComponentMeta;
 }
 
-export class FormFieldComponent {
+export class FormFieldComponentMeta {
     componentType: Type<any>;
     componentData: FormFieldData
 }
@@ -22,7 +17,7 @@ export interface FormFieldData {
     [key: string]: any
 }
 
-export class InputFieldData implements FormFieldData{
+export class InputFieldData implements FormFieldData {
     inputType: string;
     step?: number
 }

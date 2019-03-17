@@ -1,5 +1,5 @@
 import {ComponentFactoryResolver, Directive, Input, OnInit, ViewContainerRef} from "@angular/core";
-import {FormFieldComponent} from "./form-field-component.interface";
+import {FormFieldComponentDef} from "./form-field-component.interface";
 import {FormFieldStatus} from "../form-field-status";
 import {FormStatus} from "../form-status";
 
@@ -7,7 +7,7 @@ import {FormStatus} from "../form-status";
 @Directive({
     selector: "[geminiFormField]"
 })
-export class GeminiFieldDirective implements OnInit, FormFieldComponent {
+export class GeminiFieldDirective implements OnInit, FormFieldComponentDef {
     @Input() fieldStatus: FormFieldStatus;
     @Input() formStatus: FormStatus;
 

@@ -1,13 +1,15 @@
 import {Injectable} from '@angular/core';
 import {EventType, FieldEvents, FieldSchema, FieldType} from "../schema/field-schema";
-import {FormBuilder, ValidatorFn, Validators} from "@angular/forms";
+import {FormBuilder} from "@angular/forms";
 import {GeminiValueStrategy} from "../schema/gemini-value-strategy";
 import {FormStatus} from "./form-status";
-import {FormFieldComponent, FormFieldStatus} from "./form-field-status";
-import {InputComponent} from "./form-fields/input-field/input-field.component";
+import {FormFieldComponentMeta, FormFieldStatus} from "./form-field-status";
+import {InputComponent} from "./form-fields/input-fields/input-field.component";
 import {GeminiSchemaService} from "../schema/schema.service";
 import {Observable} from "rxjs";
 import {map} from 'rxjs/operators';
+import {BooleanComponent} from "./form-fields/boolean-field/boolean.component";
+import {EntityManagerService} from "../api";
 
 
 @Injectable({
@@ -15,15 +17,18 @@ import {map} from 'rxjs/operators';
 })
 export class FormService {
 
-    constructor(private fb: FormBuilder, private schemaService: GeminiSchemaService) {
+    constructor(private fb: FormBuilder,
+                private schemaService: GeminiSchemaService,
+                private entityManager: EntityManagerService) {
     }
 
-    public entitySchemaToForm(entityName: string): Observable<FormStatus> {
+    public entityToForm(entityName: string): Observable<FormStatus> {
         return this.schemaService.getEntityFields(entityName)
             .pipe(
                 map((fieldSchemas: FieldSchema[]) => {
 
                     let formStatus = new FormStatus();
+                    formStatus.entityName = entityName;
                     let formGroup = formStatus.formGroup = this.fb.group({});
                     let formFieldsStatus: FormFieldStatus[] = [];
 
@@ -37,8 +42,14 @@ export class FormService {
                         }
                     }
                     formStatus.fieldsStatus = formFieldsStatus;
+                    formStatus.submitFn = this.submitFunction.bind(this, entityName, formStatus);
                     return formStatus
                 }));
+    }
+
+    private submitFunction(entityName: string, formStatus: FormStatus) {
+        console.warn(formStatus.formGroup.value);
+        return this.entityManager.createOrUpdateEntityRecord(entityName);
     }
 
     private registerFormValueChanges(formStatus: FormStatus) {
@@ -85,7 +96,7 @@ export class FormService {
 
     }
 
-    private getFieldComponent(formFielStatus: FormFieldStatus): FormFieldComponent {
+    private getFieldComponent(formFielStatus: FormFieldStatus): FormFieldComponentMeta {
         switch (formFielStatus.fieldSchema.type) {
             case FieldType.TEXT:
                 return {
@@ -118,7 +129,12 @@ export class FormService {
                     }
                 };
             case FieldType.BOOL:
-                break;
+                return {
+                    componentType: BooleanComponent,
+                    componentData: {
+                        dateType: "" // TODO checkbox vs dropdown
+                    }
+                };
             case FieldType.TIME:
                 break;
             case FieldType.DATE:

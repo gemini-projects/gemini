@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from "@angular/common/http";
-import {Observable, OperatorFunction, throwError} from "rxjs";
+import {Observable, of, OperatorFunction, throwError} from "rxjs";
 import {catchError, retry} from "rxjs/operators";
 
 import {GeminiUriService} from "../common";
@@ -9,7 +9,7 @@ import {EntityRecord} from "../schema/EntityRecord";
 @Injectable({
     providedIn: 'root'
 })
-export class GeminiApiService {
+export class EntityManagerService {
 
     private static DEFAULT_HTTP_HEADERS = {
         'Gemini': 'gemini.api'
@@ -28,6 +28,13 @@ export class GeminiApiService {
                 catchError(this.handleError));
     }
 
+    public createOrUpdateEntityRecord(entityName: string): Observable<EntityRecord> {
+        return of({
+            meta: {},
+            data: {code: entityName}
+        });
+    }
+
     public getEntityList(entityName: string, entityKey: any, entityCollection?: string): Observable<EntityRecord[]> {
         const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
         const options = {
@@ -40,7 +47,7 @@ export class GeminiApiService {
     }
 
     private httpHeadersFromDefault(): HttpHeaders {
-        return new HttpHeaders(GeminiApiService.DEFAULT_HTTP_HEADERS);
+        return new HttpHeaders(EntityManagerService.DEFAULT_HTTP_HEADERS);
     }
 
     public getEntitiesMatchingFilter(entityName: string, searchValue: any): Observable<EntityRecord> {

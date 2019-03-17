@@ -1,11 +1,10 @@
 import {Injectable} from '@angular/core';
 import {EntitySchema} from "./entity-schema";
-import {FieldSchema, FieldType} from "./field-schema";
-import {Observable, of} from "rxjs";
-import {GeminiApiService} from "../api";
+import {FieldSchema} from "./field-schema";
+import {Observable} from "rxjs";
+import {EntityManagerService} from "../api";
 import {map} from "rxjs/operators";
 import {EntityRecord} from "./EntityRecord";
-import {GeminiValueStrategy} from "./gemini-value-strategy";
 
 @Injectable({
     providedIn: 'root',
@@ -16,7 +15,7 @@ export class GeminiSchemaService {
 
     private entityCache: { [key: string]: EntitySchema };
 
-    constructor(private apiService: GeminiApiService) {
+    constructor(private apiService: EntityManagerService) {
         this.entityCache = {}
     }
 

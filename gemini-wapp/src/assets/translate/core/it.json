@@ -1,0 +1,17 @@
+{
+  "DATATYPE": {
+    "BOOL": {
+      "TRUE": "Si",
+      "FALSE": "No"
+    }
+  },
+  "BUTTON": {
+    "NEW": "Nuovo",
+    "CANCEL": "Annulla",
+    "SAVE": "Salva",
+    "OK": "Ok"
+  },
+  "NEW_ENTITY_REC": {
+    "NEW_MESSAGE": "Inserisci nuovo record"
+  }
+}
