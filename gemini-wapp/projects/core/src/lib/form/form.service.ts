@@ -10,6 +10,7 @@ import {Observable} from "rxjs";
 import {map} from 'rxjs/operators';
 import {BooleanComponent} from "./form-fields/boolean-field/boolean.component";
 import {EntityManagerService} from "../api";
+import {DateComponent} from "./form-fields/date-time-fields/date.component";
 
 
 @Injectable({
@@ -138,7 +139,10 @@ export class FormService {
             case FieldType.TIME:
                 break;
             case FieldType.DATE:
-                break;
+                return {
+                    componentType: DateComponent,
+                    componentData: {}
+                };
             case FieldType.DATETIME:
                 break;
             case FieldType.ENTITY_REF:

@@ -6,7 +6,7 @@ import {InputTextModule} from 'primeng/inputtext';
 import {MessagesModule} from 'primeng/messages';
 import {MessageModule} from 'primeng/message';
 import {RouterModule} from '@angular/router';
-import {DropdownModule, TooltipModule} from "primeng/primeng";
+import {CalendarModule, DropdownModule, TooltipModule} from "primeng/primeng";
 import {TranslateModule} from "@ngx-translate/core";
 
 
@@ -20,6 +20,7 @@ import {NewEntityComponent} from './entity-layout/new-entity/new-entity.componen
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {BooleanComponent} from "./form/form-fields/boolean-field/boolean.component";
 import { ListEntityComponent } from './entity-layout/list-entity/list-entity.component';
+import {DateComponent} from "./form/form-fields/date-time-fields/date.component";
 
 
 @NgModule({
@@ -29,6 +30,7 @@ import { ListEntityComponent } from './entity-layout/list-entity/list-entity.com
         GeminiFieldDirective,
         InputComponent,
         BooleanComponent,
+        DateComponent,
         FormFieldContainerComponent,
         NewEntityComponent,
         ListEntityComponent
@@ -40,6 +42,7 @@ import { ListEntityComponent } from './entity-layout/list-entity/list-entity.com
         ButtonModule,
         TooltipModule,
         DropdownModule,
+        CalendarModule,
         ReactiveFormsModule,
         InputTextModule,
         MessagesModule,
@@ -49,7 +52,8 @@ import { ListEntityComponent } from './entity-layout/list-entity/list-entity.com
     exports: [EntityLayoutComponent],
     entryComponents: [
         InputComponent,
-        BooleanComponent
+        BooleanComponent,
+        DateComponent
     ]
 })
 export class CoreModule {

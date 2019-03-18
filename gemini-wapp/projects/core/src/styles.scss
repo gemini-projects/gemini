@@ -4,9 +4,15 @@ $color-icon-button: #6a6a6d;
 
 // -- Prime NG reset --
 
-body .ui-inputtext {
-  padding: 0.3em;
-  font-size: 13px;
+body {
+  .ui-inputtext {
+    padding: 0.3em;
+    font-size: 13px;
+  }
+
+  .ui-button.ui-button-icon-only .ui-button-text {
+    padding: 0.3em;
+  }
 }
 
 .ui-tooltip {
