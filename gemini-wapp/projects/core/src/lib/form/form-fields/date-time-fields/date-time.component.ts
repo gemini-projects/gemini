@@ -29,7 +29,7 @@ export class DateTimeComponent implements FormFieldComponentDef, OnInit {
         });
         this.dateTimeData = this.fieldStatus.formComponent.componentData as DateTimeFieldData;
         this.showTime = this.dateTimeData.dateTimeType == DateTimeType.DATETIME;
-        this.showButtonBar = this.dateTimeData.dateTimeType == DateTimeType.DATETIME;
+        this.showButtonBar = this.dateTimeData.dateTimeType == DateTimeType.DATE;
         this.timeOnly = this.dateTimeData.dateTimeType == DateTimeType.TIME;
     }
 

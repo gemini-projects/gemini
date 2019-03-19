@@ -11,7 +11,6 @@ import {map} from 'rxjs/operators';
 import {BooleanComponent} from "./form-fields/boolean-field/boolean.component";
 import {EntityManagerService} from "../api";
 import {DateTimeComponent} from "./form-fields/date-time-fields/date-time.component";
-import {SpinnerModule} from "primeng/primeng";
 import {SpinnerComponent} from "./form-fields/input-fields/spinner.component";
 
 
