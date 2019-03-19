@@ -6,7 +6,7 @@ import {InputTextModule} from 'primeng/inputtext';
 import {MessagesModule} from 'primeng/messages';
 import {MessageModule} from 'primeng/message';
 import {RouterModule} from '@angular/router';
-import {CalendarModule, DropdownModule, TooltipModule} from "primeng/primeng";
+import {CalendarModule, DropdownModule, SpinnerModule, ToggleButtonModule, TooltipModule} from "primeng/primeng";
 import {TranslateModule} from "@ngx-translate/core";
 
 
@@ -20,7 +20,8 @@ import {NewEntityComponent} from './entity-layout/new-entity/new-entity.componen
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {BooleanComponent} from "./form/form-fields/boolean-field/boolean.component";
 import { ListEntityComponent } from './entity-layout/list-entity/list-entity.component';
-import {DateComponent} from "./form/form-fields/date-time-fields/date.component";
+import {DateTimeComponent} from "./form/form-fields/date-time-fields/date-time.component";
+import {SpinnerComponent} from "./form/form-fields/input-fields/spinner.component";
 
 
 @NgModule({
@@ -30,7 +31,8 @@ import {DateComponent} from "./form/form-fields/date-time-fields/date.component"
         GeminiFieldDirective,
         InputComponent,
         BooleanComponent,
-        DateComponent,
+        DateTimeComponent,
+        SpinnerComponent,
         FormFieldContainerComponent,
         NewEntityComponent,
         ListEntityComponent
@@ -42,7 +44,9 @@ import {DateComponent} from "./form/form-fields/date-time-fields/date.component"
         ButtonModule,
         TooltipModule,
         DropdownModule,
+        SpinnerModule,
         CalendarModule,
+        ToggleButtonModule,
         ReactiveFormsModule,
         InputTextModule,
         MessagesModule,
@@ -53,7 +57,8 @@ import {DateComponent} from "./form/form-fields/date-time-fields/date.component"
     entryComponents: [
         InputComponent,
         BooleanComponent,
-        DateComponent
+        DateTimeComponent,
+        SpinnerComponent
     ]
 })
 export class CoreModule {

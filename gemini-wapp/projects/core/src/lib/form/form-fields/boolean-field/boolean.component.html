@@ -1,4 +1,6 @@
 <div [formGroup]="formStatus.formGroup">
-    <p-dropdown [options]="booleans" [formControlName]="fieldStatus.fieldSchema.name">
-    </p-dropdown>
+    <p-toggleButton [formControlName]="fieldStatus.fieldSchema.name"
+                    [onLabel]="trueLabel" [offLabel]="falseLabel"
+                    onIcon="pi pi-check" offIcon="pi pi-times">
+    </p-toggleButton>
 </div>

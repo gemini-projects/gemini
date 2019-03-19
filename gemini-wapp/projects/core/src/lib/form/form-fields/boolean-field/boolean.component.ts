@@ -14,7 +14,6 @@ export class BooleanComponent implements FormFieldComponentDef, OnInit {
     @Input() fieldStatus: FormFieldStatus;
     @Input() formStatus: FormStatus;
 
-    booleans: SelectItem[];
     private trueLabel: string;
     private falseLabel: string;
 
@@ -31,10 +30,6 @@ export class BooleanComponent implements FormFieldComponentDef, OnInit {
         this.translate.get('DATATYPE.BOOL.FALSE').subscribe((res: string) => {
             this.falseLabel = res;
         });
-        this.booleans = [
-            {label: this.trueLabel, value: true},
-            {label: this.falseLabel, value: false}
-        ]
     }
 
 

@@ -3,14 +3,16 @@ import {EventType, FieldEvents, FieldSchema, FieldType} from "../schema/field-sc
 import {FormBuilder} from "@angular/forms";
 import {GeminiValueStrategy} from "../schema/gemini-value-strategy";
 import {FormStatus} from "./form-status";
-import {FormFieldComponentMeta, FormFieldStatus} from "./form-field-status";
+import {DateTimeType, FormFieldComponentMeta, FormFieldStatus} from "./form-field-status";
 import {InputComponent} from "./form-fields/input-fields/input-field.component";
 import {GeminiSchemaService} from "../schema/schema.service";
 import {Observable} from "rxjs";
 import {map} from 'rxjs/operators';
 import {BooleanComponent} from "./form-fields/boolean-field/boolean.component";
 import {EntityManagerService} from "../api";
-import {DateComponent} from "./form-fields/date-time-fields/date.component";
+import {DateTimeComponent} from "./form-fields/date-time-fields/date-time.component";
+import {SpinnerModule} from "primeng/primeng";
+import {SpinnerComponent} from "./form-fields/input-fields/spinner.component";
 
 
 @Injectable({
@@ -108,43 +110,51 @@ export class FormService {
                 };
             case FieldType.NUMBER:
                 return {
-                    componentType: InputComponent,
+                    componentType: SpinnerComponent,
                     componentData: {
-                        inputType: "number"
+                        step: 0.01 // TODO configurable decimals
                     }
                 };
             case FieldType.LONG:
                 return {
-                    componentType: InputComponent,
+                    componentType: SpinnerComponent,
                     componentData: {
-                        inputType: "number",
                         step: 1
                     }
                 };
             case FieldType.DOUBLE:
                 return {
-                    componentType: InputComponent,
+                    componentType: SpinnerComponent,
                     componentData: {
-                        inputType: "number",
-                        step: 0.01 // TODO decimals
+                        step: 0.01 // TODO configurable decimals
                     }
                 };
             case FieldType.BOOL:
                 return {
                     componentType: BooleanComponent,
-                    componentData: {
-                        dateType: "" // TODO checkbox vs dropdown
-                    }
+                    componentData: {} // todo spinnger vs other gui component ??
                 };
             case FieldType.TIME:
-                break;
+                return {
+                    componentType: DateTimeComponent,
+                    componentData: {
+                        dateTimeType: DateTimeType.TIME
+                    }
+                };
             case FieldType.DATE:
                 return {
-                    componentType: DateComponent,
-                    componentData: {}
+                    componentType: DateTimeComponent,
+                    componentData: {
+                        dateTimeType: DateTimeType.DATE
+                    }
                 };
             case FieldType.DATETIME:
-                break;
+                return {
+                    componentType: DateTimeComponent,
+                    componentData: {
+                        dateTimeType: DateTimeType.DATETIME
+                    }
+                };
             case FieldType.ENTITY_REF:
                 break;
             case FieldType.RECORD:

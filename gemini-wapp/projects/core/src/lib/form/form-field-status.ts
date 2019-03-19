@@ -22,3 +22,14 @@ export class InputFieldData implements FormFieldData {
     step?: number
 }
 
+export class SpinnerFieldData implements FormFieldData {
+    step: number;
+}
+
+export class DateTimeFieldData implements FormFieldData {
+    dateTimeType: DateTimeType;
+}
+
+export enum DateTimeType {
+    DATE, TIME, DATETIME
+}
