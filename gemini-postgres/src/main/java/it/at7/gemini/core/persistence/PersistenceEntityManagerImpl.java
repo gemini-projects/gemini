@@ -343,7 +343,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                             if (entityRecordById.isPresent()) {
                                 erList.add(EntityReferenceRecord.fromEntityRecord(entityRecordById.get()));
                             } else {
-                                // TODO log or Error ?? resolutionContext ??
+                                throw new RuntimeException("TODO -- Critical exception, Inconsistent DB");
                             }
                         }
                         er.put(field, erList);
@@ -555,7 +555,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 }
                 Object[] elements = genColl.toArray();
                 Object firstElem = elements[0];
-                Array idsArray;
 
                 Long[] entityRefIds = new Long[elements.length];
                 int i = 0;
@@ -569,7 +568,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                             if (queryedEntityRec.isPresent()) {
                                 entityRefIds[i++] = (long) queryedEntityRec.get().getID();
                             } else {
-                                // TODO ERROR OR LOG ?
+                                throw EntityRecordException.LK_NOTFOUND(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
                             }
                         }
                     }

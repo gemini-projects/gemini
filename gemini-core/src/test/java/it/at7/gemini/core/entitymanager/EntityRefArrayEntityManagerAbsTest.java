@@ -3,6 +3,7 @@ package it.at7.gemini.core.entitymanager;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.EntityReferenceRecord;
 import it.at7.gemini.core.Services;
+import it.at7.gemini.exceptions.EntityRecordException;
 import it.at7.gemini.exceptions.GeminiException;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -57,5 +58,13 @@ public abstract class EntityRefArrayEntityManagerAbsTest {
         Assert.assertEquals(0, domainPkRefArray.size());
     }
 
+    @Test(expected = EntityRecordException.class)
+    public void n4_ExceptionIfNotFound() throws GeminiException {
+        EntityRecord lk5 = TestData.getDomain_singlelk_EntityRecord("lk5");
+        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
+        List<EntityRecord> domain1Array = List.of(lk5);
+        entityRecord.put("domain1Array", domain1Array);
+        Services.getEntityManager().update(entityRecord);
+    }
 
 }
