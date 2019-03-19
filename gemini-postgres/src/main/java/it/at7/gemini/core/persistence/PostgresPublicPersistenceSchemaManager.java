@@ -19,8 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.entityType;
-import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.oneToOneType;
+import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.*;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -340,17 +339,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         transaction.executeUpdate(domainSql);
     }
 
-    private String pkForeignKeyDomainFromEntity(Entity entity) {
-        return entity.getName().toLowerCase() + "_pk";
-    }
-
-    private String pkForeignKeyDomainFromEntity(String entityName) {
-        return entityName.toLowerCase() + "_pk";
-    }
-
-    private String pkDomainArrayFromEntity(String entityName) {
-        return pkForeignKeyDomainFromEntity(entityName) + "[]";
-    }
 
     private void checkOrUpdateBasicTypeColumn(Entity entity, Field field, TransactionImpl transaction) throws SQLException, GeminiException {
         String sqlColumnsCheck = "" +

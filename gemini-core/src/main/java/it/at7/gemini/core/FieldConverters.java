@@ -96,6 +96,7 @@ public class FieldConverters {
                     Entity objValueEntity = entityRecord.getEntity();
                     assert fieldEntity.equals(objValueEntity);
                     pkValue = logicalKeyFromEntityRecord(entityRecord);
+                    // TODO BOO sbagliato qua misa... meglio create il ref anche con l'oggetto di partenza
                 } else {
                     pkValue = logicalKeyFromObject(field.getEntityRef(), objValue);
                 }
@@ -123,6 +124,20 @@ public class FieldConverters {
                     return ((Collection) objValue).toArray(st);
                 }
                 break; // Unsupported OPE
+            case ENTITY_REF_ARRAY:
+                if (Collection.class.isAssignableFrom(objValue.getClass())) {
+                    Collection<Object> genColl = (Collection) objValue;
+                    if (genColl.isEmpty()) {
+                        return genColl;
+                    }
+                    Object[] elements = genColl.toArray();
+                    Object firstElem = elements[0];
+                    if (EntityRecord.class.isAssignableFrom(firstElem.getClass()) ||
+                            EntityReferenceRecord.class.isAssignableFrom(firstElem.getClass())) {
+                        return objValue;
+                    }
+                }
+                throw new RuntimeException(String.format("Field %s must have an EntityRecord|EntityReferenceRecord collection", field.toString()));
             case GENERIC_ENTITY_REF:
             case RECORD:
                 break; // Unsupported OPE

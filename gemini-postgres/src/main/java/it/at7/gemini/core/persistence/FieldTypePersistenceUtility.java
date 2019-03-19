@@ -1,5 +1,6 @@
 package it.at7.gemini.core.persistence;
 
+import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.FieldType;
 
 public class FieldTypePersistenceUtility {
@@ -52,4 +53,16 @@ public class FieldTypePersistenceUtility {
         return false;
     }
 
+    public static String pkDomainArrayFromEntity(String entityName) {
+        return pkForeignKeyDomainFromEntity(entityName) + "[]";
+    }
+
+
+    public static String pkForeignKeyDomainFromEntity(Entity entity) {
+        return entity.getName().toLowerCase() + "_pk";
+    }
+
+    public static String pkForeignKeyDomainFromEntity(String entityName) {
+        return entityName.toLowerCase() + "_pk";
+    }
 }
