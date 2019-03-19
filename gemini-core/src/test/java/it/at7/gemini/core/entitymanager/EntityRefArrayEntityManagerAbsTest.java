@@ -35,15 +35,25 @@ public abstract class EntityRefArrayEntityManagerAbsTest {
         EntityReferenceRecord lk1Ref = domainPkRefArray.iterator().next();
         Assert.assertEquals(lk1.getID(), lk1Ref.getPrimaryKey());
         Assert.assertEquals(lk1.getLogicalKeyValue(), lk1Ref.getLogicalKeyRecord().getFieldValues());
+    }
 
-        entityRecord.put("domain1Array", List.of(lk1, lk2));
-        persistedEntity = Services.getEntityManager().putOrUpdate(entityRecord);
-        domainPkRefArray = persistedEntity.get("domain1Array");
+    @Test
+    public void n2_addAnotherRefInsideArray() throws GeminiException {
+        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
+        List<EntityRecord> domain1Array = List.of(lk1, lk2);
+        entityRecord.put("domain1Array", domain1Array);
+        EntityRecord persistedEntity = Services.getEntityManager().update(entityRecord);
+        Collection<EntityReferenceRecord> domainPkRefArray = persistedEntity.get("domain1Array");
         Assert.assertEquals(2, domainPkRefArray.size());
+    }
 
-        entityRecord.put("domain1Array", List.of());
-        persistedEntity = Services.getEntityManager().putOrUpdate(entityRecord);
-        domainPkRefArray = persistedEntity.get("domain1Array");
+    @Test
+    public void n3_eraseRefArray() throws GeminiException {
+        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
+        List<EntityRecord> domain1Array = List.of();
+        entityRecord.put("domain1Array", domain1Array);
+        EntityRecord persistedEntity = Services.getEntityManager().update(entityRecord);
+        Collection<EntityReferenceRecord> domainPkRefArray = persistedEntity.get("domain1Array");
         Assert.assertEquals(0, domainPkRefArray.size());
     }
 
