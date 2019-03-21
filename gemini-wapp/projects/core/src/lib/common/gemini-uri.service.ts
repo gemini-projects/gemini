@@ -28,11 +28,11 @@ export class GeminiUriService {
         return `${this.COMPONENT_URL}/${component}/${event}`
     }
 
-    public getApiEntitiesUrl(entityName: string){
+    public getApiEntityRootUrl(entityName: string){
         return `${this.API_URL}/${entityName.toLowerCase()}`
     }
 
-    public getApiEntityUrl(entityName: string, entityKey: string): string {
+    public getApiEntityRecordByKeyUrl(entityName: string, entityKey: string): string {
         return `${this.API_URL}/${entityName.toLowerCase()}/${entityKey}`
     }
 

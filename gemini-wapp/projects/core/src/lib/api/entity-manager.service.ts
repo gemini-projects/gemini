@@ -5,6 +5,7 @@ import {catchError, retry} from "rxjs/operators";
 
 import {GeminiUriService} from "../common";
 import {EntityRecord} from "../schema/EntityRecord";
+import {pipeFromArray} from "rxjs/internal/util/pipe";
 
 @Injectable({
     providedIn: 'root'
@@ -23,19 +24,39 @@ export class EntityManagerService {
         const options = {
             headers: httpHeaders
         };
-        return this.http.get<EntityRecord>(this.configService.getApiEntityUrl(entityName, entityKey), options)
+        /* return this.http.get<EntityRecord>(this.configService.getApiEntityRecordByKeyUrl(entityName, entityKey), options)
             .pipe(retry(3),
-                catchError(this.handleError));
+                catchError(EntityManagerService.handleError)); */
+
+        return pipeFromArray(EntityManagerService.commonHandler)(this.http.get<EntityRecord>(this.configService.getApiEntityRecordByKeyUrl(entityName, entityKey), options));
+    }
+
+    public getEntityRecords(entityName: string): Observable<EntityRecord>;
+    public getEntityRecords(entityName: string, searchFilter: any): Observable<EntityRecord>;
+    public getEntityRecords(entityName: string, searchFilter?: any): Observable<EntityRecord> {
+        const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
+        let httpParams = new HttpParams();
+        httpParams = searchFilter ? httpParams.set(this.configService.SEARCH_PARAMETER, searchFilter) : httpParams;
+        const options = {
+            headers: httpHeaders,
+            params: httpParams
+        };
+        return this.http.get<EntityRecord>(this.configService.getApiEntityRootUrl(entityName), options)
+            .pipe(
+                retry(3),
+                catchError(EntityManagerService.handleError)
+            );
     }
 
     public createOrUpdateEntityRecord(entityName: string): Observable<EntityRecord> {
+        // TODO push value
         return of({
             meta: {},
             data: {code: entityName}
-        });
+        } as EntityRecord);
     }
 
-    public getEntityList(entityName: string, entityKey: any, entityCollection?: string): Observable<EntityRecord[]> {
+    /* public getEntityList(entityName: string, entityKey: any, entityCollection?: string): Observable<EntityRecord[]> {
         const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
         const options = {
             headers: httpHeaders
@@ -44,32 +65,14 @@ export class EntityManagerService {
         return this.http.get<EntityRecord[]>(this.configService.getApiEntityCollectionUrl(entityName, entityKey, entityCollection), options)
             .pipe(retry(3),
                 catchError(this.handleError));
-    }
+    } */
 
     private httpHeadersFromDefault(): HttpHeaders {
         return new HttpHeaders(EntityManagerService.DEFAULT_HTTP_HEADERS);
     }
 
-    public getEntitiesMatchingFilter(entityName: string, searchValue: any): Observable<EntityRecord> {
-        const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
-        let httpParams = new HttpParams()
-            .set(this.configService.SEARCH_PARAMETER, searchValue);
-        const options = {
-            headers: httpHeaders,
-            params: httpParams
-        };
-        return this.http.get<EntityRecord>(this.configService.getApiEntitiesUrl(entityName), options)
-            .pipe(
-                retry(3),
-                catchError(this.handleError)
-            );
-    }
 
-    private commonHandler(): OperatorFunction<any, any>[] {
-        return [retry(3), catchError(this.handleError)];
-    }
-
-    private handleError(error: HttpErrorResponse) {
+    private static handleError(error: HttpErrorResponse) {
         if (error.error instanceof ErrorEvent) {
             // A client-side or network error occurred. Handle it accordingly.
             console.error('An error occurred:', error.error.message);
@@ -84,4 +87,7 @@ export class EntityManagerService {
         return throwError(
             'Something bad happened; please try again later.');
     };
+
+    private static commonHandler: OperatorFunction<any, any>[] =
+        [retry(3), catchError(EntityManagerService.handleError)];
 }

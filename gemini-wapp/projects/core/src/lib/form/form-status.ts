@@ -6,5 +6,6 @@ export class FormStatus {
     formGroup: FormGroup;
     fieldsStatus: FormFieldStatus[];
     submitFn: (...args: any[]) => Observable<any>;
-    [key: string] : any // allowed any other string => value accordingly to the usage
+
+    [key: string]: any // allowed any other string => value accordingly to the usage
 }

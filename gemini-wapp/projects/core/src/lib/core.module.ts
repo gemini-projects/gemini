@@ -22,6 +22,7 @@ import {BooleanComponent} from "./form/form-fields/boolean-field/boolean.compone
 import { ListEntityComponent } from './entity-layout/list-entity/list-entity.component';
 import {DateTimeComponent} from "./form/form-fields/date-time-fields/date-time.component";
 import {SpinnerComponent} from "./form/form-fields/input-fields/spinner.component";
+import {EntityRefComponent} from "./form/form-fields/entityref-fields/entity-ref.component";
 
 
 @NgModule({
@@ -33,6 +34,7 @@ import {SpinnerComponent} from "./form/form-fields/input-fields/spinner.componen
         BooleanComponent,
         DateTimeComponent,
         SpinnerComponent,
+        EntityRefComponent,
         FormFieldContainerComponent,
         NewEntityComponent,
         ListEntityComponent
@@ -58,7 +60,8 @@ import {SpinnerComponent} from "./form/form-fields/input-fields/spinner.componen
         InputComponent,
         BooleanComponent,
         DateTimeComponent,
-        SpinnerComponent
+        SpinnerComponent,
+        EntityRefComponent
     ]
 })
 export class CoreModule {

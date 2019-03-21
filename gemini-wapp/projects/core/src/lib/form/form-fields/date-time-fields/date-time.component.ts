@@ -27,7 +27,7 @@ export class DateTimeComponent implements FormFieldComponentDef, OnInit {
         this.translate.get("DATATYPE.DATE_TIME").subscribe((loc: Object) => {
             this.localeConfig = loc;
         });
-        this.dateTimeData = this.fieldStatus.formComponent.componentData as DateTimeFieldData;
+        this.dateTimeData = this.fieldStatus.formComponentConfig.componentConfigData as DateTimeFieldData;
         this.showTime = this.dateTimeData.dateTimeType == DateTimeType.DATETIME;
         this.showButtonBar = this.dateTimeData.dateTimeType == DateTimeType.DATE;
         this.timeOnly = this.dateTimeData.dateTimeType == DateTimeType.TIME;

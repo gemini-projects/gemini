@@ -5,12 +5,12 @@ import {Type} from "@angular/core";
 export class FormFieldStatus {
     fieldSchema: FieldSchema;
     formControl: FormControl;
-    formComponent: FormFieldComponentMeta;
+    formComponentConfig: FormFieldComponentConfig;
 }
 
-export class FormFieldComponentMeta {
+export class FormFieldComponentConfig {
     componentType: Type<any>;
-    componentData: FormFieldData
+    componentConfigData: FormFieldData
 }
 
 export interface FormFieldData {

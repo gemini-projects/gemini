@@ -2,6 +2,7 @@ export class FieldSchema {
     name: string;
     entity?: any;
     type: FieldType;
+    refEntity?: string;
     events: FieldEvents;
 }
 
@@ -28,7 +29,7 @@ export enum FieldType {
     DOUBLE = "DOUBLE",
     BOOL = "BOOL",
     TIME = "TIME",
-    DATE ="DATE",
+    DATE = "DATE",
     DATETIME = "DATETIME",
     ENTITY_REF = "ENTITY_REF",
     RECORD = "RECORD"

@@ -20,7 +20,7 @@ export class GeminiFieldDirective implements OnInit, FormFieldComponentDef {
 
     ngOnInit(): void {
         const factory = this.resolver.resolveComponentFactory(
-           this.fieldStatus.formComponent.componentType
+           this.fieldStatus.formComponentConfig.componentType
         );
         this.componentRef = this.container.createComponent(factory);
         this.componentRef.instance.fieldStatus = this.fieldStatus;

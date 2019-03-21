@@ -19,7 +19,7 @@ export class InputComponent implements FormFieldComponentDef, OnInit {
     }
 
     ngOnInit() {
-        this.inputData = this.fieldStatus.formComponent.componentData as InputFieldData;
+        this.inputData = this.fieldStatus.formComponentConfig.componentConfigData as InputFieldData;
         if (this.inputData.inputType == "number") {
             this.initNumberFields();
         }

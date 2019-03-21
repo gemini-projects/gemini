@@ -179,15 +179,14 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     private void addFilterRequestTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
         String sqlFilter = "";
         FilterContext.SearchType searchType = filterContext.getSearchType();
-        if (searchType == FilterContext.SearchType.GEMINI) {
+        if (searchType == FilterContext.SearchType.GEMINI && !filterContext.getSearchString().isEmpty()) {
             Node rootNode = new RSQLParser().parse(filterContext.getSearchString());
-            sqlFilter = rootNode.accept(filterVisitor, entity);
+            sqlFilter += " WHERE " + rootNode.accept(filterVisitor, entity);
         }
         if (searchType == FilterContext.SearchType.PERSISTENCE) {
-            sqlFilter += filterContext.getSearchString();
+            sqlFilter += " WHERE " + filterContext.getSearchString();
         }
-        query.sql += "WHERE " + sqlFilter;
-
+        query.sql += sqlFilter;
     }
 
     private String createSelectQuerySQLFor(Entity entity) {
@@ -231,7 +230,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private boolean sameOf(EntityRecord entityRecord, EntityRecord persistedEntityRecord, Transaction transaction) throws GeminiException {
-        if((entityRecord != null && persistedEntityRecord == null) || (entityRecord == null && persistedEntityRecord != null)){
+        if ((entityRecord != null && persistedEntityRecord == null) || (entityRecord == null && persistedEntityRecord != null)) {
             return true; // base case
         }
 

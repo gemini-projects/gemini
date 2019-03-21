@@ -31,7 +31,7 @@ export class GeminiSchemaService {
 
     getEntityFields(entityName: string): Observable<FieldSchema[]> {
         const search: string = `entity==${entityName.toUpperCase()}`;
-        return this.apiService.getEntitiesMatchingFilter(GeminiSchemaService.ENTITY_NAME_OF_FIELDS, search)
+        return this.apiService.getEntityRecords(GeminiSchemaService.ENTITY_NAME_OF_FIELDS, search)
             .pipe(
                 map((entityRecord: EntityRecord) => {
                     let fieldsEntityRec = entityRecord.data as EntityRecord[];

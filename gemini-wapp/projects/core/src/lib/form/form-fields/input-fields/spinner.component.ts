@@ -13,7 +13,7 @@ export class SpinnerComponent implements FormFieldComponentDef, OnInit {
     private spinnerData: SpinnerFieldData;
 
     ngOnInit(): void {
-        this.spinnerData = this.fieldStatus.formComponent.componentData as SpinnerFieldData
+        this.spinnerData = this.fieldStatus.formComponentConfig.componentConfigData as SpinnerFieldData
     }
 
 }
