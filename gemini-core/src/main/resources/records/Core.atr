@@ -1,18 +1,18 @@
-ENTITY-RECORD FieldEvents DEFAULT
+ENTITY-RECORD FieldCommonSettings DEFAULT
 {
      "visible" : {
-        "eventType": "NO_EVENT",
+        "strategy": "STATIC",
         "value": true
      },
      "modifiable" : {
-        "eventType": "NO_EVENT",
+        "strategy": "STATIC",
         "value": true
      },
      "required" : {
-        "eventType": "NO_EVENT",
+        "strategy": "STATIC",
         "value": false
      },
-     "valueEventType" : "NO_EVENT"
+     "choiceDataStrategy" : "SIMPLE"
 }
 
 ENTITY-RECORD FieldResolution V 1

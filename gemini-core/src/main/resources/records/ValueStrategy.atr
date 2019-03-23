@@ -1,0 +1,5 @@
+ENTITY-RECORD ValueStrategy V 1
+{
+    "code" : "STATIC",
+    "description": "Get the configured static value"
+}

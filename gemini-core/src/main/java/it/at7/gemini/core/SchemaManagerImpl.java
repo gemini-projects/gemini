@@ -189,12 +189,13 @@ public class SchemaManagerImpl implements SchemaManager {
             persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
             Map<String, List<EntityRecord>> fieldRecordsByEntityName = handleSchemasEntityRecords(entities.values(), transaction);// entity records for entity / field / core entities
             createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
-            setDefaultsForFields(fieldRecordsByEntityName, transaction);
+            // setDefaultsForFields(fieldRecordsByEntityName, transaction);
             transaction.commit();
         }
     }
 
-    private void setDefaultsForFields(Map<String, List<EntityRecord>> fieldRecordsByEntityName, Transaction transaction) throws GeminiException {
+    // TODO capire come gestire i default per i valueStragy
+    /* private void setDefaultsForFields(Map<String, List<EntityRecord>> fieldRecordsByEntityName, Transaction transaction) throws GeminiException {
         Entity fieldevents = this.entities.get("FIELDEVENTS");
         assert fieldevents != null;
         EntityRecord fieldEntityRecord = fieldevents.getDefaultEntityRecord();
@@ -210,7 +211,7 @@ public class SchemaManagerImpl implements SchemaManager {
             }
         }
 
-    }
+    } */
 
     @Override
     public Collection<Entity> getAllEntities() {

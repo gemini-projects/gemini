@@ -13,28 +13,34 @@ ENTITY Entity {
 }
 
 ENTITY Field {
-    TEXT            name *
-    Entity          entity *
-    TEXT            type
-    Entity          refEntity
-    BOOL            isLogicalKey
-    TRANSL_TEXT     displayName
-    FieldEvents     events
+    TEXT                name *
+    Entity              entity *
+    TEXT                type
+    Entity              refEntity
+    BOOL                isLogicalKey
+    TRANSL_TEXT         displayName
+    FieldCommonSettings commonSettings
+    FieldGuiSettings    guiSettings
 }
 
-ENTITY EventType IMPLEMENTS Domain
+ENTITY ValueStrategy IMPLEMENTS Domain
 
-ENTITY EMBEDABLE FieldControlEvent {
-    EventType      eventType
-    BOOL           value
+ENTITY EMBEDABLE    BoolStrategy {
+    ValueStrategy   strategy
+    BOOL            value
 }
 
-ENTITY EMBEDABLE FieldEvents   {
+ENTITY EMBEDABLE FieldCommonSettings   {
     # [Field]             dependencies
-    FieldControlEvent   visible
-    FieldControlEvent   modifiable
-    FieldControlEvent   required
-    EventType           valueEventType
+    BoolStrategy          visible
+    BoolStrategy          modifiable
+    BoolStrategy          required
+    ValueStrategy         choiceDataStrategy
+}
+
+ENTITY EMBEDABLE FieldGuiSettings   {
+    BOOL         useAsDesc
+    LONG         sortKey
 }
 
 ENTITY InitRecord {
