@@ -6,6 +6,7 @@ export class FormFieldStatus {
     fieldSchema: FieldSchema;
     formControl: FormControl;
     formComponentConfig: FormFieldComponentConfig;
+    availableData?: any;
 }
 
 export class FormFieldComponentConfig {

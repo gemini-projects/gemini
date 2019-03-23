@@ -28,7 +28,7 @@ export class EntityLayoutComponent {
     @Input()
     set name(name: string) {
         this._entityName = name.trim();
-        this.schemaService.getEntitySchema(this._entityName)
+        this.schemaService.getEntitySchema$(this._entityName)
             .subscribe(es => {
                     this.entitySchema = es
                 },

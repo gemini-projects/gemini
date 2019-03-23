@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {EventType, FieldEvents, FieldSchema, FieldType} from "../schema/field-schema";
-import {FormBuilder} from "@angular/forms";
+import {FormBuilder, FormControl} from "@angular/forms";
 import {GeminiValueStrategy} from "../schema/gemini-value-strategy";
 import {FormStatus} from "./form-status";
 import {DateTimeType, FormFieldComponentConfig, FormFieldStatus} from "./form-field-status";
@@ -13,6 +13,8 @@ import {EntityManagerService} from "../api";
 import {DateTimeComponent} from "./form-fields/date-time-fields/date-time.component";
 import {SpinnerComponent} from "./form-fields/input-fields/spinner.component";
 import {EntityRefComponent} from "./form-fields/entityref-fields/entity-ref.component";
+import {EntitySchema} from "../schema/entity-schema";
+import {EntityRecord} from "../schema/EntityRecord";
 
 
 @Injectable({
@@ -26,18 +28,19 @@ export class FormService {
     }
 
     public entityToForm(entityName: string): Observable<FormStatus> {
-        return this.schemaService.getEntityFields(entityName)
+        return this.schemaService.getEntitySchema$(entityName)
             .pipe(
-                map((fieldSchemas: FieldSchema[]) => {
-
+                map((entitySchema: EntitySchema) => {
                     let formStatus = new FormStatus();
                     formStatus.entityName = entityName;
                     let formGroup = formStatus.formGroup = this.fb.group({});
+                    //let formControls: Map<string, FormControl> = new Map<string, FormControl>();
+
                     let formFieldsStatus: FormFieldStatus[] = [];
 
                     this.registerFormValueChanges(formStatus);
 
-                    for (let field of fieldSchemas) {
+                    for (let field of entitySchema.fields) {
                         let formFieldStatus = this.createFormFieldStatus(field);
                         if (formFieldStatus) {
                             formGroup.addControl(field.name, formFieldStatus.formControl);
@@ -175,6 +178,11 @@ export class FormService {
         formFielStatus.formControl.setValidators(validators);
     }*/
     private getAvailableValuesForField(formFielStatus: FormFieldStatus) {
+
+        // todo SERVER SIDE available data call
+        // todo or CLIENT SIDE available data callback
+
+        // lets implement the default available value strategy
         switch (formFielStatus.fieldSchema.type) {
             case FieldType.TEXT:
             case FieldType.NUMBER:
@@ -186,7 +194,7 @@ export class FormService {
             case FieldType.DATETIME:
                 break;
             case FieldType.ENTITY_REF:
-                this.getAvailableValuesForEntityRef(formFielStatus);
+                this.getDefaultAvailableValuesForEntityRef(formFielStatus);
             case FieldType.RECORD:
                 break;
 
@@ -194,13 +202,8 @@ export class FormService {
 
     }
 
-    private getAvailableValuesForEntityRef(formFielStatus: FormFieldStatus) {
+    private getDefaultAvailableValuesForEntityRef(formFielStatus: FormFieldStatus) {
         let refEntityName: string = formFielStatus.fieldSchema.refEntity!;
-
-        this.entityManager.getEntityRecords(refEntityName)
-            .subscribe(er => {
-                console.log(er);
-            })
-        // TODO check the event type to get the list of available values ?
+        formFielStatus.availableData = this.entityManager.getEntityRecords(refEntityName)
     }
 }
