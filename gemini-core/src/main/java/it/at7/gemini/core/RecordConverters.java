@@ -190,12 +190,16 @@ public class RecordConverters {
 
     private static void convertEntityEmbededTOJsonValue(Map<String, Object> convertedMap, Field field, Object value) {
         String fieldName = field.getName();
+        if (value == null) {
+            convertedMap.put(fieldName, new HashMap<>());
+            return;
+        }
         if (EntityRecord.class.isAssignableFrom(value.getClass())) {
             EntityRecord eRValue = (EntityRecord) value;
             convertedMap.put(fieldName, toMap(eRValue));
-        } else {
-            throw new RuntimeException(String.format("Unsupported OPE"));
+            return;
         }
+        throw new RuntimeException("Unsupported OPE");
     }
 
     private static Object toLogicalKey(EntityReferenceRecord pkRefRec) {
@@ -259,6 +263,8 @@ public class RecordConverters {
                 return EntityReferenceRecord.NO_REFERENCE;
             case RECORD:
                 return new Object();
+            case ENTITY_EMBEDED:
+                return null;
             case TEXT_ARRAY:
                 return new String[]{};
         }
