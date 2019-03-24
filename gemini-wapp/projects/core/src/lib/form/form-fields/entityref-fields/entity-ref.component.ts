@@ -5,8 +5,9 @@ import {FormStatus} from "../../form-status";
 import {SelectItem} from "primeng/api";
 import {EntitySchema} from "../../../schema/entity-schema";
 import {GeminiSchemaService} from "../../../schema/schema.service";
-import {EntityRecord} from "../../../schema/EntityRecord";
+import {EntityRecord, EntityRecordList} from "../../../schema/EntityRecord";
 import {Observable} from "rxjs";
+import {FieldSchema} from "../../../schema/field-schema";
 
 @Component({
     selector: 'gemini-entityRef',
@@ -18,19 +19,24 @@ export class EntityRefComponent implements FormFieldComponentDef, OnInit {
 
     elems: SelectItem[] = [];
 
-    constructor(entitySchema: GeminiSchemaService) {
+    constructor(private schemaService: GeminiSchemaService) {
     }
 
     ngOnInit(): void {
-        let av: Observable<any> = this.fieldStatus.availableData;
-        av.subscribe((entityRecord: EntityRecord) => {
-
-            for (let er of entityRecord.data) {
-                console.log(er);
-                let actualFields = er.data;
-                this.elems.push({label: actualFields.name as string, value: er})
-            }
+        let refEntityName = this.fieldStatus.fieldSchema.refEntity!;
+        this.schemaService.getEntitySchema$(refEntityName).subscribe((entiySchema) => {
+            let descFields = entiySchema.getFieldsForReferenceDescription();
+            let av: Observable<any> = this.fieldStatus.availableData;
+            av.subscribe((entityRecordList: EntityRecordList) => {
+                for (let er of entityRecordList.data) {
+                    this.elems.push({label: this.getReferenceDescriptionLabel(descFields, er), value: er})
+                }
+            });
         });
+    }
+
+    getReferenceDescriptionLabel(descFields: FieldSchema[], entityRecord: EntityRecord): string {
+        return descFields.map(f => entityRecord.data[f.name]).join(" - ");
     }
 
 }

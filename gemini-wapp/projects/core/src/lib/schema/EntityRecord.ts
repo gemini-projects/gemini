@@ -1,10 +1,23 @@
 export class EntityRecord {
-    meta: object;
-    data: any;
+    private _meta: object;
+    private _data: any;
 
-    constructor(){};
+    constructor() {
 
-    public getData() {
-        return this.data;
     }
+
+    get meta(): object {
+        return this._meta;
+    }
+
+    get data(): any{
+        return this._data;
+    }
+
+
+}
+
+export class EntityRecordList {
+    meta: object;
+    data: EntityRecord[];
 }

@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
-import {EventType, FieldEvents, FieldSchema, FieldType} from "../schema/field-schema";
-import {FormBuilder, FormControl} from "@angular/forms";
+import {FieldSchema, FieldType} from "../schema/field-schema";
+import {FormBuilder} from "@angular/forms";
 import {GeminiValueStrategy} from "../schema/gemini-value-strategy";
 import {FormStatus} from "./form-status";
 import {DateTimeType, FormFieldComponentConfig, FormFieldStatus} from "./form-field-status";
@@ -32,7 +32,7 @@ export class FormService {
             .pipe(
                 map((entitySchema: EntitySchema) => {
                     let formStatus = new FormStatus();
-                    formStatus.entityName = entityName;
+                    formStatus.entitySchema = entitySchema;
                     let formGroup = formStatus.formGroup = this.fb.group({});
                     //let formControls: Map<string, FormControl> = new Map<string, FormControl>();
 
@@ -48,14 +48,18 @@ export class FormService {
                         }
                     }
                     formStatus.fieldsStatus = formFieldsStatus;
-                    formStatus.submitFn = this.submitFunction.bind(this, entityName, formStatus);
+                    formStatus.submitFn = this.submitFunction.bind(this, entitySchema, formStatus);
                     return formStatus
                 }));
     }
 
-    private submitFunction(entityName: string, formStatus: FormStatus) {
+    private submitFunction(entitySchema: EntitySchema, formStatus: FormStatus) {
+        // TODO check value here
         console.warn(formStatus.formGroup.value);
-        return this.entityManager.createOrUpdateEntityRecord(entityName);
+
+        let entityRecord = this.convertFormValueToEntityRecord(entitySchema, formStatus.formGroup.value);
+
+        return this.entityManager.createOrUpdateEntityRecord(entityRecord);
     }
 
     private registerFormValueChanges(formStatus: FormStatus) {
@@ -205,5 +209,17 @@ export class FormService {
     private getDefaultAvailableValuesForEntityRef(formFielStatus: FormFieldStatus) {
         let refEntityName: string = formFielStatus.fieldSchema.refEntity!;
         formFielStatus.availableData = this.entityManager.getEntityRecords(refEntityName)
+    }
+
+    private convertFormValueToEntityRecord(entitySchema: EntitySchema, objectWithFields: Object): EntityRecord {
+        for (const field of entitySchema.fields) {
+            let value = objectWithFields[field.name];
+            if (value != null) {
+
+            }
+
+        }
+
+        return null;
     }
 }

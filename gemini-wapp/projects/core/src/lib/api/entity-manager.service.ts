@@ -48,11 +48,11 @@ export class EntityManagerService {
             );
     }
 
-    public createOrUpdateEntityRecord(entityName: string): Observable<EntityRecord> {
+    public createOrUpdateEntityRecord(entityRecord: EntityRecord): Observable<EntityRecord> {
         // TODO push value
         return of({
             meta: {},
-            data: {code: entityName}
+            data: {code: "TEST"}
         } as EntityRecord);
     }
 

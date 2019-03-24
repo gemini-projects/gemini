@@ -2,10 +2,18 @@ export class FieldSchema {
     name: string;
     entity?: any;
     type: FieldType;
+    isLogicalKey: boolean;
     refEntity?: string;
-    events: FieldEvents;
+    guiSettings: FieldGuiSettings
+    // events: FieldEvents;
 }
 
+export class FieldGuiSettings {
+    useAsDesc: boolean;
+    sortKey: number
+}
+
+/*  TODO sostituire con i settings
 export class FieldEvents {
     visible: FieldControlEvent;
     modifiable: FieldControlEvent;
@@ -20,7 +28,7 @@ export class FieldControlEvent {
 
 export enum EventType {
     NO_EVENT = "NO_EVENT"
-}
+} */
 
 export enum FieldType {
     TEXT = "TEXT",
