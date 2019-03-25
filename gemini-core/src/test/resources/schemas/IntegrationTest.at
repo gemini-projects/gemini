@@ -15,6 +15,7 @@ ENTITY TestDataType {
     DATETIME        datetime
     TestDomain1     domain1
     [TEXT]          textArray
+    [TestDomain1]   domain1Array
 }
 
 ENTITY TestDomainHierarchy {
