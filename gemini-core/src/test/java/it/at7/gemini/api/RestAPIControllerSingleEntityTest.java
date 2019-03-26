@@ -2,27 +2,22 @@ package it.at7.gemini.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.at7.gemini.UnitTestBase;
-import it.at7.gemini.exceptions.GeminiException;
-import org.junit.*;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.context.WebApplicationContext;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static it.at7.gemini.api.RestAPIController.GEMINI_DATA_TYPE;
+import static it.at7.gemini.api.ApiUtility.GEMINI_DATA_TYPE;
 import static it.at7.gemini.api.RestAPIController.GEMINI_HEADER;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 @AutoConfigureMockMvc
 

@@ -18,14 +18,30 @@ import static it.at7.gemini.core.FieldConverters.Formatter.*;
 
 
 public class RecordConverters {
+    public static final String GEMINI_DATA_FIELD = "data";
+    public static final String GEMINI_META_FIELD = "meta";
 
-    public static EntityRecord entityRecordFromMap(Entity entity, Map<String, Object> rawFields) throws InvalidLogicalKeyValue, InvalidTypeForObject {
+    // TODO conversion from gemini api type plus refactoring
+
+    public static boolean containGeminiDataTypeFields(Map<String, Object> rawFields) {
+        return rawFields.containsKey(GEMINI_DATA_FIELD) && rawFields.containsKey(GEMINI_META_FIELD);
+    }
+
+    public static EntityRecord entityRecordFromMap(Entity entity, Map<String, Object> fieldMap) throws InvalidLogicalKeyValue, InvalidTypeForObject {
+        Map<String, Object> rawFields = fieldMap;
+        if (containGeminiDataTypeFields(rawFields)) {
+            Object rawFieldsOBJ = rawFields.get(GEMINI_DATA_FIELD);
+            if (Map.class.isAssignableFrom(rawFieldsOBJ.getClass())) {
+                rawFields = (Map<String, Object>) rawFieldsOBJ;
+            }
+        }
         Map<String, Object> insensitiveFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         insensitiveFields.putAll(rawFields);
         EntityRecord entityRecord = new EntityRecord(entity);
         for (EntityField field : entity.getSchemaEntityFields()) {
             String key = field.getName().toLowerCase();
             Object objValue = insensitiveFields.get(key);
+
             if (objValue != null) {
                 try {
                     entityRecord.put(field, objValue);

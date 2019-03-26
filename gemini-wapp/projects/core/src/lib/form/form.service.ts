@@ -48,18 +48,14 @@ export class FormService {
                         }
                     }
                     formStatus.fieldsStatus = formFieldsStatus;
-                    formStatus.submitFn = this.submitFunction.bind(this, entitySchema, formStatus);
+                    formStatus.submitFn = this.submitFunction.bind(this, formStatus);
                     return formStatus
                 }));
     }
 
-    private submitFunction(entitySchema: EntitySchema, formStatus: FormStatus) {
-        // TODO check value here
-        console.warn(formStatus.formGroup.value);
-
-        let entityRecord = this.convertFormValueToEntityRecord(entitySchema, formStatus.formGroup.value);
-
-        return this.entityManager.createOrUpdateEntityRecord(entityRecord);
+    private submitFunction(formStatus: FormStatus) {
+        let entityRecord = this.convertFormValueToEntityRecord(formStatus.entitySchema, formStatus.formGroup.value);
+        return this.entityManager.creteEntityRecord(entityRecord);
     }
 
     private registerFormValueChanges(formStatus: FormStatus) {
@@ -212,14 +208,14 @@ export class FormService {
     }
 
     private convertFormValueToEntityRecord(entitySchema: EntitySchema, objectWithFields: Object): EntityRecord {
+        console.log(objectWithFields);
+        let newRecord = new EntityRecord(entitySchema);
         for (const field of entitySchema.fields) {
             let value = objectWithFields[field.name];
             if (value != null) {
-
+                newRecord.set(field, value);
             }
-
         }
-
-        return null;
+        return newRecord;
     }
 }

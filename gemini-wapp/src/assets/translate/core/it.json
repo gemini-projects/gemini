@@ -4,6 +4,10 @@
       "TRUE": "Si",
       "FALSE": "No"
     },
+    "ENTITY_REF": {
+      "NORESULT_MESSAGE": "Nessun risultato",
+      "SELECTVALUE_MESSAGE": "Seleziona"
+    },
     "DATE_TIME": {
       "firstDayOfWeek": 1,
       "dayNames": [

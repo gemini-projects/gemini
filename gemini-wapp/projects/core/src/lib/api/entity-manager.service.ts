@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from "@angular/common/http";
-import {Observable, of, OperatorFunction, throwError} from "rxjs";
+import {Observable, OperatorFunction, throwError} from "rxjs";
 import {catchError, retry} from "rxjs/operators";
 
 import {GeminiUriService} from "../common";
@@ -48,12 +48,15 @@ export class EntityManagerService {
             );
     }
 
-    public createOrUpdateEntityRecord(entityRecord: EntityRecord): Observable<EntityRecord> {
-        // TODO push value
-        return of({
-            meta: {},
-            data: {code: "TEST"}
-        } as EntityRecord);
+    public creteEntityRecord(entityRecord: EntityRecord): Observable<EntityRecord> {
+        const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
+        const options = {
+            headers: httpHeaders,
+        };
+        let entitySchema = entityRecord.entitySchema()!;
+        return pipeFromArray(EntityManagerService.commonHandler)(
+            this.http.post<EntityRecord>(this.configService.getApiEntityRootUrl(entitySchema.name), entityRecord.toJsonObject(), options)
+        );
     }
 
     /* public getEntityList(entityName: string, entityKey: any, entityCollection?: string): Observable<EntityRecord[]> {

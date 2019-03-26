@@ -142,7 +142,7 @@ public class FieldConverters {
             return null; // NO action on empty logical key field
         }
         EntityReferenceRecord record = new EntityReferenceRecord(entity);
-        if (logicalKeyList.size() == 1) {
+        if (logicalKeyList.size() == 1 && !Map.class.isAssignableFrom(value.getClass())) {
             // logicalKeyValue is the value
             Field field = logicalKeyList.get(0);
             if (RecordBase.class.isAssignableFrom(value.getClass())) {
@@ -160,9 +160,10 @@ public class FieldConverters {
                 throw InvalidLogicalKeyValue.INVALID_VALUE_TYPE;
             }
             Map<String, Object> mapValue = (Map<String, Object>) value;
+            EntityRecord refEntityRecord = RecordConverters.entityRecordFromMap(entity, mapValue);
             for (Field field : logicalKeyList) {
                 String name = field.getName();
-                Object fieldValue = mapValue.get(name);
+                Object fieldValue = refEntityRecord.get(name);
                 if (fieldValue == null) {
                     throw InvalidLogicalKeyValue.KEY_FIELD_NOTEXISTS(name);
                 }
