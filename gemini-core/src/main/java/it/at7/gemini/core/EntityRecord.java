@@ -137,5 +137,15 @@ public class EntityRecord implements RecordBase {
             EntityField field = entity.getField(value.getField().getName().toLowerCase());
             return new EntityFieldValue(field, value.getValue());
         }
+
+        @Override
+        public boolean equals(Object o) {
+            return super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            return super.hashCode();
+        }
     }
 }

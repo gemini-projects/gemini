@@ -20,6 +20,7 @@ public enum FieldType {
     TRANSL_TEXT,
     GENERIC_ENTITY_REF,
     TEXT_ARRAY("[TEXT]"),
+    ENTITY_REF_ARRAY,
     RECORD;
 
     private final String[] alias;

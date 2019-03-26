@@ -41,7 +41,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'double':0.0,'numberLong':10, 'long':0,'date':'', 'time': '', 'datetime':'', 'transl_text':'', 'textArray':[]}", true));
+                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'double':0.0,'numberLong':10, 'long':0,'date':'', 'time': '', 'datetime':'', 'transl_text':'', 'textArray':[], 'domain1Array':[]}", true));
         // no duplicated keys
         mockMvc.perform(post(API_PATH + "/TestDataType")
                 .contentType(APPLICATION_JSON)
@@ -72,7 +72,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1, 'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation', 'textArray': ['abc','def']}", true));
+                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1, 'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation', 'textArray': ['abc','def'], 'domain1Array':[]}", true));
 
 
         //==== object withGeminiSearchString entity reference (FK) - single logical key
@@ -175,7 +175,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1,'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation', 'textArray': ['abc','def']}", true));
+                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1,'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-9-6', 'time': '02:10:00', 'datetime':'1989-09-06T01:01:00','transl_text': 'translation', 'textArray': ['abc','def'], 'domain1Array':[]}", true));
 
 
         //==== object withGeminiSearchString entity reference (FK) - single logical key

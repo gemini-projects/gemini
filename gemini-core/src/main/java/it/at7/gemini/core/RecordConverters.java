@@ -39,7 +39,7 @@ public class RecordConverters {
         insensitiveFields.putAll(rawFields);
         EntityRecord entityRecord = new EntityRecord(entity);
         for (EntityField field : entity.getSchemaEntityFields()) {
-            String key = field.getName().toLowerCase();
+            String key = toFieldName(field).toLowerCase();
             Object objValue = insensitiveFields.get(key);
 
             if (objValue != null) {
@@ -47,7 +47,7 @@ public class RecordConverters {
                     entityRecord.put(field, objValue);
                 } catch (EntityFieldException e) {
                     // this sould not happen because of the loop on the entityschemafields - chiamare la Madonna
-                    throw new RuntimeException(String.format("record from JSON MAP critical bug: %s - %s", entity.getName(), field.getName()));
+                    throw new RuntimeException(String.format("record from JSON MAP critical bug: %s - %s", entity.getName(), toFieldName(field)));
                 }
             }
         }
@@ -66,7 +66,7 @@ public class RecordConverters {
     public static DynamicRecord dynamicRecordFromMap(Collection<? extends Field> fields, Map<String, Object> rawFields) throws InvalidTypeForObject {
         DynamicRecord record = new DynamicRecord();
         for (Field field : fields) {
-            String key = field.getName().toLowerCase();
+            String key = toFieldName(field);
             Object objValue = rawFields.get(key);
             if (objValue != null) {
                 putValueToRecord(record, field, objValue);
@@ -116,7 +116,7 @@ public class RecordConverters {
     static protected void convertSingleFieldTOJSONValue(Map<String, Object> convertedMap, DynamicRecord.FieldValue fieldValue) {
         Field field = fieldValue.getField();
         FieldType fieldType = field.getType();
-        String fieldNameLC = field.getName();
+        String fieldNameLC = toFieldName(field);
         Object value = fieldValue.getValue();
         if (value == null) {
             value = nullToDefault(field);
@@ -180,28 +180,52 @@ public class RecordConverters {
             case ENTITY_EMBEDED:
                 convertEntityEmbededTOJsonValue(convertedMap, field, value);
                 break;
+            case ENTITY_REF_ARRAY:
+                convertEntityRefArrayToJSONValue(convertedMap, field, value);
+                break;
             default:
                 throw new RuntimeException(String.format("No conversion found for fieldtype %s", fieldType));
         }
     }
 
+    private static void convertEntityRefArrayToJSONValue(Map<String, Object> convertedMap, Field field, Object value) {
+        List<Object> refArray = new ArrayList<>();
+        if (Collection.class.isAssignableFrom(value.getClass())) {
+            Collection genericColl = (Collection) value;
+            if (genericColl.iterator().hasNext()) {
+                Object firstVal = genericColl.iterator().next();
+                if (EntityReferenceRecord.class.isAssignableFrom(firstVal.getClass())) {
+                    Collection<EntityReferenceRecord> entityReferenceRecords = (Collection<EntityReferenceRecord>) value;
+                    for (EntityReferenceRecord entityReferenceRecord : entityReferenceRecords) {
+                        refArray.add(entityRefToMap(entityReferenceRecord));
+                    }
+                } else {
+                    // TODO
+                    throw new RuntimeException("TODO convertEntityRefArrayToJSONValue for EntityRecord array");
+                }
+            }
+        }
+        convertedMap.put(toFieldName(field), refArray);
+    }
+
     private static void convertEntityRefToJSONValue(Map<String, Object> convertedMap, Field field, Object value) {
-        String fieldNameLC = field.getName();
+        String fieldNameLC = toFieldName(field);
         if (EntityReferenceRecord.class.isAssignableFrom(value.getClass())) {
             EntityReferenceRecord pkRefRec = (EntityReferenceRecord) value;
-            if (pkRefRec.equals(EntityReferenceRecord.NO_REFERENCE)) {
-                convertedMap.put(fieldNameLC, new HashMap<>()); // empty map -> empty json
-            } else {
-                Entity entity = pkRefRec.getEntity();
-                assert field.getEntityRef().equals(entity);
-                convertedMap.put(fieldNameLC, toLogicalKey(pkRefRec));
-            }
+            convertedMap.put(fieldNameLC, entityRefToMap(pkRefRec));
         } else if (EntityRecord.class.isAssignableFrom(value.getClass())) {
             // we have the full reference record here -- we add a map of its fields
             EntityRecord eRValue = (EntityRecord) value;
             convertedMap.put(fieldNameLC, toMap(eRValue));
         }
+    }
 
+    private static Object entityRefToMap(EntityReferenceRecord rec) {
+        if (rec.equals(EntityReferenceRecord.NO_REFERENCE)) {
+            return new HashMap<>();
+        } else {
+            return toLogicalKey(rec);
+        }
     }
 
     private static void convertEntityEmbededTOJsonValue(Map<String, Object> convertedMap, Field field, Object value) {
@@ -253,6 +277,10 @@ public class RecordConverters {
             lkFieldValues.add(EntityRecord.EntityFieldValue.create(field, convertedLkElem));
         }
         return lkFieldValues;
+    }
+
+    public static String toFieldName(Field field) {
+        return field.getName();
     }
 
 

@@ -19,8 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.entityType;
-import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.oneToOneType;
+import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.*;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -276,7 +275,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 "   );";
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("domain_schema", "public");
-        parameters.put("domain_name", pkForeignKeyDomainFromModel(modelName));
+        parameters.put("domain_name", pkForeignKeyDomainFromEntity(modelName));
         transaction.executeQuery(sqlDomainExists, parameters, resultSet -> {
             if (!exists(resultSet)) {
                 createPkDomainForModel(modelName, transaction);
@@ -336,17 +335,10 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
 
     private void createPkDomainForModel(String modelName, TransactionImpl transaction) throws SQLException {
         String domainSql = String.format(
-                "CREATE DOMAIN %s AS %s", pkForeignKeyDomainFromModel(modelName), "BIGINT");
+                "CREATE DOMAIN %s AS %s", pkForeignKeyDomainFromEntity(modelName), "BIGINT");
         transaction.executeUpdate(domainSql);
     }
 
-    private String pkForeignKeyDomainFromModel(Entity entity) {
-        return entity.getName().toLowerCase() + "_pk";
-    }
-
-    private String pkForeignKeyDomainFromModel(String modelName) {
-        return modelName.toLowerCase() + "_pk";
-    }
 
     private void checkOrUpdateBasicTypeColumn(Entity entity, Field field, TransactionImpl transaction) throws SQLException, GeminiException {
         String sqlColumnsCheck = "" +
@@ -414,7 +406,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case ENTITY_EMBEDED:
                 Entity entityRef = field.getEntityRef();
                 assert entityRef != null;
-                String name = pkForeignKeyDomainFromModel(entityRef.getName());
+                String name = pkForeignKeyDomainFromEntity(entityRef.getName());
                 return data_type.equals("bigint") && name.equals(domain_name);
             case RECORD:
                 break;
@@ -437,7 +429,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         if (oneToOneType(type) || entityType(type)) {
             return field.getName().toLowerCase() + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
         }
-        throw new RuntimeException(String.format("%s - Field od type %s Not Implemented", field.getName(), field.getType())); // TODO
+        throw new RuntimeException(String.format("%s - Field of type %s Not Implemented", field.getName(), field.getType())); // TODO
     }
 
     private String fieldUnique(Field field) {
@@ -472,9 +464,11 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case ENTITY_REF:
             case ENTITY_EMBEDED:
                 Entity entityRef = field.getEntityRef();
-                return pkForeignKeyDomainFromModel(entityRef.getName()); // it is also a domain
+                return pkForeignKeyDomainFromEntity(entityRef.getName()); // it is also a domain
             case TEXT_ARRAY:
                 return "TEXT[]";
+            case ENTITY_REF_ARRAY:
+                return pkDomainArrayFromEntity(field.getEntityRef().getName()); // it is also a domain
             case RECORD:
                 throw sqlTypeException(field);
         }

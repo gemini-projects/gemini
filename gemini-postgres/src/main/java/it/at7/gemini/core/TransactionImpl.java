@@ -60,6 +60,10 @@ public class TransactionImpl implements Transaction {
         }
     }
 
+    public Connection getConnection() {
+        return connection;
+    }
+
     public void commit() throws GeminiException {
         try {
             this.connection.commit();

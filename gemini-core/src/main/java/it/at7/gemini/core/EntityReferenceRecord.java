@@ -67,6 +67,15 @@ public class EntityReferenceRecord {
         return entityReferenceRecord;
     }
 
+    public static EntityReferenceRecord fromEntityRecord(EntityRecord entityRecord) {
+        EntityReferenceRecord entityReferenceRecord = new EntityReferenceRecord(entityRecord.getEntity());
+        if (entityRecord.getID() != null) {
+            entityReferenceRecord.addPKValue(entityRecord.getID());
+        }
+        entityReferenceRecord.addLogicalKeyValues(entityRecord.getLogicalKeyValue());
+        return entityReferenceRecord;
+    }
+
 
     @Override
     public boolean equals(Object o) {

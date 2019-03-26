@@ -4,10 +4,7 @@ import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.Node;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.*;
-import it.at7.gemini.schema.Entity;
-import it.at7.gemini.schema.EntityField;
-import it.at7.gemini.schema.Field;
-import it.at7.gemini.schema.FieldType;
+import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +13,7 @@ import org.springframework.util.Assert;
 
 import java.math.BigInteger;
 import java.sql.Array;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -265,8 +263,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return false;
     }
 
-    private Optional<EntityRecord> getRecordByLogicalKeyInner(Transaction transaction, Entity
-            entity, Collection<? extends DynamicRecord.FieldValue> logicalKeyValues) throws GeminiException {
+    private Optional<EntityRecord> getRecordByLogicalKeyInner(Transaction transaction, Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKeyValues) throws GeminiException {
         if (logicalKeyValues.isEmpty()) {
             return Optional.empty();
         }
@@ -276,8 +273,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return size == 0 ? Optional.empty() : Optional.of(recordsMatching.get(0));
     }
 
-    private List<EntityRecord> fromResultSetToEntityRecord(ResultSet rs, Entity entity, EntityResolutionContext
-            resolutionContext, Transaction transaction) throws SQLException, GeminiException {
+    private List<EntityRecord> fromResultSetToEntityRecord(ResultSet rs, Entity entity, EntityResolutionContext resolutionContext, Transaction transaction) throws SQLException, GeminiException {
         List<EntityRecord> ret = new ArrayList<>();
         while (rs.next()) {
             EntityRecord er = new EntityRecord(entity);
@@ -333,6 +329,27 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                         throw new RuntimeException(String.format("Field %s of type %s not handled - strategy must be implemented", field.getName(), field.getType()));
                     }
                 } */
+                if (type.equals(FieldType.ENTITY_REF_ARRAY)) {
+                    Array array = rs.getArray(fieldName);
+                    if (array == null) {
+                        er.put(field, List.<EntityRef>of());
+                    } else {
+                        ResultSet rsArray = array.getResultSet(); // TODO ENTITY RESOLUTION CONTEXT
+                        List<EntityReferenceRecord> erList = new ArrayList<>();
+                        while (rsArray.next()) {
+                            long entityID = rsArray.getLong(2);// index 2 contains the value (JDBC spec)
+                            Optional<EntityRecord> entityRecordById = getEntityRecordById(field.getEntityRef(), entityID, transaction);
+                            if (entityRecordById.isPresent()) {
+                                erList.add(EntityReferenceRecord.fromEntityRecord(entityRecordById.get()));
+                            } else {
+                                throw new RuntimeException("TODO -- Critical exception, Inconsistent DB");
+                            }
+                        }
+                        er.put(field, erList);
+                    }
+                    // TODO query effective resolution
+                    handled = true;
+                }
                 if (!handled) {
                     throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
                 }
@@ -485,8 +502,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
 
-    private Object fromFieldToPrimitiveValue(DynamicRecord.FieldValue
-                                                     fieldValue, Map<EntityField, EntityRecord> embededEntityRecords, Transaction transaction) throws
+    private Object fromFieldToPrimitiveValue(DynamicRecord.FieldValue fieldValue, Map<EntityField, EntityRecord> embededEntityRecords, Transaction transaction) throws
             GeminiException {
         Object value = fieldValue.getValue();
         Field field = fieldValue.getField();
@@ -530,6 +546,42 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             EntityRecord embededEntity = embededEntityRecords.get(field);
             return embededEntity.get(embededEntity.getEntity().getIdEntityField());
         }
+        if (type.equals(FieldType.ENTITY_REF_ARRAY)) {
+            if (Collection.class.isAssignableFrom(value.getClass())) {
+                Collection<Object> genColl = (Collection) value;
+                if (genColl.isEmpty()) {
+                    return null;
+                }
+                Object[] elements = genColl.toArray();
+                Object firstElem = elements[0];
+
+                Long[] entityRefIds = new Long[elements.length];
+                int i = 0;
+                if (EntityRecord.class.isAssignableFrom(firstElem.getClass())) {
+                    Collection<EntityRecord> entityRecords = (Collection<EntityRecord>) value;
+                    for (EntityRecord entityRecord : entityRecords) {
+                        if (entityRecord.getID() != null) {
+                            entityRefIds[i++] = (long) entityRecord.getID();
+                        } else {
+                            Optional<EntityRecord> queryedEntityRec = getEntityRecordByLogicalKey(entityRecord, transaction);
+                            if (queryedEntityRec.isPresent()) {
+                                entityRefIds[i++] = (long) queryedEntityRec.get().getID();
+                            } else {
+                                throw EntityRecordException.LK_NOTFOUND(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
+                            }
+                        }
+                    }
+                }
+
+                TransactionImpl tImp = (TransactionImpl) transaction;
+                Connection connection = tImp.getConnection();
+                try {
+                    return connection.createArrayOf("BIGINT", entityRefIds);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         throw new RuntimeException(String.format("Not implemented %s", field.getType()));
     }
 
@@ -558,6 +610,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return new String[]{};
             case ENTITY_EMBEDED:
                 return 0;
+            case ENTITY_REF_ARRAY:
+                return null;
             case RECORD:
                 break;
         }
