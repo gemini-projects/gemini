@@ -36,6 +36,9 @@ export class NewEntityComponent implements OnInit {
         this.formStatus.submitFn().subscribe(v => {
             console.log(v)
             // TODO here gotosaved
-        });
+        }, error => {
+            // TODO notification service
+            console.error(error);
+        }, );
     }
 }
