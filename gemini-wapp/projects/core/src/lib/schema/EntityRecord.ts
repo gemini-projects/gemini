@@ -7,10 +7,15 @@ export class EntityRecord {
     private _meta: object;
     private _data: any;
 
-    constructor(entity: EntitySchema) {
+    constructor(entity: EntitySchema, entityRecord?: EntityRecord) {
         this._entity = entity;
-        this._data = {};
-        this._meta = {};
+        if (entityRecord) {
+            this._data = entityRecord.data;
+            this._meta = entityRecord.meta;
+        } else {
+            this._data = {};
+            this._meta = {};
+        }
     }
 
     get meta(): object {
@@ -38,6 +43,10 @@ export class EntityRecord {
             "data": this._data
         }
     }
+}
+
+export function entityRecordFromAPI(entity: EntitySchema, er: EntityRecord): EntityRecord {
+    return new EntityRecord(entity, er);
 }
 
 function getAndCheckEntityField(entity: EntitySchema, field: FieldSchema): FieldSchema {

@@ -14,6 +14,10 @@ export const entityRoutes: Routes = [
             {
                 path: 'new',
                 component: NewEntityComponent
+            },
+            {
+                path: ':lk',
+                component: ListEntityComponent
             }
         ]
     }

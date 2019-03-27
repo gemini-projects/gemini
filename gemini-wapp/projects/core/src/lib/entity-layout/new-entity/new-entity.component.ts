@@ -1,8 +1,10 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {GeminiSchemaService} from "../../schema/schema.service";
 import {FormService} from "../../form/form.service";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {FormStatus} from "../../form/form-status";
+import {EntityRecord} from "../../schema/EntityRecord";
+import {FieldSchema} from "../../schema/field-schema";
 
 @Component({
     selector: 'new-entity',
@@ -14,7 +16,8 @@ export class NewEntityComponent implements OnInit {
 
     constructor(private schemaService: GeminiSchemaService,
                 private formService: FormService,
-                private route: ActivatedRoute) {
+                private route: ActivatedRoute,
+                private router: Router) {
     }
 
     @Input()
@@ -33,12 +36,20 @@ export class NewEntityComponent implements OnInit {
     }
 
     submitForm() {
-        this.formStatus.submitFn().subscribe(v => {
-            console.log(v)
-            // TODO here gotosaved
+        this.formStatus.submitFn().subscribe((er: EntityRecord) => {
+            let entitySchema = er.entitySchema();
+            if (entitySchema) {
+                let logicalKeyFields: FieldSchema[] = entitySchema.getLogicalKeyFields();
+                if (logicalKeyFields.length == 1) {
+                    const lk = er.data[logicalKeyFields[0].name];
+                    return this.router.navigate(['../', lk], {relativeTo: this.route});
+                }
+            }
+            // no entity schema with a single logical key
+            // TODO we can route by #unique-id
         }, error => {
             // TODO notification service
             console.error(error);
-        }, );
+        },);
     }
 }

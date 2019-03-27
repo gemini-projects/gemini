@@ -1,10 +1,10 @@
 import {Injectable} from "@angular/core";
 import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from "@angular/common/http";
 import {Observable, OperatorFunction, throwError} from "rxjs";
-import {catchError, retry} from "rxjs/operators";
+import {catchError, map, retry} from "rxjs/operators";
 
 import {GeminiUriService} from "../common";
-import {EntityRecord} from "../schema/EntityRecord";
+import {EntityRecord, entityRecordFromAPI} from "../schema/EntityRecord";
 import {pipeFromArray} from "rxjs/internal/util/pipe";
 
 @Injectable({
@@ -54,7 +54,8 @@ export class EntityManagerService {
             headers: httpHeaders,
         };
         let entitySchema = entityRecord.entitySchema()!;
-        return pipeFromArray(EntityManagerService.commonHandler)(
+
+        return pipeFromArray(EntityManagerService.commonHandler.concat(map((e: EntityRecord) => entityRecordFromAPI(entitySchema, e))))(
             this.http.post<EntityRecord>(this.configService.getApiEntityRootUrl(entitySchema.name), entityRecord.toJsonObject(), options)
         );
     }
