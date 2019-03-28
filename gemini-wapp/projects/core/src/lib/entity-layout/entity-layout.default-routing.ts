@@ -2,6 +2,7 @@ import {Routes} from '@angular/router';
 import {EntityLayoutComponent} from "./entity-layout.component";
 import {NewEntityComponent} from "./new-entity/new-entity.component";
 import {ListEntityComponent} from "./list-entity/list-entity.component";
+import {DisplayEntityComponent} from "./display-entity/display-entity.component";
 
 
 export const entityRoutes: Routes = [
@@ -17,7 +18,7 @@ export const entityRoutes: Routes = [
             },
             {
                 path: ':lk',
-                component: ListEntityComponent
+                component: DisplayEntityComponent
             }
         ]
     }

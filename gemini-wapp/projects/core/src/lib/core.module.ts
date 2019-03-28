@@ -23,6 +23,7 @@ import { ListEntityComponent } from './entity-layout/list-entity/list-entity.com
 import {DateTimeComponent} from "./form/form-fields/date-time-fields/date-time.component";
 import {SpinnerComponent} from "./form/form-fields/input-fields/spinner.component";
 import {EntityRefComponent} from "./form/form-fields/entityref-fields/entity-ref.component";
+import { DisplayEntityComponent } from './entity-layout/display-entity/display-entity.component';
 
 
 @NgModule({
@@ -37,7 +38,8 @@ import {EntityRefComponent} from "./form/form-fields/entityref-fields/entity-ref
         EntityRefComponent,
         FormFieldContainerComponent,
         NewEntityComponent,
-        ListEntityComponent
+        ListEntityComponent,
+        DisplayEntityComponent
     ],
     imports: [
         BrowserAnimationsModule,

@@ -40,9 +40,10 @@ export class NewEntityComponent implements OnInit {
         this.translate.get("NEW_ENTITY_REC.ERRORS.NEW").subscribe(message =>
             this.ERROR_NEW_ENTITYREC = message
         );
-        this.route.parent.params.subscribe(val => {
-            this.name = val.name;
-        });
+
+        const entityName = this.route.parent.snapshot.paramMap.get("name");
+        if (entityName)
+            this.name = entityName
     }
 
     submitForm() {
