@@ -11,12 +11,28 @@ import {QuickSearchComponent} from './quick-search/quick-search.component';
 import {LoginComponent} from './login/login.component'
 import {RouterModule} from '@angular/router';
 import {HomeComponent} from './home/home.component';
+import {ToastModule} from "primeng/toast";
+import {MessageService} from "primeng/api";
 
 
 @NgModule({
-    declarations: [LayoutComponent, HeaderComponent, FooterComponent, LeftSidebarComponent, QuickSearchComponent, LoginComponent, HomeComponent],
+    declarations: [
+        LayoutComponent,
+        HeaderComponent,
+        FooterComponent,
+        LeftSidebarComponent,
+        QuickSearchComponent,
+        LoginComponent,
+        HomeComponent],
     imports: [
-        CommonModule, AutoCompleteModule, CoreModule, RouterModule
+        CommonModule,
+        AutoCompleteModule,
+        ToastModule,
+        CoreModule,
+        RouterModule
+    ],
+    providers: [
+        MessageService
     ],
     exports: [LayoutComponent, LoginComponent]
 })

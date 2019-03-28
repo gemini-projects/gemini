@@ -5,6 +5,9 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {FormStatus} from "../../form/form-status";
 import {EntityRecord} from "../../schema/EntityRecord";
 import {FieldSchema} from "../../schema/field-schema";
+import {TranslateService} from "@ngx-translate/core";
+import {ApiError} from "../../api/api-error";
+import {GeminiNotificationService} from "../../common";
 
 @Component({
     selector: 'new-entity',
@@ -14,10 +17,14 @@ import {FieldSchema} from "../../schema/field-schema";
 export class NewEntityComponent implements OnInit {
     formStatus: FormStatus;
 
+    private ERROR_NEW_ENTITYREC;
+
     constructor(private schemaService: GeminiSchemaService,
                 private formService: FormService,
                 private route: ActivatedRoute,
-                private router: Router) {
+                private router: Router,
+                private geminiNotification: GeminiNotificationService,
+                private translate: TranslateService) {
     }
 
     @Input()
@@ -30,6 +37,9 @@ export class NewEntityComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.translate.get("NEW_ENTITY_REC.ERRORS.NEW").subscribe(message =>
+            this.ERROR_NEW_ENTITYREC = message
+        );
         this.route.parent.params.subscribe(val => {
             this.name = val.name;
         });
@@ -38,6 +48,7 @@ export class NewEntityComponent implements OnInit {
     submitForm() {
         this.formStatus.submitFn().subscribe((er: EntityRecord) => {
             let entitySchema = er.entitySchema();
+            //this.geminiNotification.success("", "");
             if (entitySchema) {
                 let logicalKeyFields: FieldSchema[] = entitySchema.getLogicalKeyFields();
                 if (logicalKeyFields.length == 1) {
@@ -47,9 +58,8 @@ export class NewEntityComponent implements OnInit {
             }
             // no entity schema with a single logical key
             // TODO we can route by #unique-id
-        }, error => {
-            // TODO notification service
-            console.error(error);
-        },);
+        }, (error: ApiError) => {
+            this.geminiNotification.error(this.ERROR_NEW_ENTITYREC, error.message);
+        });
     }
 }

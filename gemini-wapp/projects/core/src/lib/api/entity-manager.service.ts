@@ -6,6 +6,7 @@ import {catchError, map, retry} from "rxjs/operators";
 import {GeminiUriService} from "../common";
 import {EntityRecord, entityRecordFromAPI} from "../schema/EntityRecord";
 import {pipeFromArray} from "rxjs/internal/util/pipe";
+import {ApiError} from "./api-error";
 
 @Injectable({
     providedIn: 'root'
@@ -79,7 +80,7 @@ export class EntityManagerService {
     private static handleError(error: HttpErrorResponse) {
         console.error(error);
         // return an observable with a user-facing error message
-        return throwError(error.error);
+        return throwError(error.error as ApiError);
     };
 
     private static commonHandler: OperatorFunction<any, any>[] =
