@@ -1,5 +1,39 @@
-<p>
-    display-entity works!
+<div *ngIf="entitySchema" class="gemini-portlet">
 
-    {{entityName}} - {{lkORUUID}}
-</p>
+
+    <div class="gemini-portlet__head">
+        <div class="gemini-portlet__head-label">
+            <h3 class="gemini-portlet__head-title" translate>
+                {{entityRecordTitle}}
+            </h3>
+        </div>
+        <div class="gemini-portlet__head-toolbar">
+            <div *ngIf="!isModifing">
+                <button pButton icon="pi pi-pencil" iconPos="right" class="ui-button-secondary"
+                        label="{{'BUTTON.EDIT' | translate }}" (click)="modify()"></button>
+                <button pButton type="submit" icon="pi pi-save" iconPos="right" class="ui-button-danger"
+                        label="{{'BUTTON.DELETE' | translate }}" (click)="delete()"></button>
+            </div>
+            <div *ngIf="isModifing">
+                <button pButton icon="pi pi-times" iconPos="right" class="ui-button-secondary"
+                        label="{{'BUTTON.CANCEL' | translate }}" (click)="cancel()"></button>
+                <button pButton type="submit" icon="pi pi-save" iconPos="right"
+                        label="{{'BUTTON.SAVE' | translate }}"
+                        [disabled]="!formStatus?.formGroup.valid" (click)="save()"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="gemini-portlet__body">
+        <div class="p-grid" *ngIf="entityRecord && !isModifing">
+            <div *ngFor="let field of entitySchema.fields;" class="p-col-12 p-md-6 p-lg-3">
+                <label>{{field.name | titlecase}}</label>
+                <div>{{entityRecord.data[field.name]}}</div>
+            </div>
+        </div>
+        <gemini-form-wrapper *ngIf="isModifing && formStatus" [formStatus]="formStatus"></gemini-form-wrapper>
+
+    </div>
+
+</div>
+

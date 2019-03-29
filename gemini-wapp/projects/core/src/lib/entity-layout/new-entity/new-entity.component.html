@@ -8,8 +8,7 @@
         </div>
         <div class="gemini-portlet__head-toolbar">
             <button pButton icon="pi pi-times" iconPos="right" class="ui-button-secondary"
-                    label="{{'BUTTON.CANCEL' | translate }}" routerLink=".."
-            ></button>
+                    label="{{'BUTTON.CANCEL' | translate }}" routerLink=".."></button>
             <button pButton type="submit" icon="pi pi-save" iconPos="right"
                     label="{{'BUTTON.SAVE' | translate }}"
                     [disabled]="!formStatus?.formGroup.valid" (click)="submitForm()"></button>

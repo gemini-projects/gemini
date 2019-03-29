@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {EntitySchema} from "./entity-schema";
 import {FieldSchema} from "./field-schema";
 import {Observable, of} from "rxjs";
-import {EntityManagerService} from "../api";
+import {GeminiEntityManagerService} from "../api";
 import {delay, flatMap, map, publish, publishReplay, refCount, share, shareReplay, tap} from "rxjs/operators";
 import {EntityRecord} from "./EntityRecord";
 
@@ -15,7 +15,7 @@ export class GeminiSchemaService {
 
     private entityCache: { [key: string]: EntitySchema };
 
-    constructor(private apiService: EntityManagerService) {
+    constructor(private apiService: GeminiEntityManagerService) {
         this.entityCache = {}
     }
 

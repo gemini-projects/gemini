@@ -9,6 +9,7 @@ import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.InvalidRequesException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static it.at7.gemini.api.ApiUtility.*;
 
@@ -94,8 +99,7 @@ public class RestAPIController {
             }
             if (logicalKeyList.size() == requestLkLenght) {
                 // the entity.. we can update or delete
-                List<String> lkStrings = paths.subList(2, paths.size());
-                String[] lkStringsArray = lkStrings.toArray(new String[lkStrings.size()]);
+                String[] lkStringsArray = decodeLogicalKeyStrings(paths);
                 switch (method) {
                     case "GET":
                         return handleGetRecord(e, lkStringsArray);
@@ -113,6 +117,19 @@ public class RestAPIController {
             }
         }
         throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
+    }
+
+    @NotNull
+    private String[] decodeLogicalKeyStrings(List<String> paths) {
+        List<String> lkStrings = paths.subList(2, paths.size());
+        lkStrings = lkStrings.stream().map(s -> {
+            try {
+                return URLDecoder.decode(s, StandardCharsets.UTF_8.toString());
+            } catch (UnsupportedEncodingException e1) {
+                throw new RuntimeException("Decode logical key failed");
+            }
+        }).collect(Collectors.toList());
+        return lkStrings.toArray(new String[0]);
     }
 
     private List<String> getGeminiHeader(HttpServletRequest request) {

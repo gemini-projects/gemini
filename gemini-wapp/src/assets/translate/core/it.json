@@ -74,7 +74,9 @@
     "NEW": "Nuovo",
     "CANCEL": "Annulla",
     "SAVE": "Salva",
-    "OK": "Ok"
+    "OK": "Ok",
+    "EDIT": "Modifica",
+    "DELETE": "Elimina"
   },
   "NEW_ENTITY_REC": {
     "NEW_MESSAGE": "Inserisci nuovo record",

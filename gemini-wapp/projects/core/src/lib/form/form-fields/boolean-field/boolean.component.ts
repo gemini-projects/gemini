@@ -2,7 +2,6 @@ import {Component, Input, OnInit} from "@angular/core";
 import {FormFieldComponentDef} from "../form-field-component.interface";
 import {FormFieldStatus} from "../../form-field-status";
 import {FormStatus} from "../../form-status";
-import {SelectItem} from "primeng/api";
 import {TranslateService} from "@ngx-translate/core";
 
 @Component({
@@ -30,6 +29,8 @@ export class BooleanComponent implements FormFieldComponentDef, OnInit {
         this.translate.get('DATATYPE.BOOL.FALSE').subscribe((res: string) => {
             this.falseLabel = res;
         });
+
+        this.fieldStatus.formControl.setValue(this.fieldStatus.defaultValue);
     }
 
 

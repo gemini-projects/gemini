@@ -23,6 +23,7 @@ export class InputComponent implements FormFieldComponentDef, OnInit {
         if (this.inputData.inputType == "number") {
             this.initNumberFields();
         }
+        this.fieldStatus.formControl.setValue(this.fieldStatus.defaultValue);
     }
 
     private initNumberFields() {
