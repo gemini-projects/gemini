@@ -9,6 +9,7 @@ import java.util.Objects;
 
 public class Field {
     public static final String ID_NAME = "id";
+    public static final Object UUID_NAME = "uuid";
     // public static final Field ID = new Field(FieldType.PK, "id", true);
 
     private final FieldType fieldType;

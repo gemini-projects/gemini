@@ -205,6 +205,9 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("CREATE TABLE " + entity.getName().toLowerCase() + " ( ");
         sqlBuilder.append(primaryKeyField(Field.ID_NAME));
+        if (!entity.isEmbedable()) {
+            sqlBuilder.append(uuidField(Field.UUID_NAME));
+        }
         entity.getSchemaEntityFields().forEach(f -> {
             if (!typeNotNeedColumns(f.getType()))
                 sqlBuilder.append(", " + field(f));
@@ -418,6 +421,10 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
 
     private String primaryKeyField(String id) {
         return String.format("%s BIGSERIAL PRIMARY KEY", id);
+    }
+
+    private String uuidField(Object uuidName) {
+        return String.format(", %s uuid UNIQUE", uuidName);
     }
 
     private String field(Field field) {
