@@ -1,4 +1,4 @@
-<div *ngIf="entitySchema" class="gemini-portlet">
+<div *ngIf="entityRecord" class="gemini-portlet">
 
 
     <div class="gemini-portlet__head">
@@ -11,13 +11,13 @@
             <div *ngIf="!isModifing">
                 <button pButton icon="pi pi-pencil" iconPos="right" class="ui-button-secondary"
                         label="{{'BUTTON.EDIT' | translate }}" (click)="modify()"></button>
-                <button pButton type="submit" icon="pi pi-save" iconPos="right" class="ui-button-danger"
+                <button pButton icon="pi pi-save" iconPos="right" class="ui-button-danger"
                         label="{{'BUTTON.DELETE' | translate }}" (click)="delete()"></button>
             </div>
             <div *ngIf="isModifing">
                 <button pButton icon="pi pi-times" iconPos="right" class="ui-button-secondary"
                         label="{{'BUTTON.CANCEL' | translate }}" (click)="cancel()"></button>
-                <button pButton type="submit" icon="pi pi-save" iconPos="right"
+                <button pButton icon="pi pi-save" iconPos="right"
                         label="{{'BUTTON.SAVE' | translate }}"
                         [disabled]="!formStatus?.formGroup.valid" (click)="save()"></button>
             </div>
@@ -36,4 +36,10 @@
     </div>
 
 </div>
+
+<p-confirmDialog acceptButtonStyleClass="ui-button-danger"
+                 rejectButtonStyleClass="ui-button-secondary"></p-confirmDialog>
+
+
+
 

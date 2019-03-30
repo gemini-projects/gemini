@@ -80,8 +80,21 @@
   },
   "NEW_ENTITY_REC": {
     "NEW_MESSAGE": "Inserisci nuovo record",
+    "CREATED": "Record creato",
     "ERRORS": {
       "NEW": "Errore di inserimento"
     }
-  }
+  },
+  "DISPLAY_ENTITY_REC": {
+    "DELETE": {
+      "DELETED": "Record cancellato",
+      "CONFIRMATION_HEADER": "Elimina record",
+      "CONFIRMATION_MESSAGE": "Sei sicuro di voler eliminare il record?"
+    },
+    "ERRORS": {
+      "NOT_FOUND": "Record non trovato"
+    }
+  },
+  "ERROR": "Errore"
+
 }

@@ -6,7 +6,14 @@ import {InputTextModule} from 'primeng/inputtext';
 import {MessagesModule} from 'primeng/messages';
 import {MessageModule} from 'primeng/message';
 import {RouterModule} from '@angular/router';
-import {CalendarModule, DropdownModule, SpinnerModule, ToggleButtonModule, TooltipModule} from "primeng/primeng";
+import {
+    CalendarModule, ConfirmationService,
+    ConfirmDialogModule,
+    DropdownModule,
+    SpinnerModule,
+    ToggleButtonModule,
+    TooltipModule
+} from "primeng/primeng";
 import {TranslateModule} from "@ngx-translate/core";
 
 
@@ -16,14 +23,14 @@ import {GeminiFormWrapperComponent} from './form/gemini-form/gemini-form-wrapper
 import {GeminiFieldDirective} from "./form/form-fields/gemini-field.directive";
 import {FormFieldContainerComponent} from './form/form-field-container/form-field-container.component';
 import {InputComponent} from "./form/form-fields/input-fields/input-field.component";
-import {NewEntityComponent} from './entity-layout/new-entity/new-entity.component';
+import {NewEntityRecordComponent} from './entity-layout/new-entity-record/new-entity-record.component';
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {BooleanComponent} from "./form/form-fields/boolean-field/boolean.component";
 import { ListEntityComponent } from './entity-layout/list-entity/list-entity.component';
 import {DateTimeComponent} from "./form/form-fields/date-time-fields/date-time.component";
 import {SpinnerComponent} from "./form/form-fields/input-fields/spinner.component";
 import {EntityRefComponent} from "./form/form-fields/entityref-fields/entity-ref.component";
-import { DisplayEntityComponent } from './entity-layout/display-entity/display-entity.component';
+import { DisplayEntityRecordComponent } from './entity-layout/display-entity-record/display-entity-record.component';
 
 
 @NgModule({
@@ -37,9 +44,9 @@ import { DisplayEntityComponent } from './entity-layout/display-entity/display-e
         SpinnerComponent,
         EntityRefComponent,
         FormFieldContainerComponent,
-        NewEntityComponent,
+        NewEntityRecordComponent,
         ListEntityComponent,
-        DisplayEntityComponent
+        DisplayEntityRecordComponent
     ],
     imports: [
         BrowserAnimationsModule,
@@ -55,9 +62,11 @@ import { DisplayEntityComponent } from './entity-layout/display-entity/display-e
         InputTextModule,
         MessagesModule,
         MessageModule,
+        ConfirmDialogModule,
         TranslateModule.forChild({})
     ],
     exports: [EntityLayoutComponent],
+    providers: [ConfirmationService],
     entryComponents: [
         InputComponent,
         BooleanComponent,

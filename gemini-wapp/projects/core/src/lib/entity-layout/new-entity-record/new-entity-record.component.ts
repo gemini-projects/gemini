@@ -11,13 +11,14 @@ import {GeminiNotificationService} from "../../common";
 
 @Component({
     selector: 'new-entity',
-    templateUrl: './new-entity.component.html',
-    styleUrls: ['./new-entity.component.css']
+    templateUrl: './new-entity-record.component.html',
+    styleUrls: ['./new-entity-record.component.css']
 })
-export class NewEntityComponent implements OnInit {
+export class NewEntityRecordComponent implements OnInit {
     formStatus: FormStatus;
 
-    private ERROR_NEW_ENTITYREC;
+    private ERROR_NEW_ENTITYREC_MESSAGE: string;
+    private CREATED_MEESSAGE: string;
 
     constructor(private schemaService: GeminiSchemaService,
                 private formService: FormService,
@@ -37,9 +38,10 @@ export class NewEntityComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.translate.get("NEW_ENTITY_REC.ERRORS.NEW").subscribe(message =>
-            this.ERROR_NEW_ENTITYREC = message
-        );
+        this.translate.get("NEW_ENTITY_REC").subscribe(message => {
+            this.ERROR_NEW_ENTITYREC_MESSAGE = message['ERRORS'] && message['ERRORS']['NEW'] ? message['ERRORS']['NEW'] : "Error";
+            this.CREATED_MEESSAGE = message['CREATED']
+        });
 
         const entityName = this.route.parent.snapshot.paramMap.get("name");
         if (entityName)
@@ -48,19 +50,19 @@ export class NewEntityComponent implements OnInit {
 
     submitForm() {
         this.formStatus.submitFn().subscribe((er: EntityRecord) => {
-            let entitySchema = er.entitySchema();
-            //this.geminiNotification.success("", "");
-            if (entitySchema) {
-                let logicalKeyFields: FieldSchema[] = entitySchema.getLogicalKeyFields();
-                if (logicalKeyFields.length == 1) {
-                    const lk = er.data[logicalKeyFields[0].name];
-                    return this.router.navigate(['../', lk], {relativeTo: this.route});
-                }
+            let entitySchema = er.entitySchema;
+            this.geminiNotification.success(this.CREATED_MEESSAGE);
+
+            let logicalKeyFields: FieldSchema[] = entitySchema.getLogicalKeyFields();
+            if (logicalKeyFields.length == 1) {
+                const lk = er.data[logicalKeyFields[0].name];
+                return this.router.navigate(['../', lk], {relativeTo: this.route});
             }
+
             // no entity schema with a single logical key
             // TODO we can route by #unique-id
         }, (error: ApiError) => {
-            this.geminiNotification.error(this.ERROR_NEW_ENTITYREC, error.message);
+            this.geminiNotification.error(this.ERROR_NEW_ENTITYREC_MESSAGE, error.message);
         });
     }
 }

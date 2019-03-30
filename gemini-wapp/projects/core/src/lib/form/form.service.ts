@@ -60,13 +60,16 @@ export class FormService {
             }
         }
         formStatus.fieldsStatus = formFieldsStatus;
-        formStatus.submitFn = this.submitFunction.bind(this, formStatus);
+        formStatus.submitFn = this.submitFunction.bind(this, formStatus, entityRecord);
         return formStatus
     }
 
-    private submitFunction(formStatus: FormStatus) {
+    private submitFunction(formStatus: FormStatus, oldEntityRec?: EntityRecord) {
         let entityRecord = this.convertFormValueToEntityRecord(formStatus.entitySchema, formStatus.formGroup.value);
-        return this.entityManager.creteEntityRecord(entityRecord);
+        if (oldEntityRec)
+            return this.entityManager.updateEntityRecord(entityRecord);
+        else
+            return this.entityManager.creteEntityRecord(entityRecord);
     }
 
     private registerFormValueChanges(formStatus: FormStatus) {
@@ -232,7 +235,7 @@ export class FormService {
     }
 
     private geDefaultValueForField(fieldStatus: FormFieldStatus, entityRecord?: EntityRecord) {
-        if(entityRecord){
+        if (entityRecord) {
             const data = entityRecord.data[fieldStatus.fieldSchema.name];
 
             fieldStatus.defaultValue = data;

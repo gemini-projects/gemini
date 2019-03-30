@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NewEntityComponent } from './new-entity.component';
+import { NewEntityRecordComponent } from './new-entity-record.component';
 
-describe('NewEntityComponent', () => {
-  let component: NewEntityComponent;
-  let fixture: ComponentFixture<NewEntityComponent>;
+describe('NewEntityRecordComponent', () => {
+  let component: NewEntityRecordComponent;
+  let fixture: ComponentFixture<NewEntityRecordComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NewEntityComponent ]
+      declarations: [ NewEntityRecordComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(NewEntityComponent);
+    fixture = TestBed.createComponent(NewEntityRecordComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

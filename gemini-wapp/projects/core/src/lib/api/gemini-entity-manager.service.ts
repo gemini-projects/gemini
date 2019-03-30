@@ -4,9 +4,11 @@ import {Observable, OperatorFunction, throwError} from "rxjs";
 import {catchError, map, retry} from "rxjs/operators";
 
 import {GeminiUriService} from "../common";
-import {EntityRecord, entityRecordFromAPI} from "../schema/EntityRecord";
+import {EntityRecord, entityRecordFromAPI, EntityRecordInterface} from "../schema/EntityRecord";
 import {pipeFromArray} from "rxjs/internal/util/pipe";
 import {ApiError} from "./api-error";
+import {EntitySchema} from "../schema/entity-schema";
+import {FieldSchema} from "../schema/field-schema";
 
 @Injectable({
     providedIn: 'root'
@@ -20,19 +22,29 @@ export class GeminiEntityManagerService {
     constructor(private configService: GeminiUriService, private http: HttpClient) {
     }
 
-    public getEntityRecord(entityName: string, entityKey: any): Observable<EntityRecord> {
+
+    public getEntityRecordJson(entityName: string, entityKey: any): Observable<EntityRecordInterface> {
         const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
         const options = {
             headers: httpHeaders
         };
         return pipeFromArray(GeminiEntityManagerService.commonHandler)(
-            this.http.get<EntityRecord>(this.configService.getApiEntityRecordByKeyUrl(entityName, entityKey), options)
+            this.http.get<EntityRecordInterface>(this.configService.getApiEntityRecordByKeyUrl(entityName, entityKey), options)
         );
     }
 
-    public getEntityRecords(entityName: string): Observable<EntityRecord>;
-    public getEntityRecords(entityName: string, searchFilter: any): Observable<EntityRecord>;
-    public getEntityRecords(entityName: string, searchFilter?: any): Observable<EntityRecord> {
+    public getEntityRecord(entitySchema: EntitySchema, entityKey: any): Observable<EntityRecord> {
+        const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
+        const options = {
+            headers: httpHeaders
+        };
+        return pipeFromArray(this.handlerToEntityRecord(entitySchema))(
+            this.http.get<EntityRecord>(this.configService.getApiEntityRecordByKeyUrl(entitySchema.name, entityKey), options));
+    }
+
+    public getEntityRecords(entityName: string): Observable<EntityRecordInterface>;
+    public getEntityRecords(entityName: string, searchFilter: any): Observable<EntityRecordInterface>;
+    public getEntityRecords(entityName: string, searchFilter?: any): Observable<EntityRecordInterface> {
         const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
         let httpParams = new HttpParams();
         httpParams = searchFilter ? httpParams.set(this.configService.SEARCH_PARAMETER, searchFilter) : httpParams;
@@ -40,11 +52,8 @@ export class GeminiEntityManagerService {
             headers: httpHeaders,
             params: httpParams
         };
-        return this.http.get<EntityRecord>(this.configService.getApiEntityRootUrl(entityName), options)
-            .pipe(
-                retry(3),
-                catchError(GeminiEntityManagerService.handleError)
-            );
+        return pipeFromArray(GeminiEntityManagerService.commonHandler)(
+            this.http.get<EntityRecord>(this.configService.getApiEntityRootUrl(entityName), options));
     }
 
     public creteEntityRecord(entityRecord: EntityRecord): Observable<EntityRecord> {
@@ -52,7 +61,7 @@ export class GeminiEntityManagerService {
     }
 
     public updateEntityRecord(entityRecord: EntityRecord): Observable<EntityRecord> {
-        return this.handleEntityRecordAPI(entityRecord, OperationType.DELETE);
+        return this.handleEntityRecordAPI(entityRecord, OperationType.UPDATE);
     }
 
     public deleteEntityRecord(entityRecord: EntityRecord): Observable<EntityRecord> {
@@ -64,25 +73,34 @@ export class GeminiEntityManagerService {
         const options = {
             headers: httpHeaders,
         };
-        let entitySchema = entityRecord.entitySchema()!;
-
         let method: string;
+        let url: string;
         switch (opeType) {
             case OperationType.CREATE:
                 method = "post";
+                url = this.configService.getApiEntityRootUrl(entityRecord.entitySchema.name);
                 break;
             case OperationType.DELETE:
                 method = "delete";
+                url = this.configService.getApiEntityRecordByKeyUrl(entityRecord.entitySchema.name, this.extractEntityKey(entityRecord));
                 break;
             case OperationType.UPDATE:
                 method = "put";
+                url = this.configService.getApiEntityRecordByKeyUrl(entityRecord.entitySchema.name, this.extractEntityKey(entityRecord));
                 break;
-
         }
-
-        return pipeFromArray(GeminiEntityManagerService.commonHandler.concat(map((e: EntityRecord) => entityRecordFromAPI(entitySchema, e))))(
-            this.http[method]<EntityRecord>(this.configService.getApiEntityRootUrl(entitySchema.name), entityRecord.toJsonObject(), options)
+        return pipeFromArray(this.handlerToEntityRecord(entityRecord.entitySchema))(
+            this.http[method]<EntityRecord>(url, entityRecord.toJsonObject(), options)
         );
+    }
+
+    private extractEntityKey(entityRecord: EntityRecord) {
+        const entitySchema = entityRecord.entitySchema;
+        let logicalKeyFields: FieldSchema[] = entitySchema.getLogicalKeyFields();
+        // TODO uuid
+        if (logicalKeyFields.length == 1) {
+            return entityRecord.data[logicalKeyFields[0].name];
+        }
     }
 
     /* public getEntityList(entityName: string, entityKey: any, entityCollection?: string): Observable<EntityRecord[]> {
@@ -101,7 +119,7 @@ export class GeminiEntityManagerService {
     }
 
 
-    private static handleError(error: HttpErrorResponse) {
+    private static handleError(error: HttpErrorResponse): Observable<ApiError> {
         console.error(error);
         // return an observable with a user-facing error message
         return throwError(error.error as ApiError);
@@ -109,6 +127,10 @@ export class GeminiEntityManagerService {
 
     private static commonHandler: OperatorFunction<any, any>[] =
         [catchError(GeminiEntityManagerService.handleError)];
+
+    private handlerToEntityRecord(entitySchema: EntitySchema) {
+        return GeminiEntityManagerService.commonHandler.concat(map((e: EntityRecord) => entityRecordFromAPI(entitySchema, e)));
+    }
 }
 
 

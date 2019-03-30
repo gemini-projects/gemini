@@ -1,14 +1,19 @@
 import {EntitySchema} from "./entity-schema";
 import {FieldSchema, FieldType} from "./field-schema";
 
-export class EntityRecord {
-    private _entity: EntitySchema;
+export interface EntityRecordInterface {
+    data: any;
+    meta: any
+}
+
+export class EntityRecord implements EntityRecordInterface {
+    entitySchema: EntitySchema;
 
     private _meta: object;
     private _data: any;
 
-    constructor(entity: EntitySchema, entityRecord?: EntityRecord) {
-        this._entity = entity;
+    constructor(entity: EntitySchema, entityRecord?: EntityRecordInterface) {
+        this.entitySchema = entity;
         if (entityRecord) {
             this._data = entityRecord.data;
             this._meta = entityRecord.meta;
@@ -26,12 +31,8 @@ export class EntityRecord {
         return this._data;
     }
 
-    entitySchema?(): EntitySchema {
-        return this._entity;
-    }
-
     set(field: FieldSchema, value: any) {
-        let entityField = getAndCheckEntityField(this._entity, field);
+        let entityField = getAndCheckEntityField(this.entitySchema, field);
         if (entityField) {
             this._data[entityField.name] = convertFieldValue.call(this, field, value);
         }
@@ -110,7 +111,7 @@ function convertFieldValue(field: FieldSchema, value: any) {
         case FieldType.RECORD:
             break;
     }
-    throw Error(`Entity ${this._entity.name}: unable to convert field ${field.name} - ${field.type}`);
+    throw Error(`Entity ${this.entitySchema.name}: unable to convert field ${field.name} - ${field.type}`);
 }
 
 function isString(value): boolean {
