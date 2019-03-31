@@ -7,9 +7,9 @@ import {EntityRecord} from "../../schema/EntityRecord";
 import {FormService} from "../../form/form.service";
 import {FormStatus} from "../../form/form-status";
 import {ConfirmationService} from "primeng/api";
-import {TranslateService} from "@ngx-translate/core";
 import {GeminiNotificationService, GeminiNotificationType} from "../../common";
 import {ApiError} from "../../api/api-error";
+import {GeminiMessagesService} from "../../common/gemini-messages.service";
 
 @Component({
     selector: 'lib-display-entity',
@@ -25,7 +25,6 @@ export class DisplayEntityRecordComponent implements OnInit {
     private entityRecordTitle: string;
     private isModifing: boolean;
     private formStatus: FormStatus;
-    private MESSAGES: any;
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -33,8 +32,8 @@ export class DisplayEntityRecordComponent implements OnInit {
                 private entityManager: GeminiEntityManagerService,
                 private formService: FormService,
                 private confirmationService: ConfirmationService,
-                private translate: TranslateService,
-                private notification: GeminiNotificationService) {
+                private geminiNotification: GeminiNotificationService,
+                private message: GeminiMessagesService) {
         this.isModifing = false;
     }
 
@@ -46,10 +45,6 @@ export class DisplayEntityRecordComponent implements OnInit {
         if (lkORUUID)
             this.lkORUUID = lkORUUID;
 
-        this.translate.get(["DISPLAY_ENTITY_REC", "BUTTON", "ERROR"]).subscribe(message => {
-            this.MESSAGES = message;
-        });
-
         this.schemaService.getEntitySchema$(entityName).subscribe(entitySchema => {
             this.entitySchema = entitySchema;
             this.entityManager.getEntityRecord(this.entitySchema, this.lkORUUID).subscribe(entityRecord => {
@@ -57,7 +52,7 @@ export class DisplayEntityRecordComponent implements OnInit {
                 const refDescFields = this.entitySchema.getFieldsForReferenceDescription();
                 this.entityRecordTitle = refDescFields.map(f => entityRecord.data[f.name]).join(" - ");
             }, (entityRecError: ApiError) => {
-                this.notification.error(this.MESSAGES["ERROR"], this.MESSAGES["DISPLAY_ENTITY_REC"]["ERRORS"]["NOT_FOUND"], GeminiNotificationType.INSIDE);
+                this.geminiNotification.error(this.message.get("ERROR"), this.message.get("ENTITY_RECORD.ERRORS.NOT_FOUND"), GeminiNotificationType.INSIDE);
             });
         });
 
@@ -74,13 +69,14 @@ export class DisplayEntityRecordComponent implements OnInit {
 
     delete() {
         this.confirmationService.confirm({
-            message: this.MESSAGES['DISPLAY_ENTITY_REC']['DELETE']['CONFIRMATION_MESSAGE'],
-            header: this.MESSAGES['DISPLAY_ENTITY_REC']['DELETE']['CONFIRMATION_HEADER'],
-            acceptLabel: this.MESSAGES['BUTTON']['DELETE'],
-            rejectLabel: this.MESSAGES['BUTTON']['CANCEL'],
+            message: this.message.get('ENTITY_RECORD.DELETE.CONFIRMATION_MESSAGE'),
+            header: this.message.get('ENTITY_RECORD.DELETE.CONFIRMATION_HEADER'),
+            acceptLabel: this.message.get('BUTTON.DELETE'),
+            rejectLabel: this.message.get('BUTTON.CANCEL'),
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
                 this.entityManager.deleteEntityRecord(this.entityRecord).subscribe(() => {
+                    this.geminiNotification.warning(this.message.get("ENTITY_RECORD.DELETE.DELETED"));
                     return this.router.navigate(['../'], {relativeTo: this.route});
                 })
             },
@@ -94,8 +90,8 @@ export class DisplayEntityRecordComponent implements OnInit {
     }
 
     save() {
-        console.log("SAVING");
         this.formStatus.submitFn().subscribe((er: EntityRecord) => {
+            this.geminiNotification.success(this.message.get("ENTITY_RECORD.MODIFY.MODIFIED"));
             this.entityRecord = er;
             this.isModifing = false;
         });

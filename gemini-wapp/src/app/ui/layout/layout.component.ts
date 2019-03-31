@@ -21,7 +21,8 @@ export class LayoutComponent implements OnInit {
                     severity: notification.severity,
                     summary: notification.title,
                     detail: notification.description,
-                    life: LayoutComponent.HIDE_DELAY, sticky: false
+                    life: LayoutComponent.HIDE_DELAY, sticky: false,
+                    key: GeminiNotificationType.TOAST
                 })
         })
     }

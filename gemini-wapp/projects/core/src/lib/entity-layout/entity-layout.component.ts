@@ -38,12 +38,14 @@ export class EntityLayoutComponent implements OnInit {
             }
         });
         this.notificationService.notification$.subscribe(notification => {
-            if (notification.type == GeminiNotificationType.INSIDE)
+            if (notification.type == GeminiNotificationType.INSIDE) {
                 this.errorMsgs.push({
                     severity: notification.severity,
                     summary: notification.title,
-                    detail: notification.description
+                    detail: notification.description,
+                    key: GeminiNotificationType.INSIDE
                 })
+            }
         })
     }
 
@@ -55,7 +57,12 @@ export class EntityLayoutComponent implements OnInit {
                     this.entitySchema = es
                 },
                 (error: ApiError) => {
-                    this.errorMsgs = [{severity: 'error', summary: 'Error', detail: error.message}]
+                    this.errorMsgs = [{
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: error.message,
+                        key: GeminiNotificationType.INSIDE
+                    }]
                 }
             );
     }

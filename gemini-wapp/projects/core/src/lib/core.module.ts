@@ -1,4 +1,4 @@
-import {NgModule} from '@angular/core';
+import {APP_INITIALIZER, NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ReactiveFormsModule} from '@angular/forms';
 import {ButtonModule} from 'primeng/button';
@@ -7,7 +7,8 @@ import {MessagesModule} from 'primeng/messages';
 import {MessageModule} from 'primeng/message';
 import {RouterModule} from '@angular/router';
 import {
-    CalendarModule, ConfirmationService,
+    CalendarModule,
+    ConfirmationService,
     ConfirmDialogModule,
     DropdownModule,
     SpinnerModule,
@@ -26,11 +27,12 @@ import {InputComponent} from "./form/form-fields/input-fields/input-field.compon
 import {NewEntityRecordComponent} from './entity-layout/new-entity-record/new-entity-record.component';
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {BooleanComponent} from "./form/form-fields/boolean-field/boolean.component";
-import { ListEntityComponent } from './entity-layout/list-entity/list-entity.component';
+import {ListEntityComponent} from './entity-layout/list-entity/list-entity.component';
 import {DateTimeComponent} from "./form/form-fields/date-time-fields/date-time.component";
 import {SpinnerComponent} from "./form/form-fields/input-fields/spinner.component";
 import {EntityRefComponent} from "./form/form-fields/entityref-fields/entity-ref.component";
-import { DisplayEntityRecordComponent } from './entity-layout/display-entity-record/display-entity-record.component';
+import {DisplayEntityRecordComponent} from './entity-layout/display-entity-record/display-entity-record.component';
+import {GeminiMessagesService, initMessageService} from "./common/gemini-messages.service";
 
 
 @NgModule({
@@ -66,7 +68,15 @@ import { DisplayEntityRecordComponent } from './entity-layout/display-entity-rec
         TranslateModule.forChild({})
     ],
     exports: [EntityLayoutComponent],
-    providers: [ConfirmationService],
+    providers: [ConfirmationService,
+        GeminiMessagesService,
+        {
+            provide: APP_INITIALIZER,
+            useFactory: initMessageService,
+            deps: [GeminiMessagesService],
+            multi: true
+        }
+    ],
     entryComponents: [
         InputComponent,
         BooleanComponent,

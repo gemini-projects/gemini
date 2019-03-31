@@ -5,9 +5,9 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {FormStatus} from "../../form/form-status";
 import {EntityRecord} from "../../schema/EntityRecord";
 import {FieldSchema} from "../../schema/field-schema";
-import {TranslateService} from "@ngx-translate/core";
 import {ApiError} from "../../api/api-error";
 import {GeminiNotificationService} from "../../common";
+import {GeminiMessagesService} from "../../common/gemini-messages.service";
 
 @Component({
     selector: 'new-entity',
@@ -19,13 +19,14 @@ export class NewEntityRecordComponent implements OnInit {
 
     private ERROR_NEW_ENTITYREC_MESSAGE: string;
     private CREATED_MEESSAGE: string;
+    private NEW_RECORD: string;
 
     constructor(private schemaService: GeminiSchemaService,
                 private formService: FormService,
                 private route: ActivatedRoute,
                 private router: Router,
                 private geminiNotification: GeminiNotificationService,
-                private translate: TranslateService) {
+                private mesage: GeminiMessagesService) {
     }
 
     @Input()
@@ -34,14 +35,14 @@ export class NewEntityRecordComponent implements OnInit {
         this.formService.entityToForm(entityName)
             .subscribe(fs => {
                 this.formStatus = fs;
+                this.ERROR_NEW_ENTITYREC_MESSAGE = this.mesage.get('ENTITY_RECORD.ERRORS.NEW');
+                this.NEW_RECORD = this.mesage.get('ENTITY_RECORD.NEW');
+                this.CREATED_MEESSAGE = this.mesage.get('ENTITY_RECORD.CREATED');
             })
     }
 
     ngOnInit() {
-        this.translate.get("NEW_ENTITY_REC").subscribe(message => {
-            this.ERROR_NEW_ENTITYREC_MESSAGE = message['ERRORS'] && message['ERRORS']['NEW'] ? message['ERRORS']['NEW'] : "Error";
-            this.CREATED_MEESSAGE = message['CREATED']
-        });
+
 
         const entityName = this.route.parent.snapshot.paramMap.get("name");
         if (entityName)

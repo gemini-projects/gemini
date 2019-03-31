@@ -21,6 +21,13 @@ export class GeminiNotificationService {
         this.prepareAndEmitNotification("error", errorTitle, errorDescription, notificationType);
     }
 
+    warning(warningTitle: string): void;
+    warning(warningTitle: string, warningDescription: string): void ;
+    warning(warningTitle: string, warningDescription: string, notificationType: GeminiNotificationType): void ;
+    warning(warningTitle: string, warningDescription?: string, notificationType?: GeminiNotificationType): void {
+        this.prepareAndEmitNotification("warn", warningTitle, warningDescription, notificationType);
+    }
+
     success(successTitle: string): void;
     success(successTitle: string, successDescription: string): void ;
     success(successTitle: string, successDescription: string, notificationType: GeminiNotificationType): void ;
