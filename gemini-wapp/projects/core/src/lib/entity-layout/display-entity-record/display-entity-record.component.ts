@@ -38,14 +38,14 @@ export class DisplayEntityRecordComponent implements OnInit {
     }
 
     ngOnInit() {
-        const entityName = this.route.parent.snapshot.paramMap.get("name");
-        if (entityName)
-            this.entityName = entityName;
+        const _entityName = this.route.parent.snapshot.paramMap.get("name");
+        if (_entityName)
+            this.entityName = _entityName.toUpperCase();
         const lkORUUID = this.route.snapshot.paramMap.get("lk");
         if (lkORUUID)
             this.lkORUUID = lkORUUID;
 
-        this.schemaService.getEntitySchema$(entityName).subscribe(entitySchema => {
+        this.schemaService.getEntitySchema$(this.entityName).subscribe(entitySchema => {
             this.entitySchema = entitySchema;
             this.entityManager.getEntityRecord(this.entitySchema, this.lkORUUID).subscribe(entityRecord => {
                 this.entityRecord = entityRecord;

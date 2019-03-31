@@ -18,7 +18,7 @@ export class EntityLayoutComponent implements OnInit {
     newEntityRecordEnabled: boolean;
     entitySchema: EntitySchema;
 
-    _entityName;
+    _entityName: string;
 
     constructor(private schemaService: GeminiSchemaService,
                 private formService: FormService,
@@ -51,7 +51,7 @@ export class EntityLayoutComponent implements OnInit {
 
     @Input()
     set name(name: string) {
-        this._entityName = name.trim();
+        this._entityName = name.trim().toUpperCase();
         this.schemaService.getEntitySchema$(this._entityName)
             .subscribe(es => {
                     this.entitySchema = es
@@ -69,6 +69,10 @@ export class EntityLayoutComponent implements OnInit {
 
     get name() {
         return this._entityName;
+    }
+
+    get routeName() {
+        return this._entityName.toLowerCase();
     }
 }
 

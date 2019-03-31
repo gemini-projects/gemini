@@ -31,7 +31,7 @@ export class NewEntityRecordComponent implements OnInit {
 
     @Input()
     set name(name: string) {
-        let entityName = name.trim();
+        let entityName = name.trim().toUpperCase();
         this.formService.entityToForm(entityName)
             .subscribe(fs => {
                 this.formStatus = fs;

@@ -43,7 +43,7 @@ export class QuickSearchComponent extends GeminiComponent {
 
     selected(value) {
         const route: string = AppRoutingModule.ENTITY_ROUTE;
-        return this.router.navigate([route, value.searchRoute]);
+        return this.router.navigate([route, value.searchRoute.toLowerCase()]);
     }
 }
 

@@ -4,7 +4,7 @@
         <div class="gemini-subheader__main">
             <h3 class="gemini-subheader__title">{{entitySchema.displayName | titlecase}}</h3>
             <div class="gemini-subheader__icon_group">
-                <button [routerLink]="['/entity', name,'new']"
+                <button [routerLink]="['/entity', routeName,'new']"
                    routerLinkActive="active" class="ui-button-secondary"
                    pButton icon="pi pi-plus" iconPos="right"
                    label="Nuovo ">
