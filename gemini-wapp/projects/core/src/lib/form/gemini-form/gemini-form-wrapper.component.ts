@@ -1,7 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {EntitySchema} from "../../schema/entity-schema";
-import {GeminiSchemaService} from "../../schema/schema.service";
-import {FormService} from "../form.service";
+import {Component, Input} from '@angular/core';
 import {FormStatus} from "../form-status";
 
 @Component({

@@ -31,8 +31,9 @@ import {ListEntityComponent} from './entity-layout/list-entity/list-entity.compo
 import {DateTimeComponent} from "./form/form-fields/date-time-fields/date-time.component";
 import {SpinnerComponent} from "./form/form-fields/input-fields/spinner.component";
 import {EntityRefComponent} from "./form/form-fields/entityref-fields/entity-ref.component";
-import {DisplayEntityRecordComponent} from './entity-layout/display-entity-record/display-entity-record.component';
+import {ViewEntityRecordComponent} from './entity-layout/view-entity-record/view-entity-record.component';
 import {GeminiMessagesService, initMessageService} from "./common/gemini-messages.service";
+import { ViewFieldContainerComponent } from './entity-layout/view-field-container/view-field-container.component';
 
 
 @NgModule({
@@ -48,7 +49,8 @@ import {GeminiMessagesService, initMessageService} from "./common/gemini-message
         FormFieldContainerComponent,
         NewEntityRecordComponent,
         ListEntityComponent,
-        DisplayEntityRecordComponent
+        ViewEntityRecordComponent,
+        ViewFieldContainerComponent
     ],
     imports: [
         BrowserAnimationsModule,

@@ -12,11 +12,11 @@ import {ApiError} from "../../api/api-error";
 import {GeminiMessagesService} from "../../common/gemini-messages.service";
 
 @Component({
-    selector: 'lib-display-entity',
-    templateUrl: './display-entity-record.component.html',
-    styleUrls: ['./display-entity-record.component.scss']
+    selector: 'display-entity',
+    templateUrl: './view-entity-record.component.html',
+    styleUrls: ['./view-entity-record.component.scss']
 })
-export class DisplayEntityRecordComponent implements OnInit {
+export class ViewEntityRecordComponent implements OnInit {
     private entityName: string;
     private lkORUUID: string;
 

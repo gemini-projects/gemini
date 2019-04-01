@@ -27,11 +27,12 @@
     <div class="gemini-portlet__body">
         <div class="p-grid" *ngIf="entityRecord && !isModifing">
             <div *ngFor="let field of entitySchema.fields;" class="p-col-12 p-md-6 p-lg-3">
-                <label>{{field.name | titlecase}}</label>
-                <div>{{entityRecord.data[field.name]}}</div>
+                <view-field-container [field]="field" [entityRecord]="entityRecord"></view-field-container>
             </div>
         </div>
-        <gemini-form-wrapper *ngIf="isModifing && formStatus" [formStatus]="formStatus"></gemini-form-wrapper>
+        <gemini-form-wrapper *ngIf="isModifing && formStatus"
+                             [formStatus]="formStatus">
+        </gemini-form-wrapper>
 
     </div>
 

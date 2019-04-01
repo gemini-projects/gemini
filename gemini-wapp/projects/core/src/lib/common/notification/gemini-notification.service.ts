@@ -7,11 +7,9 @@ import {Observable} from "rxjs";
 })
 export class GeminiNotificationService {
     private notificationEmitter: EventEmitter<GeminiNotification>;
-    notification$: Observable<GeminiNotification>;
 
     constructor() {
         this.notificationEmitter = new EventEmitter();
-        this.notification$ = this.notificationEmitter;
     }
 
     error(errorTitle: string): void;
@@ -33,6 +31,10 @@ export class GeminiNotificationService {
     success(successTitle: string, successDescription: string, notificationType: GeminiNotificationType): void ;
     success(successTitle: string, successDescription?: string, notificationType?: GeminiNotificationType): void {
         this.prepareAndEmitNotification("success", successTitle, successDescription, notificationType);
+    }
+
+    get notification$(): Observable<GeminiNotification>{
+        return this.notificationEmitter;
     }
 
     private prepareAndEmitNotification(severity: string, title: string, desc: string, type?: GeminiNotificationType) {
