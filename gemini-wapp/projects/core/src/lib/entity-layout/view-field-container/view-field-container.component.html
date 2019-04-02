@@ -1,3 +1,18 @@
 <label>{{field.name | titlecase}}</label>
 
-<div>{{entityRecord.data[field.name]}}</div>
+<div [ngSwitch]="type" class="display-field-container">
+    <div *ngSwitchCase="FieldType.DOUBLE">{{value}}</div>
+    <div *ngSwitchCase="FieldType.LONG">{{value}}</div>
+    <div *ngSwitchCase="FieldType.NUMBER">{{value}}</div>
+    <div *ngSwitchCase="FieldType.TEXT">{{value}}</div>
+
+    <p-toggleButton *ngSwitchCase="FieldType.BOOL" disabled [ngModel]="value" class="datatype-bool-disabled"
+                    onIcon="pi pi-check" offIcon="pi pi-times" styleClass="datatype-bool"
+                    [onLabel]="trueLabel" [offLabel]="falseLabel">
+
+    </p-toggleButton>
+    <div *ngSwitchDefault>&#x200b;</div>
+
+
+</div>
+

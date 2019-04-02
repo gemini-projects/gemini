@@ -107,11 +107,11 @@ function convertFieldValue(field: FieldSchema, value: any) {
         case FieldType.ENTITY_REF:
             // TODO any check ? EntityRecord Object instance check ??
             return value;
-            break;
         case FieldType.RECORD:
             break;
     }
-    throw Error(`Entity ${this.entitySchema.name}: unable to convert field ${field.name} - ${field.type}`);
+    console.error(`Entity ${this.entitySchema.name}: unable to convert field ${field.name} - ${field.type} - return uncovverted value`);
+    return value;
 }
 
 function isString(value): boolean {

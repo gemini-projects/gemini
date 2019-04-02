@@ -181,7 +181,12 @@ export class FormService {
             case FieldType.RECORD:
                 break;
         }
-        return null;
+        return {
+            componentType: InputComponent,
+            componentConfigData: {
+                inputType: "text"
+            }
+        };
     }
 
     /* private computeSyncValidator(formFielStatus: FormFieldStatus) {

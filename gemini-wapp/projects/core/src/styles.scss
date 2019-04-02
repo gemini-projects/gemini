@@ -126,3 +126,24 @@ body {
   }
 }
 
+.datatype {
+  &-bool {
+    width: 90px;
+  }
+
+  &-bool-disabled {
+    .ui-state-disabled, .ui-widget:disabled {
+      opacity: 1;
+    }
+  }
+}
+
+
+.display-field-container {
+  & > div {
+    padding: 0.3em;
+    font-size: 13px;
+    border: 1px solid #dcdcdc;
+    border-radius: 3px;
+  }
+}
