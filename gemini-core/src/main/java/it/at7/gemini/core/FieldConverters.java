@@ -15,14 +15,13 @@ import java.util.List;
 import java.util.Map;
 
 import static it.at7.gemini.core.FieldConverters.Formatter.*;
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
+import static java.time.format.DateTimeFormatter.*;
 
 public class FieldConverters {
 
     public interface Formatter {
         DateTimeFormatter DATE_FORMATTER_INPUT = DateTimeFormatter.ofPattern("[yyyy-M-d][yyyy/M/d][d/M/yyyy]");
-        DateTimeFormatter DATE_FORMATTER_OUTPUT = DateTimeFormatter.ofPattern("yyyy-M-d");
+        DateTimeFormatter DATE_FORMATTER_OUTPUT = ISO_LOCAL_DATE;
         DateTimeFormatter TIME_FORMATTER_INPUT = ISO_LOCAL_TIME;
         DateTimeFormatter TIME_FORMATTER_OUTPUT = ISO_LOCAL_TIME;
         DateTimeFormatter DATETIME_FORMATTER_INPUT = ISO_LOCAL_DATE_TIME;
