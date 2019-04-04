@@ -9,19 +9,17 @@ import it.at7.gemini.schema.Field;
 import it.at7.gemini.schema.FieldType;
 import org.springframework.lang.Nullable;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.*;
 
-import static it.at7.gemini.core.FieldConverters.Formatter.*;
+import static it.at7.gemini.core.utils.DateTimeUtility.Formatter.*;
 
 
 public class RecordConverters {
     public static final String GEMINI_DATA_FIELD = "data";
     public static final String GEMINI_META_FIELD = "meta";
 
-    // TODO conversion from gemini api type plus refactoring
+    // TODO handle dates
 
     public static boolean containGeminiDataTypeFields(Map<String, Object> rawFields) {
         return rawFields.containsKey(GEMINI_DATA_FIELD) && rawFields.containsKey(GEMINI_META_FIELD);
@@ -142,9 +140,9 @@ public class RecordConverters {
                     convertedMap.put(fieldNameLC, value);
                 }
                 if (LocalTime.class.isAssignableFrom(value.getClass())) {
-                    // TODO
                     LocalTime ltValue = (LocalTime) value;
-                    convertedMap.put(fieldNameLC, ltValue.format(TIME_FORMATTER_OUTPUT));
+                    OffsetTime utcTime = OffsetTime.of(ltValue, ZoneOffset.UTC);
+                    convertedMap.put(fieldNameLC, utcTime.format(TIME_FORMATTER_OUTPUT));
                 }
                 break;
             case DATE:
@@ -169,9 +167,9 @@ public class RecordConverters {
                     convertedMap.put(fieldNameLC, value);
                 }
                 if (LocalDateTime.class.isAssignableFrom(value.getClass())) {
-                    // TODO
                     LocalDateTime ltValue = (LocalDateTime) value;
-                    convertedMap.put(fieldNameLC, ltValue.format(DATETIME_FORMATTER_OUTPUT));
+                    OffsetDateTime utcDateTime = OffsetDateTime.of(ltValue, ZoneOffset.UTC);
+                    convertedMap.put(fieldNameLC, utcDateTime.format(DATETIME_FORMATTER_OUTPUT));
                 }
                 break;
             case ENTITY_REF:

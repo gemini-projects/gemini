@@ -22,6 +22,7 @@
     "@angular/router": "^7.2.9",
     "@ngx-translate/core": "^11.0.1",
     "core-js": "^2.6.5",
+    "moment": "^2.24.0",
     "ngx-translate-multi-http-loader": "^3.0.0",
     "primeflex": "^1.0.0-rc.1",
     "primeicons": "^1.0.0",

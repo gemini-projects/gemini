@@ -1,10 +1,12 @@
 <div [formGroup]="formStatus.formGroup">
     <p-calendar [formControlName]="fieldStatus.fieldSchema.name"
                 [showButtonBar]="showButtonBar"
-                [showIcon]="true" [locale]="localeConfig"
+                [showIcon]="true"
                 [showTime]="showTime"
                 [timeOnly]="timeOnly"
                 [hourFormat]="hourFormat"
+                [locale]="localeConfig"
+                [dateFormat]="localeConfig.dateFormat"
                 [monthNavigator]="true" [yearNavigator]="true" yearRange="1920:2100">
     </p-calendar>
 </div>
