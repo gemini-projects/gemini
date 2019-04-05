@@ -6,13 +6,14 @@ import org.slf4j.LoggerFactory;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 
+import static it.at7.gemini.core.utils.DateTimeUtility.Formatter.DATE_FORMATTER_INPUT_EXT;
 import static java.time.format.DateTimeFormatter.*;
 
 public class DateTimeUtility {
     private static Logger logger = LoggerFactory.getLogger(DateTimeUtility.class);
 
     public interface Formatter {
-        DateTimeFormatter DATE_FORMATTER_INPUT = DateTimeFormatter.ofPattern("[yyyy-M-d][yyyy/M/d][d/M/yyyy]");
+        DateTimeFormatter DATE_FORMATTER_INPUT_EXT = DateTimeFormatter.ofPattern("[yyyy-M-d][yyyy/M/d][d/M/yyyy]");
         DateTimeFormatter DATE_FORMATTER_OUTPUT = ISO_DATE;
         DateTimeFormatter TIME_FORMATTER_INPUT = ISO_TIME;
         DateTimeFormatter TIME_FORMATTER_OUTPUT = ISO_TIME;
@@ -34,7 +35,11 @@ public class DateTimeUtility {
             LocalDateTime localDateTime = isoStringToLocalDateTime(stValue);
             return localDateTime.toLocalDate();
         } catch (DateTimeException e) {
-            return LocalDate.parse(stValue, ISO_DATE);
+            try {
+                return LocalDate.parse(stValue, ISO_DATE);
+            } catch (DateTimeException e1) {
+                return LocalDate.parse(stValue, DATE_FORMATTER_INPUT_EXT);
+            }
         }
     }
 

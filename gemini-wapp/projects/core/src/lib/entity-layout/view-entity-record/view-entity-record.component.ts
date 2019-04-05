@@ -94,6 +94,8 @@ export class ViewEntityRecordComponent implements OnInit {
             this.geminiNotification.success(this.message.get("ENTITY_RECORD.MODIFY.MODIFIED"));
             this.entityRecord = er;
             this.isModifing = false;
+        }, (error: ApiError) => {
+            this.geminiNotification.error(this.message.get("ENTITY_RECORD.ERRORS.UPDATE"), error.message);
         });
     }
 

@@ -91,7 +91,8 @@
     },
     "ERRORS": {
       "NOT_FOUND": "Record non trovato",
-      "NEW": "Errore di inserimento"
+      "NEW": "Errore di inserimento",
+      "UPDATE": "Aggiornamento non riscito"
     }
   },
   "ERROR": "Errore"
