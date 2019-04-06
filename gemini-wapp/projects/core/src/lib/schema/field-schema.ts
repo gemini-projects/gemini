@@ -42,4 +42,3 @@ export enum FieldType {
     ENTITY_REF = "ENTITY_REF",
     RECORD = "RECORD"
 }
-

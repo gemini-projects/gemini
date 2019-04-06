@@ -9,6 +9,7 @@ import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.InvalidRequesException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -17,16 +18,19 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static it.at7.gemini.api.ApiUtility.*;
 
 @RestController
 @RequestMapping("/api/{entity}")
 public class RestAPIController {
     public static final String SEARCH_PARAMETER = "search";
     public static final String GEMINI_HEADER = "Gemini";
-
-    public static final String GEMINI_SIMPLE_DATA_TYPE = "gemini.api.nometa";
-    public static final String GEMINI_DATA_TYPE = "gemini.api";
 
 
     private EntityManager entityManager;
@@ -44,9 +48,9 @@ public class RestAPIController {
                              HttpServletRequest request,
                              HttpServletResponse response) throws GeminiException {
 
+        List<String> geminiHeaderValues = getGeminiHeader(request);
         Object results = requestHandler(entity, body, request, response);
-        List<String> geminiHeaderValues = getGeminiHeader(request); // request.getHeader(GEMINI_ACCEPT_TYPE);
-        if (geminiClassicResponse(geminiHeaderValues)) {
+        if (noGeminiDataType(geminiHeaderValues)) {
             return results;
         }
         return handleGeminiDataTypeResponse(results, request, response);
@@ -63,18 +67,6 @@ public class RestAPIController {
         throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
     }
 
-    private List<String> getGeminiHeader(HttpServletRequest request) {
-        String header = request.getHeader(GEMINI_HEADER);
-        return header == null ? Collections.emptyList() : Arrays.asList(header.split(","));
-    }
-
-    private boolean geminiClassicResponse(List<String> geminiAcceptTypeHeader) {
-        if (geminiAcceptTypeHeader == null || geminiAcceptTypeHeader.isEmpty() || geminiAcceptTypeHeader.contains(GEMINI_SIMPLE_DATA_TYPE)) {
-            return true;
-        }
-        return false;
-    }
-
     private Object requestHandler(String entity, Object body, HttpServletRequest request, HttpServletResponse response) throws GeminiException {
         Entity e = checkEntity(entity.toUpperCase());
         UriComponents uriComponents = UriComponentsBuilder.fromUriString(request.getRequestURI()).build();
@@ -82,6 +74,7 @@ public class RestAPIController {
         ensurePathsAreConsistent(paths, e);
         String method = request.getMethod();
         Map<String, String[]> parameters = request.getParameterMap(); // query string params
+        List<String> geminiHeader = getGeminiHeader(request);
         if (paths.size() == 2) {
             // this is a root entity requet - METHOD ALLOWED POST AND GET (for list)
             switch (method) {
@@ -89,7 +82,7 @@ public class RestAPIController {
                     if (body == null) {
                         throw InvalidRequesException.BODY_REQUIRED();
                     }
-                    return handleInsertRecord(e, body);
+                    return handleInsertRecord(e, geminiHeader, body);
                 case "GET":
                     return handleGetEntityList(e, parameters);
                 default:
@@ -106,8 +99,7 @@ public class RestAPIController {
             }
             if (logicalKeyList.size() == requestLkLenght) {
                 // the entity.. we can update or delete
-                List<String> lkStrings = paths.subList(2, paths.size());
-                String[] lkStringsArray = lkStrings.toArray(new String[lkStrings.size()]);
+                String[] lkStringsArray = decodeLogicalKeyStrings(paths);
                 switch (method) {
                     case "GET":
                         return handleGetRecord(e, lkStringsArray);
@@ -127,6 +119,25 @@ public class RestAPIController {
         throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
     }
 
+    @NotNull
+    private String[] decodeLogicalKeyStrings(List<String> paths) {
+        List<String> lkStrings = paths.subList(2, paths.size());
+        lkStrings = lkStrings.stream().map(s -> {
+            try {
+                return URLDecoder.decode(s, StandardCharsets.UTF_8.toString());
+            } catch (UnsupportedEncodingException e1) {
+                throw new RuntimeException("Decode logical key failed");
+            }
+        }).collect(Collectors.toList());
+        return lkStrings.toArray(new String[0]);
+    }
+
+    private List<String> getGeminiHeader(HttpServletRequest request) {
+        String header = request.getHeader(GEMINI_HEADER);
+        return header == null ? Collections.emptyList() : Arrays.asList(header.split(","));
+    }
+
+
     private GeminiWrappers.EntityRecordsList handleGetEntityList(Entity e, Map<String, String[]> parameters) throws GeminiException {
         String searchString = getSearchFromParameters(parameters.get(SEARCH_PARAMETER));
         FilterContext filterContext = FilterContext.BUILDER()
@@ -143,13 +154,26 @@ public class RestAPIController {
         return "";
     }
 
+    private Object handleInsertRecord(Entity e, List<String> geminiHeader, Object body) throws GeminiException {
+        if (geminiDataType(geminiHeader)) {
+            if (Map.class.isAssignableFrom(body.getClass())) {
+                Map<String, Object> mapBody = (Map<String, Object>) body;
+                if (RecordConverters.containGeminiDataTypeFields(mapBody))
+                    return handleInsertRecord(e, body);
+            }
+            throw InvalidRequesException.INVALID_BODY();
+        } else {
+            return handleInsertRecord(e, body);
+        }
+    }
+
     private Object handleInsertRecord(Entity e, Object body) throws GeminiException {
         if (Map.class.isAssignableFrom(body.getClass()))
             return handleInsertRecord((Map<String, Object>) body, e);
         if (List.class.isAssignableFrom(body.getClass())) {
             return handleInsertRecords((List<Map<String, Object>>) body, e);
         }
-        return null;
+        throw InvalidRequesException.INVALID_BODY();
     }
 
     private EntityRecord handleInsertRecord(Map<String, Object> body, Entity e) throws GeminiException {

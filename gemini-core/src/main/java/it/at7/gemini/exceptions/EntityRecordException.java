@@ -51,7 +51,7 @@ public class EntityRecordException extends GeminiException {
     }
 
     public static EntityRecordException MULTIPLE_LK_FOUND(Entity entity, Collection<? extends DynamicRecord.FieldValue> lk) {
-        return new EntityRecordException(MULTIPLE_LK_FOUND, entity, lk, String.format("Found multiple DynamicRecord for Logical Key of %s : %s", entity.getName(), lk.toString()));
+        return new EntityRecordException(MULTIPLE_LK_FOUND, entity, lk, String.format("Found multiple Records for Logical Key of %s : %s", entity.getName(), lk.toString()));
     }
 
     public static EntityRecordException LK_NOTFOUND(Entity entity, Collection<? extends DynamicRecord.FieldValue> lk) {

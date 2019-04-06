@@ -1,12 +1,20 @@
-import {NgModule} from '@angular/core';
+import {APP_INITIALIZER, NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {ReactiveFormsModule} from '@angular/forms';
+import {ReactiveFormsModule, FormsModule} from '@angular/forms';
 import {ButtonModule} from 'primeng/button';
 import {InputTextModule} from 'primeng/inputtext';
 import {MessagesModule} from 'primeng/messages';
 import {MessageModule} from 'primeng/message';
 import {RouterModule} from '@angular/router';
-import {CalendarModule, DropdownModule, SpinnerModule, ToggleButtonModule, TooltipModule} from "primeng/primeng";
+import {
+    CalendarModule,
+    ConfirmationService,
+    ConfirmDialogModule,
+    DropdownModule,
+    SpinnerModule,
+    ToggleButtonModule,
+    TooltipModule
+} from "primeng/primeng";
 import {TranslateModule} from "@ngx-translate/core";
 
 
@@ -16,13 +24,16 @@ import {GeminiFormWrapperComponent} from './form/gemini-form/gemini-form-wrapper
 import {GeminiFieldDirective} from "./form/form-fields/gemini-field.directive";
 import {FormFieldContainerComponent} from './form/form-field-container/form-field-container.component';
 import {InputComponent} from "./form/form-fields/input-fields/input-field.component";
-import {NewEntityComponent} from './entity-layout/new-entity/new-entity.component';
+import {NewEntityRecordComponent} from './entity-layout/new-entity-record/new-entity-record.component';
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {BooleanComponent} from "./form/form-fields/boolean-field/boolean.component";
-import { ListEntityComponent } from './entity-layout/list-entity/list-entity.component';
+import {ListEntityComponent} from './entity-layout/list-entity/list-entity.component';
 import {DateTimeComponent} from "./form/form-fields/date-time-fields/date-time.component";
 import {SpinnerComponent} from "./form/form-fields/input-fields/spinner.component";
 import {EntityRefComponent} from "./form/form-fields/entityref-fields/entity-ref.component";
+import {ViewEntityRecordComponent} from './entity-layout/view-entity-record/view-entity-record.component';
+import {GeminiMessagesService, initMessageService} from "./common/gemini-messages.service";
+import { ViewFieldContainerComponent } from './entity-layout/view-field-container/view-field-container.component';
 
 
 @NgModule({
@@ -36,8 +47,10 @@ import {EntityRefComponent} from "./form/form-fields/entityref-fields/entity-ref
         SpinnerComponent,
         EntityRefComponent,
         FormFieldContainerComponent,
-        NewEntityComponent,
-        ListEntityComponent
+        NewEntityRecordComponent,
+        ListEntityComponent,
+        ViewEntityRecordComponent,
+        ViewFieldContainerComponent
     ],
     imports: [
         BrowserAnimationsModule,
@@ -50,12 +63,23 @@ import {EntityRefComponent} from "./form/form-fields/entityref-fields/entity-ref
         CalendarModule,
         ToggleButtonModule,
         ReactiveFormsModule,
+        FormsModule,
         InputTextModule,
         MessagesModule,
         MessageModule,
+        ConfirmDialogModule,
         TranslateModule.forChild({})
     ],
     exports: [EntityLayoutComponent],
+    providers: [ConfirmationService,
+        GeminiMessagesService,
+        {
+            provide: APP_INITIALIZER,
+            useFactory: initMessageService,
+            deps: [GeminiMessagesService],
+            multi: true
+        }
+    ],
     entryComponents: [
         InputComponent,
         BooleanComponent,

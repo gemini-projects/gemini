@@ -1,1 +1,1 @@
-export * from './entity-manager.service';
+export * from './gemini-entity-manager.service';

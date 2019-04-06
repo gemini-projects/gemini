@@ -121,7 +121,6 @@ public class TransactionImpl implements Transaction {
     }
 
     private PreparedStatement getPreparedStatement(String sql, @Nullable Map<String, ?> parameters) throws SQLException {
-        // Map<String, SqlParameterValue> paramSqlType = extractSqlParameterType(parameters);
         SqlParameterSource paramSource = new MapSqlParameterSource(parameters);
         ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
         String sqlToUse = NamedParameterUtils.substituteNamedParameters(parsedSql, paramSource);
@@ -131,19 +130,9 @@ public class TransactionImpl implements Transaction {
         psCreatorFactory.setReturnGeneratedKeys(true);
         PreparedStatementCreator psCreator = psCreatorFactory.newPreparedStatementCreator(params);
         PreparedStatement preparedStatement = psCreator.createPreparedStatement(connection);
-        logger.debug(preparedStatement.toString());
-        /* logger.debug(
-                preparedStatement.unwrap(com.p.jdbc.JDBC42PreparedStatement.class).asSql()
-        ); */
+        logger.debug(preparedStatement.unwrap(PreparedStatement.class).toString());
         return preparedStatement;
     }
-
-   /*  private Map<String, SqlParameterValue> extractSqlParameterType(Map<String, ?> parameters) {
-        Map<String, SqlParameterValue> ret = new HashMap<>();
-        for (Map.Entry<String, ?> par : parameters.entrySet()) {
-            new SqlParameterValue(, par.getValue())
-        }
-    } */
 
     @FunctionalInterface
     public interface CallbackWithResultThrowingSqlException<R, T> {

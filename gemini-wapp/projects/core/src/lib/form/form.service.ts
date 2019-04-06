@@ -6,10 +6,10 @@ import {FormStatus} from "./form-status";
 import {DateTimeType, FormFieldComponentConfig, FormFieldStatus} from "./form-field-status";
 import {InputComponent} from "./form-fields/input-fields/input-field.component";
 import {GeminiSchemaService} from "../schema/schema.service";
-import {Observable} from "rxjs";
+import {Observable, of} from "rxjs";
 import {map} from 'rxjs/operators';
 import {BooleanComponent} from "./form-fields/boolean-field/boolean.component";
-import {EntityManagerService} from "../api";
+import {GeminiEntityManagerService} from "../api";
 import {DateTimeComponent} from "./form-fields/date-time-fields/date-time.component";
 import {SpinnerComponent} from "./form-fields/input-fields/spinner.component";
 import {EntityRefComponent} from "./form-fields/entityref-fields/entity-ref.component";
@@ -24,49 +24,59 @@ export class FormService {
 
     constructor(private fb: FormBuilder,
                 private schemaService: GeminiSchemaService,
-                private entityManager: EntityManagerService) {
+                private entityManager: GeminiEntityManagerService) {
     }
 
-    public entityToForm(entityName: string): Observable<FormStatus> {
-        return this.schemaService.getEntitySchema$(entityName)
-            .pipe(
-                map((entitySchema: EntitySchema) => {
-                    let formStatus = new FormStatus();
-                    formStatus.entitySchema = entitySchema;
-                    let formGroup = formStatus.formGroup = this.fb.group({});
-                    //let formControls: Map<string, FormControl> = new Map<string, FormControl>();
-
-                    let formFieldsStatus: FormFieldStatus[] = [];
-
-                    this.registerFormValueChanges(formStatus);
-
-                    for (let field of entitySchema.fields) {
-                        let formFieldStatus = this.createFormFieldStatus(field);
-                        if (formFieldStatus) {
-                            formGroup.addControl(field.name, formFieldStatus.formControl);
-                            formFieldsStatus.push(formFieldStatus);
-                        }
-                    }
-                    formStatus.fieldsStatus = formFieldsStatus;
-                    formStatus.submitFn = this.submitFunction.bind(this, entitySchema, formStatus);
-                    return formStatus
-                }));
+    public entityToForm(entity: EntitySchema | string): Observable<FormStatus>;
+    public entityToForm(entity: EntitySchema, entityRecord: EntityRecord): Observable<FormStatus>;
+    public entityToForm(entity: string | EntitySchema, entityRecord?: EntityRecord): Observable<FormStatus> {
+        if (typeof entity == "string") {
+            return this.schemaService.getEntitySchema$(entity)
+                .pipe(
+                    map((entitySchema: EntitySchema) => {
+                        return this.createFormStatus(entitySchema, entityRecord);
+                    }));
+        }
+        if (entity instanceof EntitySchema) {
+            return of(this.createFormStatus(entity, entityRecord))
+        }
     }
 
-    private submitFunction(entitySchema: EntitySchema, formStatus: FormStatus) {
-        // TODO check value here
-        console.warn(formStatus.formGroup.value);
+    private createFormStatus(entitySchema: EntitySchema, entityRecord?: EntityRecord): FormStatus {
+        let formStatus = new FormStatus();
+        formStatus.entitySchema = entitySchema;
+        let formGroup = formStatus.formGroup = this.fb.group({});
+        //let formControls: Map<string, FormControl> = new Map<string, FormControl>();
 
-        let entityRecord = this.convertFormValueToEntityRecord(entitySchema, formStatus.formGroup.value);
+        let formFieldsStatus: FormFieldStatus[] = [];
 
-        return this.entityManager.createOrUpdateEntityRecord(entityRecord);
+        this.registerFormValueChanges(formStatus);
+
+        for (let field of entitySchema.fields) {
+            let formFieldStatus = this.createFormFieldStatus(field, entityRecord);
+            if (formFieldStatus) {
+                formGroup.addControl(field.name, formFieldStatus.formControl);
+                formFieldsStatus.push(formFieldStatus);
+            }
+        }
+        formStatus.fieldsStatus = formFieldsStatus;
+        formStatus.submitFn = this.submitFunction.bind(this, formStatus, entityRecord);
+        return formStatus
+    }
+
+    private submitFunction(formStatus: FormStatus, oldEntityRec?: EntityRecord) {
+        let entityRecord = this.convertFormValueToEntityRecord(formStatus.entitySchema, formStatus.formGroup.value);
+        if (oldEntityRec)
+            return this.entityManager.updateEntityRecord(entityRecord);
+        else
+            return this.entityManager.creteEntityRecord(entityRecord);
     }
 
     private registerFormValueChanges(formStatus: FormStatus) {
         // formStatus.formGroup.valueChanges.subscribe(value => console.log(value));
     }
 
-    private createFormFieldStatus(field: FieldSchema): FormFieldStatus {
+    private createFormFieldStatus(field: FieldSchema, entityRecord?: EntityRecord): FormFieldStatus {
         let formFielStatus = new FormFieldStatus();
         formFielStatus.formControl = this.fb.control(null); // angular control
         formFielStatus.fieldSchema = field;
@@ -85,6 +95,7 @@ export class FormService {
             return null;
 
         // TODO compute default DATA -- with def value
+        this.geDefaultValueForField(formFielStatus, entityRecord);
         this.getAvailableValuesForField(formFielStatus);
 
 
@@ -170,7 +181,12 @@ export class FormService {
             case FieldType.RECORD:
                 break;
         }
-        return null;
+        return {
+            componentType: InputComponent,
+            componentConfigData: {
+                inputType: "text"
+            }
+        };
     }
 
     /* private computeSyncValidator(formFielStatus: FormFieldStatus) {
@@ -212,14 +228,20 @@ export class FormService {
     }
 
     private convertFormValueToEntityRecord(entitySchema: EntitySchema, objectWithFields: Object): EntityRecord {
+        let newRecord = new EntityRecord(entitySchema);
         for (const field of entitySchema.fields) {
             let value = objectWithFields[field.name];
-            if (value != null) {
-
-            }
-
+            newRecord.set(field, value);
         }
+        return newRecord;
+    }
 
-        return null;
+    private geDefaultValueForField(fieldStatus: FormFieldStatus, entityRecord?: EntityRecord) {
+        if (entityRecord) {
+            const data = entityRecord.data[fieldStatus.fieldSchema.name];
+
+            // TODO conversion ??
+            fieldStatus.defaultValue = data;
+        }
     }
 }

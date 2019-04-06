@@ -9,24 +9,38 @@ import it.at7.gemini.schema.Field;
 import it.at7.gemini.schema.FieldType;
 import org.springframework.lang.Nullable;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.*;
 
-import static it.at7.gemini.core.FieldConverters.Formatter.*;
+import static it.at7.gemini.core.utils.DateTimeUtility.Formatter.*;
 
 
 public class RecordConverters {
+    public static final String GEMINI_DATA_FIELD = "data";
+    public static final String GEMINI_META_FIELD = "meta";
 
-    public static EntityRecord entityRecordFromMap(Entity entity, Map<String, Object> rawFields) throws InvalidLogicalKeyValue, InvalidTypeForObject {
+    // TODO handle dates
+
+    public static boolean containGeminiDataTypeFields(Map<String, Object> rawFields) {
+        return rawFields.containsKey(GEMINI_DATA_FIELD) && rawFields.containsKey(GEMINI_META_FIELD);
+    }
+
+    public static EntityRecord entityRecordFromMap(Entity entity, Map<String, Object> fieldMap) throws InvalidLogicalKeyValue, InvalidTypeForObject {
+        Map<String, Object> rawFields = fieldMap;
+        if (containGeminiDataTypeFields(rawFields)) {
+            Object rawFieldsOBJ = rawFields.get(GEMINI_DATA_FIELD);
+            if (Map.class.isAssignableFrom(rawFieldsOBJ.getClass())) {
+                rawFields = (Map<String, Object>) rawFieldsOBJ;
+            }
+        }
         Map<String, Object> insensitiveFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         insensitiveFields.putAll(rawFields);
         EntityRecord entityRecord = new EntityRecord(entity);
         for (EntityField field : entity.getSchemaEntityFields()) {
             String key = toFieldName(field).toLowerCase();
             Object objValue = insensitiveFields.get(key);
-            if (objValue != null) {
+
+            if (insensitiveFields.containsKey(key)) {
                 try {
                     entityRecord.put(field, objValue);
                 } catch (EntityFieldException e) {
@@ -126,9 +140,9 @@ public class RecordConverters {
                     convertedMap.put(fieldNameLC, value);
                 }
                 if (LocalTime.class.isAssignableFrom(value.getClass())) {
-                    // TODO
                     LocalTime ltValue = (LocalTime) value;
-                    convertedMap.put(fieldNameLC, ltValue.format(TIME_FORMATTER_OUTPUT));
+                    OffsetTime utcTime = OffsetTime.of(ltValue, ZoneOffset.UTC);
+                    convertedMap.put(fieldNameLC, utcTime.format(TIME_FORMATTER_OUTPUT));
                 }
                 break;
             case DATE:
@@ -153,9 +167,9 @@ public class RecordConverters {
                     convertedMap.put(fieldNameLC, value);
                 }
                 if (LocalDateTime.class.isAssignableFrom(value.getClass())) {
-                    // TODO
                     LocalDateTime ltValue = (LocalDateTime) value;
-                    convertedMap.put(fieldNameLC, ltValue.format(DATETIME_FORMATTER_OUTPUT));
+                    OffsetDateTime utcDateTime = OffsetDateTime.of(ltValue, ZoneOffset.UTC);
+                    convertedMap.put(fieldNameLC, utcDateTime.format(DATETIME_FORMATTER_OUTPUT));
                 }
                 break;
             case ENTITY_REF:

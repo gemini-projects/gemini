@@ -4,6 +4,10 @@
       "TRUE": "Si",
       "FALSE": "No"
     },
+    "ENTITY_REF": {
+      "NORESULT_MESSAGE": "Nessun risultato",
+      "SELECTVALUE_MESSAGE": "Seleziona"
+    },
     "DATE_TIME": {
       "firstDayOfWeek": 1,
       "dayNames": [
@@ -70,9 +74,26 @@
     "NEW": "Nuovo",
     "CANCEL": "Annulla",
     "SAVE": "Salva",
-    "OK": "Ok"
+    "OK": "Ok",
+    "EDIT": "Modifica",
+    "DELETE": "Elimina"
   },
-  "NEW_ENTITY_REC": {
-    "NEW_MESSAGE": "Inserisci nuovo record"
-  }
+  "ENTITY_RECORD": {
+    "NEW": "Inserisci nuovo record",
+    "CREATED": "Record creato",
+    "DELETE": {
+      "DELETED": "Record cancellato",
+      "CONFIRMATION_HEADER": "Elimina record",
+      "CONFIRMATION_MESSAGE": "Sei sicuro di voler eliminare il record?"
+    },
+    "MODIFY": {
+      "MODIFIED": "Record Modificato"
+    },
+    "ERRORS": {
+      "NOT_FOUND": "Record non trovato",
+      "NEW": "Errore di inserimento",
+      "UPDATE": "Aggiornamento non riscito"
+    }
+  },
+  "ERROR": "Errore"
 }

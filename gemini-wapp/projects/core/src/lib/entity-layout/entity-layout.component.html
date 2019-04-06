@@ -1,14 +1,10 @@
-<div *ngIf="!entitySchema">
-    <p-messages [(value)]="errorMsgs" [closable]="false" severity="error"></p-messages>
-</div>
-
 <div *ngIf="entitySchema">
 
     <div class="gemini-subheader">
         <div class="gemini-subheader__main">
             <h3 class="gemini-subheader__title">{{entitySchema.displayName | titlecase}}</h3>
             <div class="gemini-subheader__icon_group">
-                <button [routerLink]="['/entity', name,'new']"
+                <button [routerLink]="['/entity', routeName,'new']"
                    routerLinkActive="active" class="ui-button-secondary"
                    pButton icon="pi pi-plus" iconPos="right"
                    label="Nuovo ">
@@ -24,6 +20,9 @@
     <router-outlet></router-outlet>
 </div>
 
+<div *ngIf="errorMsgs">
+    <p-messages [(value)]="errorMsgs" [closable]="false" key="INSIDE"></p-messages>
+</div>
 
 <!-- <div *ngIf="entitySchema" class="gemini-portlet">
     <router-outlet></router-outlet>

@@ -2,14 +2,13 @@
 
     <div class="gemini-portlet__head">
         <div class="gemini-portlet__head-label">
-            <h3 class="gemini-portlet__head-title" translate>
-                NEW_ENTITY_REC.NEW_MESSAGE
+            <h3 class="gemini-portlet__head-title">
+                {{NEW_RECORD}}
             </h3>
         </div>
         <div class="gemini-portlet__head-toolbar">
             <button pButton icon="pi pi-times" iconPos="right" class="ui-button-secondary"
-                    label="{{'BUTTON.CANCEL' | translate }}" routerLink=".."
-            ></button>
+                    label="{{'BUTTON.CANCEL' | translate }}" routerLink=".."></button>
             <button pButton type="submit" icon="pi pi-save" iconPos="right"
                     label="{{'BUTTON.SAVE' | translate }}"
                     [disabled]="!formStatus?.formGroup.valid" (click)="submitForm()"></button>
@@ -17,7 +16,6 @@
     </div>
 
     <div class="gemini-portlet__body">
-        <!-- (formStatusEvent)="formCreated($event)" -->
         <gemini-form-wrapper [formStatus]="formStatus"></gemini-form-wrapper>
     </div>
 

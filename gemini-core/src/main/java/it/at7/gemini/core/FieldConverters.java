@@ -5,29 +5,20 @@ import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.Field;
 import it.at7.gemini.schema.FieldType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.time.OffsetTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static it.at7.gemini.core.FieldConverters.Formatter.*;
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
+import static it.at7.gemini.core.utils.DateTimeUtility.*;
 
 public class FieldConverters {
-
-    public interface Formatter {
-        DateTimeFormatter DATE_FORMATTER_INPUT = DateTimeFormatter.ofPattern("[yyyy-M-d][yyyy/M/d][d/M/yyyy]");
-        DateTimeFormatter DATE_FORMATTER_OUTPUT = DateTimeFormatter.ofPattern("yyyy-M-d");
-        DateTimeFormatter TIME_FORMATTER_INPUT = ISO_LOCAL_TIME;
-        DateTimeFormatter TIME_FORMATTER_OUTPUT = ISO_LOCAL_TIME;
-        DateTimeFormatter DATETIME_FORMATTER_INPUT = ISO_LOCAL_DATE_TIME;
-        DateTimeFormatter DATETIME_FORMATTER_OUTPUT = ISO_LOCAL_DATE_TIME;
-    }
+    private static Logger logger = LoggerFactory.getLogger(FieldConverters.class);
 
 
     public static Object getConvertedFieldValue(Field field, Object objValue) {
@@ -70,20 +61,20 @@ public class FieldConverters {
                     return Boolean.parseBoolean(stValue);
                 }
             case TIME:
-                if (LocalTime.class.isAssignableFrom(objValue.getClass())) {
+                if (OffsetTime.class.isAssignableFrom(objValue.getClass())) {
                     return objValue;
                 }
-                return LocalTime.parse(stValue, TIME_FORMATTER_INPUT);
+                return isoStringToLocalTime(stValue);
             case DATE:
                 if (LocalDate.class.isAssignableFrom(objValue.getClass())) {
                     return objValue;
                 }
-                return LocalDate.parse(stValue, DATE_FORMATTER_INPUT);
+                return isoStringToLocalDate(stValue);
             case DATETIME:
                 if (LocalDateTime.class.isAssignableFrom(objValue.getClass())) {
                     return objValue;
                 }
-                return LocalDateTime.parse(stValue, DATETIME_FORMATTER_INPUT);
+                return isoStringToLocalDateTime(stValue);
             case ENTITY_REF:
                 if (EntityReferenceRecord.class.isAssignableFrom(objValue.getClass())) {
                     // no need to convert
@@ -157,7 +148,7 @@ public class FieldConverters {
             return null; // NO action on empty logical key field
         }
         EntityReferenceRecord record = new EntityReferenceRecord(entity);
-        if (logicalKeyList.size() == 1) {
+        if (logicalKeyList.size() == 1 && !Map.class.isAssignableFrom(value.getClass())) {
             // logicalKeyValue is the value
             Field field = logicalKeyList.get(0);
             if (RecordBase.class.isAssignableFrom(value.getClass())) {
@@ -175,9 +166,10 @@ public class FieldConverters {
                 throw InvalidLogicalKeyValue.INVALID_VALUE_TYPE;
             }
             Map<String, Object> mapValue = (Map<String, Object>) value;
+            EntityRecord refEntityRecord = RecordConverters.entityRecordFromMap(entity, mapValue);
             for (Field field : logicalKeyList) {
                 String name = field.getName();
-                Object fieldValue = mapValue.get(name);
+                Object fieldValue = refEntityRecord.get(name);
                 if (fieldValue == null) {
                     throw InvalidLogicalKeyValue.KEY_FIELD_NOTEXISTS(name);
                 }
@@ -187,5 +179,7 @@ public class FieldConverters {
         }
         return record;
     }
+
+
 
 }

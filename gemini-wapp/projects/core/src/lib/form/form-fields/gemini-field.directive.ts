@@ -12,15 +12,15 @@ export class GeminiFieldDirective implements OnInit, FormFieldComponentDef {
     @Input() formStatus: FormStatus;
 
     componentRef: any;
+
     constructor(
         private resolver: ComponentFactoryResolver,
-        private container: ViewContainerRef
-    ) {
+        private container: ViewContainerRef) {
     }
 
     ngOnInit(): void {
         const factory = this.resolver.resolveComponentFactory(
-           this.fieldStatus.formComponentConfig.componentType
+            this.fieldStatus.formComponentConfig.componentType
         );
         this.componentRef = this.container.createComponent(factory);
         this.componentRef.instance.fieldStatus = this.fieldStatus;

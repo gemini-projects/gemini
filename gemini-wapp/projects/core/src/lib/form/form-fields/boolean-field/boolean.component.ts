@@ -2,8 +2,8 @@ import {Component, Input, OnInit} from "@angular/core";
 import {FormFieldComponentDef} from "../form-field-component.interface";
 import {FormFieldStatus} from "../../form-field-status";
 import {FormStatus} from "../../form-status";
-import {SelectItem} from "primeng/api";
 import {TranslateService} from "@ngx-translate/core";
+import {GeminiMessagesService} from "../../../common/gemini-messages.service";
 
 @Component({
     selector: 'gemini-boolean-field',
@@ -17,21 +17,14 @@ export class BooleanComponent implements FormFieldComponentDef, OnInit {
     private trueLabel: string;
     private falseLabel: string;
 
-    constructor(private translate: TranslateService) {
+    constructor(private messages: GeminiMessagesService) {
     }
 
     ngOnInit(): void {
-        this.trueLabel = 'YES';
-        this.falseLabel = 'NO';
-
-        this.translate.get('DATATYPE.BOOL.TRUE').subscribe((res: string) => {
-            this.trueLabel = res;
-        });
-        this.translate.get('DATATYPE.BOOL.FALSE').subscribe((res: string) => {
-            this.falseLabel = res;
-        });
+        this.trueLabel = this.messages.get('DATATYPE.BOOL.TRUE');
+        this.falseLabel = this.messages.get('DATATYPE.BOOL.FALSE');
+        this.fieldStatus.formControl.setValue(this.fieldStatus.defaultValue);
     }
-
 
 }
 

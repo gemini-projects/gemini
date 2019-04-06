@@ -1,0 +1,26 @@
+<label>{{field.name | titlecase}}</label>
+
+<div *ngIf="noValue" class="display-field-container">
+    <div>&#x200b;</div>
+</div>
+
+<div *ngIf="!noValue" [ngSwitch]="type" class="display-field-container">
+    <div *ngSwitchCase="FieldType.DOUBLE">{{value}}</div>
+    <div *ngSwitchCase="FieldType.LONG">{{value}}</div>
+    <div *ngSwitchCase="FieldType.NUMBER">{{value}}</div>
+    <div *ngSwitchCase="FieldType.TEXT">{{value}}</div>
+    <div *ngSwitchCase="FieldType.DATETIME">{{value}}</div>
+    <div *ngSwitchCase="FieldType.DATE">{{value}}</div>
+    <div *ngSwitchCase="FieldType.TIME">{{value}}</div>
+    <div *ngSwitchCase="FieldType.ENTITY_REF">{{value}}</div>
+
+    <p-toggleButton *ngSwitchCase="FieldType.BOOL" disabled [ngModel]="value" class="datatype-bool-disabled"
+                    onIcon="pi pi-check" offIcon="pi pi-times" styleClass="datatype-bool"
+                    [onLabel]="trueLabel" [offLabel]="falseLabel">
+    </p-toggleButton>
+
+    <div *ngSwitchDefault>&#x200b;</div>
+
+
+</div>
+

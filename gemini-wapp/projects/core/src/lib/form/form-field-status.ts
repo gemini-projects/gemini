@@ -7,6 +7,7 @@ export class FormFieldStatus {
     formControl: FormControl;
     formComponentConfig: FormFieldComponentConfig;
     availableData?: any;
+    defaultValue: any;
 }
 
 export class FormFieldComponentConfig {

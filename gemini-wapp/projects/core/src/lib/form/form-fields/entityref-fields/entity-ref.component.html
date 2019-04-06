@@ -1,5 +1,6 @@
 <div [formGroup]="formStatus.formGroup">
-    <p-dropdown [formControlName]="fieldStatus.fieldSchema.name"
-                [options]="elems"
-                filter="true" virtualScroll="true"></p-dropdown>
+    <p-dropdown [formControlName]="fieldStatus.fieldSchema.name" [showClear]="true"
+                [options]="elems" [emptyFilterMessage]="emptyFilterMessage"
+                [placeholder]="selectValueMessage"
+                filter="true" ></p-dropdown>
 </div>

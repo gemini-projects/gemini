@@ -15,6 +15,7 @@ public class APIExceptionHandlerController {
 
     @ExceptionHandler(EntityRecordException.class)
     public ResponseEntity<?> handleEntityFoundException(EntityRecordException exception) {
+        logger.error("EntityRecordException", exception);
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         switch (exception.getErrorCode()) {
             case MULTIPLE_LK_FOUND:
@@ -30,6 +31,7 @@ public class APIExceptionHandlerController {
 
     @ExceptionHandler(GeminiException.class)
     public ResponseEntity<?> handleRestoCheckedException(GeminiException exception) {
+        logger.error("GeminiException", exception);
         return new ResponseEntity<>(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, exception.getErrorCodeName(), exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NewEntityComponent } from './new-entity.component';
+import { ViewFieldContainerComponent } from './view-field-container.component';
 
-describe('NewEntityComponent', () => {
-  let component: NewEntityComponent;
-  let fixture: ComponentFixture<NewEntityComponent>;
+describe('ViewFieldContainerComponent', () => {
+  let component: ViewFieldContainerComponent;
+  let fixture: ComponentFixture<ViewFieldContainerComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NewEntityComponent ]
+      declarations: [ ViewFieldContainerComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(NewEntityComponent);
+    fixture = TestBed.createComponent(ViewFieldContainerComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
