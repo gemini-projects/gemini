@@ -2,6 +2,8 @@ import {Component, Input, OnInit} from '@angular/core';
 import {FieldSchema, FieldType} from "../../schema/field-schema";
 import {EntityRecord} from "../../schema/EntityRecord";
 import {GeminiMessagesService} from "../../common/gemini-messages.service";
+import {GeminiEntityManagerService} from "../../api";
+import {el} from "@angular/platform-browser/testing/src/browser_util";
 
 @Component({
     selector: 'view-field-container',
@@ -20,12 +22,13 @@ export class ViewFieldContainerComponent implements OnInit {
     value: any;
     type: FieldType;
 
-    constructor(private messages: GeminiMessagesService) {
+    constructor(private messages: GeminiMessagesService,
+                private entityManager: GeminiEntityManagerService) {
     }
 
     ngOnInit(): void {
         this.type = this.field.type;
-        this.value = this.fromFieldToValue(this.field, this.entityRecord);
+        this.fromFieldToValue(this.field, this.entityRecord);
         this.trueLabel = this.messages.get('DATATYPE.BOOL.TRUE');
         this.falseLabel = this.messages.get('DATATYPE.BOOL.FALSE');
     }
@@ -43,23 +46,54 @@ export class ViewFieldContainerComponent implements OnInit {
             case FieldType.LONG:
             case FieldType.DOUBLE:
             case FieldType.BOOL:
-                return entityRecord.data[field.name];
+                this.value = entityRecord.data[field.name];
+                break;
             case FieldType.TIME:
                 const t = entityRecord.data[field.name] as Date;
-                return t.toLocaleTimeString();
+                this.value = t.toLocaleTimeString();
+                break;
             case FieldType.DATE:
                 const d = entityRecord.data[field.name] as Date;
-                return d.toLocaleDateString();
+                this.value = d.toLocaleDateString();
+                break;
             case FieldType.DATETIME:
                 const dt = entityRecord.data[field.name] as Date;
-                return dt.toLocaleString();
+                this.value = dt.toLocaleString();
+                break;
             case FieldType.ENTITY_REF:
+                const refValue = entityRecord.data[field.name];
+                if (refValue instanceof EntityRecord) {
+                    const er: EntityRecord = entityRecord.data[field.name];
+                    this.value = er.getReferenceDescriptionLabel()
+                } else {
+                    // need to be async - we have the field key
+                    if (isNotEmpty(refValue)) {
+                        this.entityManager.getEntityRecord(field.refEntity, refValue)
+                            .subscribe(er => {
+                                this.value = er.getReferenceDescriptionLabel();
+                            })
+                    } else {
+                        this.noValue = true;
+                    }
+                }
                 break;
             case FieldType.RECORD:
                 break;
+            default:
+                console.error(`Unable to convert field ${field.name} - ${field.type}`);
         }
-        console.error(`Unable to convert field ${field.name} - ${field.type}`);
     }
+}
+
+
+function isNotEmpty(refValue): boolean {
+    if (refValue == null)
+        return false;
+    for (var key in refValue) {
+        if (refValue.hasOwnProperty(key))
+            return true;
+    }
+    return false;
 }
 
 

@@ -10,10 +10,6 @@ export class GeminiMessagesService {
     private _messages;
 
     constructor(private translate: TranslateService) {
-        /* this.translate.getTranslation(this.translate.currentLang).subscribe(m =>
-            this._messages = m
-        ); */
-
     }
 
     load(): Promise<Object> {

@@ -16,7 +16,8 @@ export class GeminiSchemaService {
     private entityCache: { [key: string]: EntitySchema };
 
     constructor(private apiService: GeminiEntityManagerService) {
-        this.entityCache = {}
+        this.entityCache = {};
+        this.apiService.schemaService = this; // to avoid circular dependency
     }
 
     getEntitySchema$(entityName: string): Observable<EntitySchema> {
@@ -34,7 +35,7 @@ export class GeminiSchemaService {
 
     private getEntityFields(entityName: string): Observable<FieldSchema[]> {
         const search: string = `entity==${entityName.toUpperCase()}`;
-        return this.apiService.getEntityRecords(GeminiSchemaService.ENTITY_NAME_OF_FIELDS, search)
+        return this.apiService.getEntityRecordsInterface(GeminiSchemaService.ENTITY_NAME_OF_FIELDS, search)
             .pipe(
                 map((entityRecord: EntityRecord) => {
                     let fieldsEntityRec = entityRecord.data as EntityRecord[];

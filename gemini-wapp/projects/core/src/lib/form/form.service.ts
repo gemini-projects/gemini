@@ -228,13 +228,10 @@ export class FormService {
     }
 
     private convertFormValueToEntityRecord(entitySchema: EntitySchema, objectWithFields: Object): EntityRecord {
-        console.log(objectWithFields);
         let newRecord = new EntityRecord(entitySchema);
         for (const field of entitySchema.fields) {
             let value = objectWithFields[field.name];
-            if (value != null) {
-                newRecord.set(field, value);
-            }
+            newRecord.set(field, value);
         }
         return newRecord;
     }
@@ -243,8 +240,8 @@ export class FormService {
         if (entityRecord) {
             const data = entityRecord.data[fieldStatus.fieldSchema.name];
 
+            // TODO conversion ??
             fieldStatus.defaultValue = data;
-            // TODO conversion
         }
     }
 }

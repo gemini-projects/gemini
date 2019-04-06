@@ -22,7 +22,7 @@ export class BooleanComponent implements FormFieldComponentDef, OnInit {
 
     ngOnInit(): void {
         this.trueLabel = this.messages.get('DATATYPE.BOOL.TRUE');
-        this.falseLabel = this.messages.get('DATATYPE.BOOL.FALSE')
+        this.falseLabel = this.messages.get('DATATYPE.BOOL.FALSE');
         this.fieldStatus.formControl.setValue(this.fieldStatus.defaultValue);
     }
 

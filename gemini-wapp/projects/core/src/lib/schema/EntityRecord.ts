@@ -2,18 +2,34 @@ import {EntitySchema} from "./entity-schema";
 import {FieldSchema, FieldType} from "./field-schema";
 import * as moment from 'moment';
 
-export interface EntityRecordInterface {
+/**
+ * EntityRecordApi is used as the first entry point for Gemini API EntityRecord (JSON).
+ * It maps the response to an Object
+ */
+export interface EntityRecordApi {
     data: any;
     meta: any
 }
 
-export class EntityRecord implements EntityRecordInterface {
+/**
+ * EntityRecordApiList  is used as the first entry point for Gemini API results (as list
+ */
+export class EntityRecordApiList {
+    meta: any;
+    data: EntityRecordApi[];
+}
+
+/**
+ * EntityRecord is used to manipulate data and its field types. It implements the [[EntityRecordApi]] interface
+ * but stores and checks data converting field values to a suitable and omogeneous type accordingly to [[FieldType]]
+ */
+export class EntityRecord implements EntityRecordApi {
     entitySchema: EntitySchema;
 
     private _meta: object;
     private _data: any;
 
-    constructor(entity: EntitySchema, entityRecord?: EntityRecordInterface) {
+    constructor(entity: EntitySchema, entityRecord?: EntityRecordApi) {
         this.entitySchema = entity;
         this._data = {};
         this._meta = {};
@@ -40,6 +56,41 @@ export class EntityRecord implements EntityRecordInterface {
         }
     }
 
+    getLogicalKeyValue() {
+        const logicalKeyFields = this.entitySchema.getLogicalKeyFields();
+        if (logicalKeyFields.length == 1) {
+            const key = logicalKeyFields[0];
+            if (!(this._data[key.name] instanceof Object)) {
+                return this._data[key.name];
+            } else {
+                console.warn("TODO entityRef Keys"); // TODO
+            }
+        } else {
+            console.warn("TODO handle multiple logical keys value"); // TODO
+        }
+    }
+
+    getReferenceDescriptionLabel(): string {
+        const descFields = this.entitySchema.getFieldsForReferenceDescription();
+        return descFields.map(f => this._data[f.name]).join(" - ");
+    }
+
+    is(logicalKey: any):boolean {
+        const logicalKeyFields = this.entitySchema.getLogicalKeyFields();
+        if (logicalKeyFields.length == 1) {
+            const key = logicalKeyFields[0];
+            if (!(this._data[key.name] instanceof Object)) {
+                return this._data[key.name] == logicalKey;
+            } else {
+                console.warn("TODO equality"); // TODO
+
+            }
+        } else {
+            console.warn("TODO equals for multiple logical keys value"); // TODO
+        }
+        return false;
+    }
+
     toJsonObject(): Object {
         if (this.entitySchema) {
             return {
@@ -54,6 +105,14 @@ export class EntityRecord implements EntityRecordInterface {
         }
     }
 }
+
+
+export class EntityRecordList {
+    meta: any;
+    entitySchema: EntitySchema;
+    data: EntityRecord[];
+}
+
 
 export function entityRecordFromAPI(entity: EntitySchema, er: EntityRecord): EntityRecord {
     return new EntityRecord(entity, er);
@@ -100,6 +159,12 @@ function convertToJsonData(entitySchema: EntitySchema, data: any) {
                     ret[field.name] = dt.toISOString();
                     break;
                 case FieldType.ENTITY_REF:
+                    if (value instanceof EntityRecord) {
+                        const er = value as EntityRecord;
+                        ret[field.name] = er.getLogicalKeyValue();
+                    } else {
+                        console.error(`Json Conversion non implemented: \value is not an instance of EntityRecord`)
+                    }
                     break;
                 case FieldType.RECORD:
                     break;
@@ -182,6 +247,7 @@ function convertToFieldValue(field: FieldSchema, value: any) {
             }
         case FieldType.ENTITY_REF:
             // TODO any check ? EntityRecord Object instance check ??
+            // the value may also be a simple value as a string.. need type checking when is used
             return value;
         case FieldType.RECORD:
             break;
@@ -230,9 +296,4 @@ function parseISODateTime(value): Date {
     if (date.isValid())
         return date.toDate();
     return null;
-}
-
-export class EntityRecordList {
-    meta: object;
-    data: EntityRecord[];
 }

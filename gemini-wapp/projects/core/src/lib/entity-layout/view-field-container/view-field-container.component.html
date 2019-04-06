@@ -12,6 +12,7 @@
     <div *ngSwitchCase="FieldType.DATETIME">{{value}}</div>
     <div *ngSwitchCase="FieldType.DATE">{{value}}</div>
     <div *ngSwitchCase="FieldType.TIME">{{value}}</div>
+    <div *ngSwitchCase="FieldType.ENTITY_REF">{{value}}</div>
 
     <p-toggleButton *ngSwitchCase="FieldType.BOOL" disabled [ngModel]="value" class="datatype-bool-disabled"
                     onIcon="pi pi-check" offIcon="pi pi-times" styleClass="datatype-bool"

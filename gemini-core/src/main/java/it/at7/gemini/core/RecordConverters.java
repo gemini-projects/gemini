@@ -40,7 +40,7 @@ public class RecordConverters {
             String key = toFieldName(field).toLowerCase();
             Object objValue = insensitiveFields.get(key);
 
-            if (objValue != null) {
+            if (insensitiveFields.containsKey(key)) {
                 try {
                     entityRecord.put(field, objValue);
                 } catch (EntityFieldException e) {
