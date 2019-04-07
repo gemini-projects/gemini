@@ -3,7 +3,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {GeminiSchemaService} from "../../schema/schema.service";
 import {EntitySchema} from "../../schema/entity-schema";
 import {GeminiEntityManagerService} from "../../api";
-import {EntityRecord} from "../../schema/EntityRecord";
+import {EntityRecord, FIELD_META_UUID} from "../../schema/EntityRecord";
 import {FormService} from "../../form/form.service";
 import {FormStatus} from "../../form/form-status";
 import {ConfirmationService} from "primeng/api";
@@ -92,6 +92,9 @@ export class ViewEntityRecordComponent implements OnInit {
     save() {
         this.formStatus.submitFn().subscribe((er: EntityRecord) => {
             this.geminiNotification.success(this.message.get("ENTITY_RECORD.MODIFY.MODIFIED"));
+            if (this.entityRecord.meta.uuid != er.meta.uuid) {
+                console.warn("TODO need to refresh")
+            }
             this.entityRecord = er;
             this.isModifing = false;
         }, (error: ApiError) => {

@@ -6,6 +6,7 @@ import it.at7.gemini.schema.Entity;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public interface EntityManager {
 
@@ -19,11 +20,13 @@ public interface EntityManager {
 
     EntityRecord putOrUpdate(EntityRecord rec) throws GeminiException;
 
-    default EntityRecord update(EntityRecord rec)throws GeminiException{
+    default EntityRecord update(EntityRecord rec) throws GeminiException {
         return update(rec, rec.getLogicalKeyValue());
     }
 
     EntityRecord update(EntityRecord rec, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
+
+    EntityRecord update(EntityRecord rec, UUID uuid) throws GeminiException;
 
     default EntityRecord delete(EntityRecord entityRecord) throws GeminiException {
         return delete(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());

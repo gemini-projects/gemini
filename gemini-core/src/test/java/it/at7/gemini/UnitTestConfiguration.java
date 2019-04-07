@@ -152,6 +152,11 @@ public class UnitTestConfiguration {
                 return Optional.empty();
             }
 
+            @Override
+            public Optional<EntityRecord> getEntityRecordByUUID(Entity entity, UUID uuid, Transaction transaction) throws GeminiException {
+                return Optional.empty();
+            }
+
             private Optional<EntityRecord> getRecordByLogicalKeyInner(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey) {
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.get(entityName);
@@ -277,6 +282,11 @@ public class UnitTestConfiguration {
                     return createNewEntityRecord(entityRecord, transaction);
                 }
                 return entityRecord;
+            }
+
+            @Override
+            public UUID getUUIDforEntityRecord(EntityRecord record) throws GeminiException {
+                return null;
             }
 
            /* @Override

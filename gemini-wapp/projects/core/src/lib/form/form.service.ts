@@ -14,7 +14,7 @@ import {DateTimeComponent} from "./form-fields/date-time-fields/date-time.compon
 import {SpinnerComponent} from "./form-fields/input-fields/spinner.component";
 import {EntityRefComponent} from "./form-fields/entityref-fields/entity-ref.component";
 import {EntitySchema} from "../schema/entity-schema";
-import {EntityRecord} from "../schema/EntityRecord";
+import {EntityRecord, FIELD_META_UUID} from "../schema/EntityRecord";
 
 
 @Injectable({
@@ -67,7 +67,7 @@ export class FormService {
     private submitFunction(formStatus: FormStatus, oldEntityRec?: EntityRecord) {
         let entityRecord = this.convertFormValueToEntityRecord(formStatus.entitySchema, formStatus.formGroup.value);
         if (oldEntityRec)
-            return this.entityManager.updateEntityRecord(entityRecord);
+            return this.entityManager.updateEntityRecord(entityRecord, oldEntityRec.meta[FIELD_META_UUID]);
         else
             return this.entityManager.creteEntityRecord(entityRecord);
     }

@@ -2,6 +2,8 @@ import {EntitySchema} from "./entity-schema";
 import {FieldSchema, FieldType} from "./field-schema";
 import * as moment from 'moment';
 
+export const FIELD_META_UUID: string = "uuid";
+
 /**
  * EntityRecordApi is used as the first entry point for Gemini API EntityRecord (JSON).
  * It maps the response to an Object
@@ -37,11 +39,13 @@ export class EntityRecord implements EntityRecordApi {
             for (const field of entity.fields) {
                 this.set(field, entityRecord.data[field.name]);
             }
-            // TODO meta
+            if (entityRecord.meta[FIELD_META_UUID] != null) {
+                this._meta[FIELD_META_UUID] = entityRecord.meta[FIELD_META_UUID]
+            }
         }
     }
 
-    get meta(): object {
+    get meta(): EntityRecordMeta {
         return this._meta;
     }
 
@@ -75,7 +79,7 @@ export class EntityRecord implements EntityRecordApi {
         return descFields.map(f => this._data[f.name]).join(" - ");
     }
 
-    is(logicalKey: any):boolean {
+    is(logicalKey: any): boolean {
         const logicalKeyFields = this.entitySchema.getLogicalKeyFields();
         if (logicalKeyFields.length == 1) {
             const key = logicalKeyFields[0];
@@ -111,6 +115,12 @@ export class EntityRecordList {
     meta: any;
     entitySchema: EntitySchema;
     data: EntityRecord[];
+}
+
+export class EntityRecordMeta {
+    uuid?: string;
+
+    [key: string]: any
 }
 
 

@@ -199,8 +199,14 @@ public class RestAPIController {
 
     private EntityRecord handleUpdateRecord(Entity e, Map<String, Object> body, String... logicalKey) throws GeminiException {
         EntityRecord rec = RecordConverters.entityRecordFromMap(e, body);
-        List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
-        return entityManager.update(rec, logicalKeyValues);
+        try {
+            UUID uuid = UUID.fromString(logicalKey[0]);
+            return entityManager.update(rec, uuid);
+        } catch (IllegalArgumentException e1) {
+            // it is not a UUID
+            List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
+            return entityManager.update(rec, logicalKeyValues);
+        }
     }
 
     private EntityRecord handleDeleteRecord(Entity e, String... logicalKey) throws GeminiException {

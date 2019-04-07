@@ -12,6 +12,7 @@ public class EntityRecord implements RecordBase {
     private Map<String, Object> store;
     private Set<EntityField> fields;
     private Entity entity;
+    private UUID uuid;
 
     public EntityRecord(Entity entity) {
         Assert.notNull(entity, "Entity required for Entity DynamicRecord");
@@ -118,6 +119,14 @@ public class EntityRecord implements RecordBase {
     public EntityFieldValue getIDEntityFieldValueType() {
         Object value = get(getEntity().getIdEntityField());
         return EntityFieldValue.create(getEntity().getIdEntityField(), value);
+    }
+
+    public void setUUID(UUID uuid) {
+        this.uuid = uuid;
+    }
+
+    public UUID getUUID(){
+        return this.uuid;
     }
 
     public static class EntityFieldValue extends DynamicRecord.FieldValue {

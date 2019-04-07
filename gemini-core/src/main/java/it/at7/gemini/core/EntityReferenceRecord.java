@@ -7,9 +7,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class EntityReferenceRecord {
-
-    public static EntityReferenceRecord NO_REFERENCE = new EntityReferenceRecord();
-
     private Set<StoredType> storedTypeSet;
     private Object primaryKey;
     private DynamicRecord logicalKeyValue;

@@ -136,7 +136,7 @@ public class SchemaManagerImpl implements SchemaManager {
         return fieldsRecordByEntityName;
     }
 
-    private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, Entity entity) throws SQLException, GeminiException {
+    private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, Entity entity) throws GeminiException {
         List<EntityRecord> fieldRecords = new ArrayList<>();
         Set<EntityField> fields = entity.getSchemaEntityFields();
         for (EntityField field : fields) {

@@ -7,6 +7,7 @@ import it.at7.gemini.schema.Entity;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static it.at7.gemini.core.EntityResolutionContext.DEFAULT;
 
@@ -34,6 +35,8 @@ public interface PersistenceEntityManager {
 
     Optional<EntityRecord> getEntityRecordById(Entity entity, long recordId, Transaction transaction) throws GeminiException;
 
+    Optional<EntityRecord> getEntityRecordByUUID(Entity entity, UUID uuid, Transaction transaction) throws GeminiException;
+
     EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException;
 
     EntityRecord updateEntityRecordByID(EntityRecord record, Transaction transaction) throws GeminiException;
@@ -41,5 +44,7 @@ public interface PersistenceEntityManager {
     void deleteEntityRecordByID(EntityRecord record, Transaction transaction) throws GeminiException;
 
     EntityRecord createOrUpdateEntityRecord(EntityRecord entityRecord, Transaction transaction) throws GeminiException;
+
+    UUID getUUIDforEntityRecord(EntityRecord record) throws GeminiException;
 
 }
