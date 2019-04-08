@@ -4,10 +4,10 @@ import {FormService} from "../../form/form.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {FormStatus} from "../../form/form-status";
 import {EntityRecord} from "../../schema/EntityRecord";
-import {FieldSchema} from "../../schema/field-schema";
 import {ApiError} from "../../api/api-error";
 import {GeminiNotificationService} from "../../common";
 import {GeminiMessagesService} from "../../common/gemini-messages.service";
+import {navigateToEntityRecord} from "../entity-router-utility";
 
 @Component({
     selector: 'new-entity',
@@ -51,17 +51,9 @@ export class NewEntityRecordComponent implements OnInit {
 
     submitForm() {
         this.formStatus.submitFn().subscribe((er: EntityRecord) => {
-            let entitySchema = er.entitySchema;
             this.geminiNotification.success(this.CREATED_MEESSAGE);
+            navigateToEntityRecord(this.router, this.route, er);
 
-            let logicalKeyFields: FieldSchema[] = entitySchema.getLogicalKeyFields();
-            if (logicalKeyFields.length == 1) {
-                const lk = er.data[logicalKeyFields[0].name];
-                return this.router.navigate(['../', lk], {relativeTo: this.route});
-            }
-
-            // no entity schema with a single logical key
-            // TODO we can route by #unique-id
         }, (error: ApiError) => {
             this.geminiNotification.error(this.ERROR_NEW_ENTITYREC_MESSAGE, error.message);
         });
