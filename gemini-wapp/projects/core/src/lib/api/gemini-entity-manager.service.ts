@@ -112,15 +112,15 @@ export class GeminiEntityManagerService {
         return this.handleEntityRecordAPI(entityRecord, OperationType.CREATE);
     }
 
-    public updateEntityRecord(entityRecord: EntityRecord): Observable<EntityRecord> {
-        return this.handleEntityRecordAPI(entityRecord, OperationType.UPDATE);
+    public updateEntityRecord(entityRecord: EntityRecord, uuid?: string): Observable<EntityRecord> {
+        return this.handleEntityRecordAPI(entityRecord, OperationType.UPDATE, uuid);
     }
 
     public deleteEntityRecord(entityRecord: EntityRecord): Observable<EntityRecord> {
         return this.handleEntityRecordAPI(entityRecord, OperationType.DELETE);
     }
 
-    private handleEntityRecordAPI(entityRecord: EntityRecord, opeType: OperationType): Observable<EntityRecord> {
+    private handleEntityRecordAPI(entityRecord: EntityRecord, opeType: OperationType, uuid?: string): Observable<EntityRecord> {
         const httpHeaders: HttpHeaders = this.httpHeadersFromDefault();
         const options = {
             headers: httpHeaders,
@@ -134,11 +134,11 @@ export class GeminiEntityManagerService {
                 break;
             case OperationType.DELETE:
                 method = "delete";
-                url = this.configService.getApiEntityRecordByKeyUrl(entityRecord.entitySchema.name, this.extractEntityKey(entityRecord));
+                url = this.configService.getApiEntityRecordByKeyUrl(entityRecord.entitySchema.name, this.extractEntityKeyOrUUID(entityRecord, uuid));
                 break;
             case OperationType.UPDATE:
                 method = "put";
-                url = this.configService.getApiEntityRecordByKeyUrl(entityRecord.entitySchema.name, this.extractEntityKey(entityRecord));
+                url = this.configService.getApiEntityRecordByKeyUrl(entityRecord.entitySchema.name, this.extractEntityKeyOrUUID(entityRecord, uuid));
                 break;
         }
         return pipeFromArray(this.handlerToEntityRecord(entityRecord.entitySchema))(
@@ -146,10 +146,16 @@ export class GeminiEntityManagerService {
         );
     }
 
-    private extractEntityKey(entityRecord: EntityRecord) {
+    private extractEntityKeyOrUUID(entityRecord: EntityRecord, uuid?: string) {
         const entitySchema = entityRecord.entitySchema;
+        console.log(entityRecord);
+        if (uuid != null) {
+            return uuid;
+        }
+        if (entityRecord.meta['uuid'] != null) {
+            return entityRecord.meta.uuid;
+        }
         let logicalKeyFields: FieldSchema[] = entitySchema.getLogicalKeyFields();
-        // TODO uuid
         if (logicalKeyFields.length == 1) {
             return entityRecord.data[logicalKeyFields[0].name];
         }

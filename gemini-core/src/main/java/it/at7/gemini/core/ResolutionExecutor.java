@@ -48,7 +48,7 @@ public class ResolutionExecutor {
             switch (resolutionType) {
                 case EMPTY:
                     for (EntityRecord record : recordsToResolve) {
-                        record.put(field, EntityReferenceRecord.NO_REFERENCE);
+                        record.put(field, null);
                         persistenceEntityManager.createOrUpdateEntityRecord(record, transaction);
                     }
                     break;

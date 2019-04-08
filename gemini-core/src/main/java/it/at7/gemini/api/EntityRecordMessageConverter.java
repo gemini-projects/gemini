@@ -26,7 +26,7 @@ public class EntityRecordMessageConverter extends MappingJackson2HttpMessageConv
     @Override
     protected void writeInternal(Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         EntityRecord record = EntityRecord.class.cast(object);
-        Map<String, Object> recordMap = RecordConverters.toJSONMap(record);
+        Map<String, Object> recordMap = RecordConverters.fieldsToJSONMap(record);
         super.writeInternal(recordMap, type, outputMessage);
     }
 }

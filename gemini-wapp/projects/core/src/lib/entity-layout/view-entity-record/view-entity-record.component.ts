@@ -10,6 +10,7 @@ import {ConfirmationService} from "primeng/api";
 import {GeminiNotificationService, GeminiNotificationType} from "../../common";
 import {ApiError} from "../../api/api-error";
 import {GeminiMessagesService} from "../../common/gemini-messages.service";
+import {navigateToEntityRecord} from "../entity-router-utility";
 
 @Component({
     selector: 'display-entity',
@@ -92,6 +93,9 @@ export class ViewEntityRecordComponent implements OnInit {
     save() {
         this.formStatus.submitFn().subscribe((er: EntityRecord) => {
             this.geminiNotification.success(this.message.get("ENTITY_RECORD.MODIFY.MODIFIED"));
+            if (this.entityRecord.meta.uuid != er.meta.uuid) {
+                navigateToEntityRecord(this.router, this.route, er);
+            }
             this.entityRecord = er;
             this.isModifing = false;
         }, (error: ApiError) => {

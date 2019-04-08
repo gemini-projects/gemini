@@ -7,6 +7,7 @@ import it.at7.gemini.schema.Entity;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.UUID;
 
 import static it.at7.gemini.exceptions.EntityRecordException.Code.*;
 
@@ -14,18 +15,29 @@ public class EntityRecordException extends GeminiException {
     public enum Code {
         MULTIPLE_LK_FOUND,
         LK_NOTFOUND,
-        INSERTED_RECORD_NOT_FOUND
+        INSERTED_RECORD_NOT_FOUND,
+        UUID_NOTFOUND
     }
 
     private final Entity entity;
     private final Collection<? extends DynamicRecord.FieldValue> lk;
     private final Code errorCode;
+    private final UUID uuid;
 
     public EntityRecordException(Code errorCode, Entity entity, Collection<? extends DynamicRecord.FieldValue> lk, String message) {
         super(errorCode.name(), message);
         this.errorCode = errorCode;
         this.entity = entity;
         this.lk = lk;
+        this.uuid = null;
+    }
+
+    public EntityRecordException(Code errorCode, Entity entity, UUID uuid, String message) {
+        super(errorCode.name(), message);
+        this.errorCode = errorCode;
+        this.entity = entity;
+        this.lk = null;
+        this.uuid = uuid;
     }
 
     public Code getErrorCode() {
@@ -60,6 +72,10 @@ public class EntityRecordException extends GeminiException {
 
     public static EntityRecordException INSERTED_RECORD_NOT_FOUND(Entity entity, Set<EntityRecord.EntityFieldValue> lk) {
         return new EntityRecordException(INSERTED_RECORD_NOT_FOUND, entity, lk, String.format("Inserted record for entity %s not found: %s ", entity.getName(), lk.toString()));
+    }
+
+    public static EntityRecordException UUID_NOTFOUND(Entity entity, UUID uuid) {
+        return new EntityRecordException(UUID_NOTFOUND, entity, uuid, String.format("UUID for entity %s not found: %s ", entity.getName(), uuid.toString()));
     }
 
 }

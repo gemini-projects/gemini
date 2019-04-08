@@ -4,6 +4,7 @@ import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.EntityReferenceRecord;
 import it.at7.gemini.core.RecordConverters;
 import it.at7.gemini.core.Services;
+import it.at7.gemini.exceptions.EntityFieldException;
 import it.at7.gemini.exceptions.InvalidLogicalKeyValue;
 import it.at7.gemini.exceptions.InvalidTypeForObject;
 import org.springframework.lang.Nullable;
@@ -57,19 +58,23 @@ public class EntityField extends Field {
         return idValue;
     }
 
-    public EntityRecord toInitializationEntityRecord() throws InvalidLogicalKeyValue, InvalidTypeForObject {
+    public EntityRecord toInitializationEntityRecord() throws InvalidLogicalKeyValue, InvalidTypeForObject, EntityFieldException {
         HashMap<String, Object> values = new HashMap<>();
         values.put("name", getName());
         values.put("type", getType().name());
-        values.put("entity", EntityReferenceRecord.fromPKValue(entity, entity.getIDValue()));
+        Entity ENTITY_ENTITY = Services.getSchemaManager().getEntity("ENTITY");
+        EntityReferenceRecord entityRefRec = EntityReferenceRecord.fromPKValue(ENTITY_ENTITY, this.entity.getIDValue());
+        EntityField ENTIY_NAME_FIELD = ENTITY_ENTITY.getField("name");
+        entityRefRec.addLogicalKeyValue(ENTIY_NAME_FIELD, this.entity.getName());
+        values.put("entity", entityRefRec);
         Entity entityRef = getEntityRef();
         if (entityRef != null) {
             values.put("refentity", EntityReferenceRecord.fromPKValue(entityRef, entityRef.getIDValue()));
         }
         values.put("islogicalkey", isLogicalKey());
-        Entity entity = Services.getSchemaManager().getEntity("FIELD");
-        assert entity != null;
-        return RecordConverters.entityRecordFromMap(entity, values);
+        Entity FIELD_ENTITY = Services.getSchemaManager().getEntity("FIELD");
+        assert FIELD_ENTITY != null;
+        return RecordConverters.entityRecordFromMap(FIELD_ENTITY, values);
     }
 
     @Override

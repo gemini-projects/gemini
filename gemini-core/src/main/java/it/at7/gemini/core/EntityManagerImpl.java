@@ -4,6 +4,8 @@ import it.at7.gemini.conf.State;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,8 @@ import static it.at7.gemini.schema.Entity.NAME;
 
 @Service
 public class EntityManagerImpl implements EntityManager {
+    private static final Logger logger = LoggerFactory.getLogger(EntityManager.class);
+
     public static final String ENTITY = "ENTITY";
     public static final String FIELD = "FIELD";
 
@@ -76,6 +80,14 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
+    public EntityRecord update(EntityRecord rec, UUID uuid) throws GeminiException {
+        checkEnabledState();
+        return transactionManager.executeInSingleTrasaction(transaction -> {
+            return update(rec, uuid, transaction);
+        });
+    }
+
+    @Override
     public EntityRecord delete(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException {
         checkEnabledState();
         return transactionManager.executeInSingleTrasaction(transaction -> {
@@ -88,6 +100,14 @@ public class EntityManagerImpl implements EntityManager {
         checkEnabledState();
         return transactionManager.executeInSingleTrasaction(transaction -> {
             return get(entity, logicalKey, transaction);
+        });
+    }
+
+    @Override
+    public EntityRecord get(Entity entity, UUID uuid) throws GeminiException {
+        checkEnabledState();
+        return transactionManager.executeInSingleTrasaction(transaction -> {
+            return get(entity, uuid, transaction);
         });
     }
 
@@ -209,6 +229,30 @@ public class EntityManagerImpl implements EntityManager {
         throw EntityRecordException.LK_NOTFOUND(record.getEntity(), logicalKey);
     }
 
+    private EntityRecord update(EntityRecord record, UUID uuid, Transaction transaction) throws GeminiException {
+
+        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(record.getEntity(), uuid, transaction);
+        if (persistedRecordOpt.isPresent()) {
+            EntityRecord persistedRecord = persistedRecordOpt.get();
+            Optional<EntityRecord> lkRecord = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
+            if (lkRecord.isPresent()) {
+                // the uuid / id must be the same.. otherwise we lack the logical key uniqueness
+                EntityRecord lkEntityRecord = lkRecord.get();
+                assert persistedRecord.getID() != null && lkEntityRecord.getID() != null;
+                if (!persistedRecord.getID().equals(lkEntityRecord.getID())) {
+                    throw EntityRecordException.MULTIPLE_LK_FOUND(record);
+                }
+            } else {
+                // if the lk is not present we need to upddate the UUID
+                persistedRecord.setUUID(persistenceEntityManager.getUUIDforEntityRecord(record));
+            }
+            // can update
+            persistedRecord.update(record);
+            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
+        }
+        throw EntityRecordException.UUID_NOTFOUND(record.getEntity(), uuid);
+    }
+
     private EntityRecord delete(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
@@ -251,6 +295,14 @@ public class EntityManagerImpl implements EntityManager {
             return recordByLogicalKey.get();
         }
         throw EntityRecordException.LK_NOTFOUND(entity, logicalKey);
+    }
+
+    private EntityRecord get(Entity entity, UUID uuid, Transaction transaction) throws GeminiException {
+        Optional<EntityRecord> uuidPersisted = persistenceEntityManager.getEntityRecordByUUID(entity, uuid, transaction);
+        if (uuidPersisted.isPresent()) {
+            return uuidPersisted.get();
+        }
+        throw EntityRecordException.UUID_NOTFOUND(entity, uuid);
     }
 
     private void checkEnabledState() throws InvalidStateException {

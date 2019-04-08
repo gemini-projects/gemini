@@ -3,7 +3,6 @@ import {FieldSchema, FieldType} from "../../schema/field-schema";
 import {EntityRecord} from "../../schema/EntityRecord";
 import {GeminiMessagesService} from "../../common/gemini-messages.service";
 import {GeminiEntityManagerService} from "../../api";
-import {el} from "@angular/platform-browser/testing/src/browser_util";
 
 @Component({
     selector: 'view-field-container',

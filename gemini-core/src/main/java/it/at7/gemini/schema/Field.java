@@ -8,8 +8,8 @@ import org.springframework.util.Assert;
 import java.util.Objects;
 
 public class Field {
-    public static final String ID_NAME = "id";
-    // public static final Field ID = new Field(FieldType.PK, "id", true);
+    public static final String ID_NAME = "_id";
+    public static final String UUID_NAME = "_uuid";
 
     private final FieldType fieldType;
     private final String fieldName;

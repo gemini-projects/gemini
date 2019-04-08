@@ -34,8 +34,9 @@ public class EntityRecordApiTypeMessageConverter extends MappingJackson2HttpMess
 
     public static Map<String, Object> createGeminiApiEntityRecordMap(EntityRecord entityRecord) {
         Map<String, Object> results = new HashMap<>();
-        Map<String, Object> recordMap = RecordConverters.toJSONMap(entityRecord);
-        results.put("meta", "__TODOOOO___meta_data_here____");
+        Map<String, Object> recordMap = RecordConverters.fieldsToJSONMap(entityRecord);
+        Map<String, Object> recordMetaMap = RecordConverters.metaToJSONMap(entityRecord);
+        results.put("meta", recordMetaMap);
         results.put("data", recordMap);
         return results;
     }

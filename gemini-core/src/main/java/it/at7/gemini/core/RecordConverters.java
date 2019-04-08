@@ -18,6 +18,7 @@ import static it.at7.gemini.core.utils.DateTimeUtility.Formatter.*;
 public class RecordConverters {
     public static final String GEMINI_DATA_FIELD = "data";
     public static final String GEMINI_META_FIELD = "meta";
+    public static final String GEMINI_UUID_FIELD = "uuid";
 
     // TODO handle dates
 
@@ -78,10 +79,18 @@ public class RecordConverters {
         return entityRecordFromMap(entity, store);
     }
 
-    public static Map<String, Object> toJSONMap(EntityRecord record) {
+    public static Map<String, Object> fieldsToJSONMap(EntityRecord record) {
         Map<String, Object> convertedMap = new HashMap<>();
         for (EntityRecord.EntityFieldValue fieldValue : record.getAllSchemaEntityFieldValues()) {
             convertSingleFieldTOJSONValue(convertedMap, fieldValue);
+        }
+        return convertedMap;
+    }
+
+    public static Map<String, Object> metaToJSONMap(EntityRecord entityRecord) {
+        Map<String, Object> convertedMap = new HashMap<>();
+        if (!entityRecord.getEntity().isEmbedable()) {
+            convertedMap.put(GEMINI_UUID_FIELD, entityRecord.getUUID());
         }
         return convertedMap;
     }
@@ -195,7 +204,7 @@ public class RecordConverters {
                 if (EntityReferenceRecord.class.isAssignableFrom(firstVal.getClass())) {
                     Collection<EntityReferenceRecord> entityReferenceRecords = (Collection<EntityReferenceRecord>) value;
                     for (EntityReferenceRecord entityReferenceRecord : entityReferenceRecords) {
-                        refArray.add(entityRefToMap(entityReferenceRecord));
+                        refArray.add(toLogicalKey(entityReferenceRecord));
                     }
                 } else {
                     // TODO
@@ -208,21 +217,17 @@ public class RecordConverters {
 
     private static void convertEntityRefToJSONValue(Map<String, Object> convertedMap, Field field, Object value) {
         String fieldNameLC = toFieldName(field);
+        if (value == null) {
+            convertedMap.put(fieldNameLC, new HashMap<>());
+            return;
+        }
         if (EntityReferenceRecord.class.isAssignableFrom(value.getClass())) {
             EntityReferenceRecord pkRefRec = (EntityReferenceRecord) value;
-            convertedMap.put(fieldNameLC, entityRefToMap(pkRefRec));
+            convertedMap.put(fieldNameLC, toLogicalKey(pkRefRec));
         } else if (EntityRecord.class.isAssignableFrom(value.getClass())) {
             // we have the full reference record here -- we add a map of its fields
             EntityRecord eRValue = (EntityRecord) value;
             convertedMap.put(fieldNameLC, toMap(eRValue));
-        }
-    }
-
-    private static Object entityRefToMap(EntityReferenceRecord rec) {
-        if (rec.equals(EntityReferenceRecord.NO_REFERENCE)) {
-            return new HashMap<>();
-        } else {
-            return toLogicalKey(rec);
         }
     }
 
@@ -302,7 +307,7 @@ public class RecordConverters {
             case BOOL:
                 return false;
             case ENTITY_REF:
-                return EntityReferenceRecord.NO_REFERENCE;
+                return null;
             case RECORD:
                 return new Object();
             case ENTITY_EMBEDED:

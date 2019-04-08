@@ -31,7 +31,7 @@ public class EntityRecordListMessageConverter extends MappingJackson2HttpMessage
         Collection<EntityRecord> records = recordsWrapper.getRecords();
         List<Object> listOfFields = new ArrayList<>(records.size());
         for (EntityRecord record : records) {
-            listOfFields.add(RecordConverters.toJSONMap(record));
+            listOfFields.add(RecordConverters.fieldsToJSONMap(record));
         }
         super.writeInternal(listOfFields, type, outputMessage);
     }

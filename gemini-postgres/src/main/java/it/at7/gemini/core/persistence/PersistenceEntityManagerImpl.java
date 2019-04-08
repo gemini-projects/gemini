@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -49,6 +50,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     @Override
     public EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
+        record.setUUID(getUUIDforEntityRecord(record));
         QueryWithParams queryWithParams = makeInsertQuery(record, transaction);
         try {
             long recordId = transactionImpl.executeInsert(queryWithParams.sql, queryWithParams.params);
@@ -158,18 +160,38 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         try {
             QueryWithParams query = createSelectQueryFor(entity);
             addIdCondition(entity, recordId, query);
-            return transactionImpl.executeQuery(query.sql, query.params, resultSet -> {
-                List<EntityRecord> entityRecords = fromResultSetToEntityRecord(resultSet, entity, null, transactionImpl);
-                assert entityRecords.size() <= 1;
-                return entityRecords.size() == 0 ? Optional.empty() : Optional.of(entityRecords.get(0));
-            });
+            return executeOptionalEntityRecordQuery(entity, transactionImpl, query);
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
         }
     }
 
+    @Override
+    public Optional<EntityRecord> getEntityRecordByUUID(Entity entity, UUID uuid, Transaction transaction) throws GeminiException {
+        TransactionImpl transactionImpl = (TransactionImpl) transaction;
+        try {
+            QueryWithParams query = createSelectQueryFor(entity);
+            addUUIDCondition(entity, uuid, query);
+            return executeOptionalEntityRecordQuery(entity, transactionImpl, query);
+        } catch (SQLException e) {
+            throw GeminiGenericException.wrap(e);
+        }
+    }
+
+    private Optional<EntityRecord> executeOptionalEntityRecordQuery(Entity entity, TransactionImpl transactionImpl, QueryWithParams query) throws SQLException, GeminiException {
+        return transactionImpl.executeQuery(query.sql, query.params, resultSet -> {
+            List<EntityRecord> entityRecords = fromResultSetToEntityRecord(resultSet, entity, null, transactionImpl);
+            assert entityRecords.size() <= 1;
+            return entityRecords.size() == 0 ? Optional.empty() : Optional.of(entityRecords.get(0));
+        });
+    }
+
     private void addIdCondition(Entity entity, long recordId, QueryWithParams query) {
         query.sql += String.format("WHERE %s.%s = %d", entity.getName().toUpperCase(), entity.getIdEntityField().getName(), recordId);
+    }
+
+    private void addUUIDCondition(Entity entity, UUID uuid, QueryWithParams query) {
+        query.sql += String.format("WHERE %s.%s = '%s'", entity.getName().toUpperCase(), Field.UUID_NAME, uuid.toString());
     }
 
     private void addFilterRequestTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
@@ -275,6 +297,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         List<EntityRecord> ret = new ArrayList<>();
         while (rs.next()) {
             EntityRecord er = new EntityRecord(entity);
+            if (!entity.isEmbedable()) {
+                er.setUUID(rs.getObject(Field.UUID_NAME, UUID.class));
+            }
             for (EntityField field : entity.getSchemaEntityFields()) {
                 FieldType type = field.getType();
                 String fieldName = field.getName().toLowerCase();
@@ -372,33 +397,41 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
         Map<EntityField, EntityRecord> embededEntityRecords = checkAndCreateEmbededEntity(record, transaction);
 
-        String sql = String.format("INSERT INTO %s", entity.getName().toLowerCase());
+        StringBuilder sql = new StringBuilder(String.format("INSERT INTO %s", entity.getName().toLowerCase()));
         Map<String, Object> params = new HashMap<>();
         List<? extends DynamicRecord.FieldValue> sortedFields = sortFields(record.getAllSchemaEntityFieldValues());
         boolean first = true;
-        // TODO Unsupported ope
+        if (!entity.isEmbedable()) {
+            sql.append("(").append(Field.UUID_NAME);
+            first = false;
+        }
         for (DynamicRecord.FieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || entityType(type)) {
-                sql += first ? "(" : ",";
+                sql.append(first ? "(" : ",");
                 first = false;
-                sql += field.getField().getName().toLowerCase();
+                sql.append(field.getField().getName().toLowerCase());
             }
         }
-        sql += ") VALUES ";
+        sql.append(") VALUES ");
         first = true;
+        if (!entity.isEmbedable()) {
+            first = false;
+            sql.append("(:").append(Field.UUID_NAME);
+            params.put(Field.UUID_NAME, record.getUUID());
+        }
         for (DynamicRecord.FieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || entityType(type)) {
                 String columnName = field.getField().getName().toLowerCase();
-                sql += first ? "(" : ",";
+                sql.append(first ? "(" : ",");
                 first = false;
-                sql += ":" + columnName;
+                sql.append(":").append(columnName);
                 params.put(columnName, fromFieldToPrimitiveValue(field, embededEntityRecords, transaction));
             }
         }
-        sql += ")";
-        return new QueryWithParams(sql, params);
+        sql.append(")");
+        return new QueryWithParams(sql.toString(), params);
     }
 
     private Map<EntityField, EntityRecord> checkAndCreateEmbededEntity(EntityRecord record, Transaction transaction) throws
@@ -418,21 +451,25 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             GeminiException {
         Entity entity = record.getEntity();
         Map<EntityField, EntityRecord> embededEntityRecords = checkAndModifyEmbededEntyRecords(record, transaction);
-        String sql = String.format("UPDATE %s SET ", entity.getName().toLowerCase());
+        StringBuilder sql = new StringBuilder(String.format("UPDATE %s SET ", entity.getName().toLowerCase()));
         Map<String, Object> params = new HashMap<>();
+        if (!record.getEntity().isEmbedable()) {
+            sql.append(String.format(" %s = :%s , ", Field.UUID_NAME, Field.UUID_NAME));
+            params.put(Field.UUID_NAME, record.getUUID());
+        }
         List<? extends DynamicRecord.FieldValue> sortedFields = sortFields(record.getOnlyModifiedEntityFieldValue());
         for (int i = 0; i < sortedFields.size(); i++) {
             DynamicRecord.FieldValue field = sortedFields.get(i);
             String columnName = field.getField().getName().toLowerCase();
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || entityType(type)) {
-                sql += String.format(" %s = :%s", columnName, columnName);
-                sql += i == sortedFields.size() - 1 ? " " : " , ";
+                sql.append(String.format(" %s = :%s", columnName, columnName));
+                sql.append(i == sortedFields.size() - 1 ? " " : " , ");
                 params.put(columnName, fromFieldToPrimitiveValue(field, embededEntityRecords, transaction));
             }
         }
-        sql += String.format(" WHERE %s = %s", Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class));
-        return new QueryWithParams(sql, params);
+        sql.append(String.format(" WHERE %s = %s", Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class)));
+        return new QueryWithParams(sql.toString(), params);
     }
 
     private Map<EntityField, EntityRecord> checkAndModifyEmbededEntyRecords(EntityRecord record, Transaction
@@ -453,9 +490,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return results;
     }
 
-    private QueryWithParams makeSelectQueryFilteringFiledValue(Entity
-                                                                       entity, Set<EntityRecord.EntityFieldValue> filterValues, Transaction transaction) throws
-            SQLException, GeminiException {
+    private QueryWithParams makeSelectQueryFilteringFiledValue(Entity entity, Set<EntityRecord.EntityFieldValue> filterValues, Transaction transaction) throws SQLException, GeminiException {
         String entityName = entity.getName().toLowerCase();
         String sql = String.format("SELECT %1$s.* FROM %1$s WHERE ", entityName);
         Map<String, Object> params = new HashMap<>();
@@ -472,8 +507,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return new QueryWithParams(sql, params);
     }
 
-    private String handleSingleColumnSelectBasicType(String
-                                                             entityName, Map<String, Object> params, DynamicRecord.FieldValue fieldValue, Transaction transaction) throws
+    private String handleSingleColumnSelectBasicType(String entityName, Map<String, Object> params, DynamicRecord.FieldValue fieldValue, Transaction transaction) throws
             SQLException, GeminiException {
         String colName = fieldValue.getField().getName();
         Object value = fromFieldToPrimitiveValue(fieldValue, /* TODO  */ Map.of(), transaction);
@@ -482,8 +516,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return res;
     }
 
-    private QueryWithParams makeDeleteQueryByID(EntityRecord record, Transaction transaction) throws
-            GeminiException {
+    private QueryWithParams makeDeleteQueryByID(EntityRecord record, Transaction transaction) throws GeminiException {
         Entity entity = record.getEntity();
         checkAndDeleteEmbededEntity(record, transaction);
         String sql = String.format("DELETE FROM %s WHERE %s = %s", entity.getName().toLowerCase(), Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class));
@@ -499,9 +532,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
     }
 
-
-    private Object fromFieldToPrimitiveValue(DynamicRecord.FieldValue fieldValue, Map<EntityField, EntityRecord> embededEntityRecords, Transaction transaction) throws
-            GeminiException {
+    private Object fromFieldToPrimitiveValue(DynamicRecord.FieldValue fieldValue, Map<EntityField, EntityRecord> embededEntityRecords, Transaction transaction) throws GeminiException {
         Object value = fieldValue.getValue();
         Field field = fieldValue.getField();
         FieldType type = field.getType();
@@ -536,8 +567,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                     EntityRecord entityRecord = lkRecords.get(0);
                     return entityRecord.get(entityRef.getIdEntityField());
                 }
-                assert refRecord.equals(EntityReferenceRecord.NO_REFERENCE);
-                return 0L;
+                throw new RuntimeException(String.format("fromFieldToPrimitiveValue %s - EntityRef without Pk or LK", field.getName()));
             }
         }
         if (type.equals(FieldType.ENTITY_EMBEDED)) {
@@ -580,7 +610,54 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 }
             }
         }
-        throw new RuntimeException(String.format("Not implemented %s", field.getType()));
+        throw new RuntimeException(String.format("fromFieldToPrimitiveValue - Not implemented %s", field.getType()));
+    }
+
+    @Override
+    public UUID getUUIDforEntityRecord(EntityRecord record) {
+        // uuid: EntityName + LogicalKey --> it should be unique
+        StringBuilder uuidString = new StringBuilder(record.getEntity().getName());
+        Set<EntityRecord.EntityFieldValue> logicalKeyValues = record.getLogicalKeyValue();
+        List<EntityRecord.EntityFieldValue> sortedLkValues = logicalKeyValues.stream().sorted(Comparator.comparing(e -> e.getField().getName())).collect(Collectors.toList());
+        for (EntityRecord.EntityFieldValue lkValue : sortedLkValues) {
+            uuidString.append(fromEntityFieldToUUID(lkValue));
+        }
+        return UUID.nameUUIDFromBytes(uuidString.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String fromEntityFieldToUUID(EntityRecord.EntityFieldValue lkValue) {
+        EntityField field = lkValue.getEntityField();
+        FieldType type = field.getType();
+        Object value = lkValue.getValue();
+        if (value == null) {
+            return "null";
+        }
+        if (oneToOneType(type)) {
+            return value.toString();
+        }
+        if (type.equals(FieldType.ENTITY_REF)) {
+            EntityReferenceRecord refRecord;
+            Entity entityRef = field.getEntityRef();
+            if (!EntityReferenceRecord.class.isAssignableFrom(value.getClass())) {
+                refRecord = logicalKeyFromObject(entityRef, value);
+            } else {
+                refRecord = (EntityReferenceRecord) value;
+            }
+            if (refRecord.hasLogicalKey()) {
+                DynamicRecord logicalKeyRecord = refRecord.getLogicalKeyRecord();
+                List<EntityField> lkv = entityRef.getLogicalKey().getLogicalKeyList();
+                lkv.sort(Comparator.comparing(Field::getName));
+                StringBuilder res = new StringBuilder();
+                for (EntityField lkPieceField : lkv) {
+                    EntityRecord.EntityFieldValue entityFieldValue = EntityRecord.EntityFieldValue.create(lkPieceField, logicalKeyRecord.getFieldValue(lkPieceField));
+                    res.append(fromEntityFieldToUUID(entityFieldValue));
+                }
+                return res.toString();
+            } else {
+                logger.warn(String.format("Using primary key to generate the UUID for %s.%s - may be an error", field.getEntity().getName(), field.getName()));
+            }
+        }
+        throw new RuntimeException(String.format("fromEntityFieldToUUID - Not implemented %s", field.getType()));
     }
 
     private Object handleNullValueForField(FieldType type) {
