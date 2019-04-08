@@ -12,7 +12,7 @@ export function navigateToEntityRecord(router: Router, route: ActivatedRoute, er
 
     // no entity schema with a single logical key
     // let's try by UUID
-   /*  if (er.meta.uuid != null) {
+    if (er.meta.uuid != null) {
         return router.navigate(['../', er.meta.uuid], {relativeTo: route});
-    } */
+    }
 }

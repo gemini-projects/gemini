@@ -40,6 +40,8 @@ public interface EntityManager {
 
     EntityRecord get(Entity e, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
 
+    EntityRecord get(Entity e, UUID uuid) throws GeminiException;
+
     default List<EntityRecord> getRecordsMatching(Entity entity, DynamicRecord searchRecord) throws GeminiException {
         assert searchRecord != null;
         return getRecordsMatching(entity, searchRecord.getFieldValues());

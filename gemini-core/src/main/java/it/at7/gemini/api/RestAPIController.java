@@ -215,8 +215,13 @@ public class RestAPIController {
     }
 
     private EntityRecord handleGetRecord(Entity e, String... logicalKey) throws GeminiException {
-        List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
-        return entityManager.get(e, logicalKeyValues);
+        try {
+            UUID uuid = UUID.fromString(logicalKey[0]);
+            return entityManager.get(e, uuid);
+        } catch (IllegalArgumentException e1) {
+            List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
+            return entityManager.get(e, logicalKeyValues);
+        }
     }
 
     /* private EntityRecord handleGetRecord(Entity e, String logicalKey) throws SQLException, GeminiException {

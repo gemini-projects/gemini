@@ -9,10 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static it.at7.gemini.schema.Entity.NAME;
 
@@ -103,6 +100,14 @@ public class EntityManagerImpl implements EntityManager {
         checkEnabledState();
         return transactionManager.executeInSingleTrasaction(transaction -> {
             return get(entity, logicalKey, transaction);
+        });
+    }
+
+    @Override
+    public EntityRecord get(Entity entity, UUID uuid) throws GeminiException {
+        checkEnabledState();
+        return transactionManager.executeInSingleTrasaction(transaction -> {
+            return get(entity, uuid, transaction);
         });
     }
 
@@ -290,6 +295,14 @@ public class EntityManagerImpl implements EntityManager {
             return recordByLogicalKey.get();
         }
         throw EntityRecordException.LK_NOTFOUND(entity, logicalKey);
+    }
+
+    private EntityRecord get(Entity entity, UUID uuid, Transaction transaction) throws GeminiException {
+        Optional<EntityRecord> uuidPersisted = persistenceEntityManager.getEntityRecordByUUID(entity, uuid, transaction);
+        if (uuidPersisted.isPresent()) {
+            return uuidPersisted.get();
+        }
+        throw EntityRecordException.UUID_NOTFOUND(entity, uuid);
     }
 
     private void checkEnabledState() throws InvalidStateException {
