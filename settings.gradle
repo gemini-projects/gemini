@@ -1,6 +1,6 @@
+rootProject.name = 'gemini'
+
 include 'gemini-dsl'
 include 'gemini-core'
-include 'gemini-postgres'
+include 'gemini-postgresql'
 include 'gemini-boot'
-include 'gemini-wapp'
-

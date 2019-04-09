@@ -1,5 +1,3 @@
-group 'it.at7.gemini.core.persistence'
-
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-jdbc")
     compile 'org.postgresql:postgresql:42.2.5'
