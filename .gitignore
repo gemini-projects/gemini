@@ -1,6 +1,5 @@
 # Specific for Gemini
 wd/
-./gemini-*/schema
 
 
 # Created by https://www.gitignore.io/api/osx,node,java,gradle,angular,windows,intellij+all
