@@ -242,9 +242,6 @@ public class EntityManagerImpl implements EntityManager {
                 if (!persistedRecord.getID().equals(lkEntityRecord.getID())) {
                     throw EntityRecordException.MULTIPLE_LK_FOUND(record);
                 }
-            } else {
-                // if the lk is not present we need to upddate the UUID
-                persistedRecord.setUUID(persistenceEntityManager.getUUIDforEntityRecord(record));
             }
             // can update
             persistedRecord.update(record);

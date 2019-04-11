@@ -390,7 +390,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case PK:
                 return data_type.equals("bigint");
             case TEXT:
-            case TRANSL_TEXT:
                 return data_type.equals("text");
             case NUMBER:
                 return data_type.equals("numeric");
@@ -452,7 +451,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case PK:
                 break;
             case TEXT:
-            case TRANSL_TEXT:
                 return "TEXT";
             case NUMBER:
                 return "NUMERIC";

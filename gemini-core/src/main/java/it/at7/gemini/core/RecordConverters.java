@@ -133,7 +133,6 @@ public class RecordConverters {
             case LONG:
             case DOUBLE:
             case TEXT:
-            case TRANSL_TEXT:
             case NUMBER:
             case BOOL:
             case RECORD:
@@ -296,7 +295,6 @@ public class RecordConverters {
             case TIME:
             case DATE:
             case DATETIME:
-            case TRANSL_TEXT:
                 return "";
             case NUMBER:
                 return 0;

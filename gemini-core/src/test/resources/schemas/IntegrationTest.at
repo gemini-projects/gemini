@@ -11,7 +11,6 @@ ENTITY TestDataType {
     BOOL            bool
     DATE            date
     TIME            time
-    TRANSL_TEXT     transl_text
     DATETIME        datetime
     TestDomain1     domain1
     [TEXT]          textArray
@@ -39,7 +38,6 @@ ENTITY EMBEDABLE EmbedableEntity {
     BOOL            bool
     DATE            date
     TIME            time
-    TRANSL_TEXT     transl_text
     DATETIME        datetime
     TestDomain1     domain1
     [TEXT]          textArray

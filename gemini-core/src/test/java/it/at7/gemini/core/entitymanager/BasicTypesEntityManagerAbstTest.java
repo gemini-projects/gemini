@@ -32,7 +32,6 @@ public abstract class BasicTypesEntityManagerAbstTest {
 
     public static void testDefaulValues(EntityRecord testEntity, String lk){
         assertEquals(lk, testEntity.get("text")); // real field
-        assertEquals("", testEntity.get("transl_text")); // real field
         assertEquals(0, (long) testEntity.get("numberLong")); // default
         assertEquals(0, (long) testEntity.get("numberDouble")); // default
         assertEquals(0., testEntity.get("double"), 0.001); // default

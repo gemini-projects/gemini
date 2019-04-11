@@ -12,7 +12,7 @@ ENTITY-RECORD FieldCommonSettings DEFAULT
         "strategy": "STATIC",
         "value": false
      },
-     "choiceDataStrategy" : "SIMPLE"
+     "choiceDataStrategy" : "STATIC"
 }
 
 ENTITY-RECORD FieldResolution V 1
@@ -29,15 +29,5 @@ ENTITY-RECORD Entity V 2
 [{
     "name": "ENTITY",
     "displayName": "Entità"
-}]
-
-ENTITY-RECORD Language V 1
-[{
-    "code": "IT",
-    "description": "Italiano"
-},
-{
-    "code": "EN",
-    "description": "English"
 }]
 

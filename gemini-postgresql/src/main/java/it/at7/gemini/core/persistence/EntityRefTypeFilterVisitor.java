@@ -78,8 +78,6 @@ public class EntityRefTypeFilterVisitor implements GeminiTypeFilterVisitor {
                 break;
             case ENTITY_REF:
                 break;
-            case TRANSL_TEXT:
-                break;
             case GENERIC_ENTITY_REF:
                 break;
             case TEXT_ARRAY:

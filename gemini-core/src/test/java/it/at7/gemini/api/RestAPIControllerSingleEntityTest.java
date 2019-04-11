@@ -41,7 +41,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'double':0.0,'numberLong':10, 'long':0,'date':'', 'time': '', 'datetime':'', 'transl_text':'', 'textArray':[], 'domain1Array':[]}", true));
+                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'double':0.0,'numberLong':10, 'long':0,'date':'', 'time': '', 'datetime':'', 'textArray':[], 'domain1Array':[]}", true));
         // no duplicated keys
         mockMvc.perform(post(API_PATH + "/TestDataType")
                 .contentType(APPLICATION_JSON)
@@ -61,7 +61,6 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
         jsonAllBasicTypes.put("date", "1989/9/6");
         jsonAllBasicTypes.put("time", "02:10");
         jsonAllBasicTypes.put("datetime", "1989-09-06T01:01");
-        jsonAllBasicTypes.put("transl_text", "translation");
         jsonAllBasicTypes.put("textArray", new String[]{"abc", "def"});
         String jsonAllBtypeString = objectMapper.writeValueAsString(jsonAllBasicTypes);
         mockMvc.perform(post(API_PATH + "/TestDataType")
@@ -72,7 +71,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1, 'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-09-06', 'time': '02:10:00Z', 'datetime':'1989-09-06T01:01:00Z','transl_text': 'translation', 'textArray': ['abc','def'], 'domain1Array':[]}", true));
+                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1, 'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-09-06', 'time': '02:10:00Z', 'datetime':'1989-09-06T01:01:00Z','textArray': ['abc','def'], 'domain1Array':[]}", true));
 
 
         //==== object withGeminiSearchString entity reference (FK) - single logical key
@@ -98,7 +97,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lkWithDomain','domain1':'dm1','numberDouble':0,'numberLong':11, 'long': 0, 'double': 0.0, 'transl_text':''}"));
+                        .json("{'bool':false,'text':'lkWithDomain','domain1':'dm1','numberDouble':0,'numberLong':11, 'long': 0, 'double': 0.0}"));
 
         //=== lets POST a list of Objects
         List<Map<String, Object>> objList = new ArrayList<>();
@@ -175,7 +174,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1,'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-09-06', 'time': '02:10:00Z', 'datetime':'1989-09-06T01:01:00Z','transl_text': 'translation', 'textArray': ['abc','def'], 'domain1Array':[]}", true));
+                        .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1,'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-09-06', 'time': '02:10:00Z', 'datetime':'1989-09-06T01:01:00Z', 'textArray': ['abc','def'], 'domain1Array':[]}", true));
 
 
         //==== object withGeminiSearchString entity reference (FK) - single logical key

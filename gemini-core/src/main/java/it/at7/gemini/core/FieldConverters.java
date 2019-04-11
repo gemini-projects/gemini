@@ -31,7 +31,6 @@ public class FieldConverters {
             case PK:
                 return objValue;
             case TEXT:
-            case TRANSL_TEXT:
                 return stValue;
             case NUMBER:
                 try {

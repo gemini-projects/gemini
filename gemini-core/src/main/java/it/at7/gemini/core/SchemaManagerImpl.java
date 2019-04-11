@@ -186,7 +186,10 @@ public class SchemaManagerImpl implements SchemaManager {
                     .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
 
             persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
-            Map<String, List<EntityRecord>> fieldRecordsByEntityName = handleSchemasEntityRecords(entities.values(), transaction);// entity records for entity / field / core entities
+
+            // entity records for entity, field / core entities
+            Map<String, List<EntityRecord>> fieldRecordsByEntityName = handleSchemasEntityRecords(entities.values(), transaction);
+
             createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
             // setDefaultsForFields(fieldRecordsByEntityName, transaction);
             transaction.commit();

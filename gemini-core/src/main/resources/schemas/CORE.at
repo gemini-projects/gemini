@@ -2,14 +2,14 @@
 
 INTERFACE Domain {
     TEXT            code  *
-    TRANSL_TEXT     description
+    TEXT		    description
 }
 
 ENTITY Entity {
     TEXT            name *
     TEXT            module
     BOOL            embedable
-    TRANSL_TEXT     displayName
+    TEXT		    displayName
 }
 
 ENTITY Field {
@@ -18,7 +18,7 @@ ENTITY Field {
     TEXT                type
     Entity              refEntity
     BOOL                isLogicalKey
-    TRANSL_TEXT         displayName
+    TEXT		        displayName
     FieldCommonSettings commonSettings
     FieldGuiSettings    guiSettings
 }
@@ -50,15 +50,6 @@ ENTITY InitRecord {
 }
 
 ENTITY Language IMPLEMENTS Domain
-
-ENTITY Translation {
-    Entity          entity *
-    Field           field  *
-    LANGUAGE        language *
-    # ENTITY_RECORD   recordKey
-    TEXT            value
-}
-
 
 ENTITY FieldResolution {
     Field   field *

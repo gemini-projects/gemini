@@ -71,6 +71,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             throw IdFieldException.ID_FIELD_REQUIRED("update", record);
         }
         try {
+            record.setUUID(getUUIDforEntityRecord(record));
             QueryWithParams queryWithParams = makeModifyQueryFromID(record, transaction);
             transactionImpl.executeUpdate(queryWithParams.sql, queryWithParams.params);
             Optional<EntityRecord> recordById = getEntityRecordById(record.getEntity(), (long) id, transactionImpl);
@@ -453,7 +454,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         Map<EntityField, EntityRecord> embededEntityRecords = checkAndModifyEmbededEntyRecords(record, transaction);
         StringBuilder sql = new StringBuilder(String.format("UPDATE %s SET ", entity.getName().toLowerCase()));
         Map<String, Object> params = new HashMap<>();
-        if (!record.getEntity().isEmbedable()) {
+        if (!record.getEntity().isEmbedable() && record.getUUID() != null) { // uuis should be updated only if it is provided
             sql.append(String.format(" %s = :%s , ", Field.UUID_NAME, Field.UUID_NAME));
             params.put(Field.UUID_NAME, record.getUUID());
         }
@@ -667,7 +668,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             case PK:
                 return 0;
             case TEXT:
-            case TRANSL_TEXT:
                 return "";
             case LONG:
                 return 0L;
@@ -700,7 +700,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             case PK:
                 return BigInteger.class;
             case TEXT:
-            case TRANSL_TEXT:
                 return String.class;
             case LONG:
                 return Long.class;

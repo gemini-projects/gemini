@@ -16,7 +16,6 @@ public class FieldTypePersistenceUtility {
             case TIME:
             case DATE:
             case DATETIME:
-            case TRANSL_TEXT:
             case TEXT_ARRAY:
                 return true;
             case ENTITY_REF:
@@ -40,7 +39,6 @@ public class FieldTypePersistenceUtility {
             case TIME:
             case DATE:
             case DATETIME:
-            case TRANSL_TEXT:
             case TEXT_ARRAY:
             case RECORD:
                 return false;

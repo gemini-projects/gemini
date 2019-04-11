@@ -6,6 +6,7 @@ import it.at7.gemini.schema.EntityField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import javax.validation.constraints.Null;
 import java.util.*;
 
 public class EntityRecord implements RecordBase {
@@ -125,6 +126,7 @@ public class EntityRecord implements RecordBase {
         this.uuid = uuid;
     }
 
+    @Nullable
     public UUID getUUID(){
         return this.uuid;
     }
