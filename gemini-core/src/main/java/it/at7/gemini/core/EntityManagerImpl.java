@@ -1,5 +1,6 @@
 package it.at7.gemini.core;
 
+import it.at7.gemini.conf.DynamicSchema;
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.exceptions.*;
@@ -11,26 +12,26 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static it.at7.gemini.schema.Entity.NAME;
-
 @Service
 public class EntityManagerImpl implements EntityManager {
     private static final Logger logger = LoggerFactory.getLogger(EntityManager.class);
 
-    public static final String ENTITY = "ENTITY";
-    public static final String FIELD = "FIELD";
+    private final String ENTITY = EntityRef.NAME;
+    private final String FIELD = FieldRef.NAME;
 
     private SchemaManager schemaManager;
     private TransactionManager transactionManager;
     private PersistenceEntityManager persistenceEntityManager;
     private StateManager stateManager;
+    private ConfigurationService configurationService;
 
     @Autowired
-    public EntityManagerImpl(SchemaManager schemaManager, TransactionManager transactionManager, PersistenceEntityManager persistenceEntityManager, StateManager stateManager) {
+    public EntityManagerImpl(SchemaManager schemaManager, TransactionManager transactionManager, PersistenceEntityManager persistenceEntityManager, StateManager stateManager, ConfigurationService configurationService) {
         this.schemaManager = schemaManager;
         this.transactionManager = transactionManager;
         this.persistenceEntityManager = persistenceEntityManager;
         this.stateManager = stateManager;
+        this.configurationService = configurationService;
     }
 
     @Override
@@ -133,9 +134,10 @@ public class EntityManagerImpl implements EntityManager {
 
 
     private EntityRecord putIfAbsent(EntityRecord record, Transaction transaction) throws GeminiException {
+        assertDynamicSchema(record);
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
-            handleInsertSchemaCoreEntities(record, transaction);
+            // TODO enable when dynamic schema --  handleInsertSchemaCoreEntities(record, transaction);
             // can insert the entity record
             return persistenceEntityManager.createNewEntityRecord(record, transaction);
         }
@@ -143,9 +145,10 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private EntityRecord putOrUpdate(EntityRecord record, Transaction transaction) throws GeminiException {
+        assertDynamicSchema(record);
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
-            handleInsertSchemaCoreEntities(record, transaction);
+            // TODO enable when dynamic schema -- handleInsertSchemaCoreEntities(record, transaction);
             // can insert the entity record
             return persistenceEntityManager.createNewEntityRecord(record, transaction);
         } else {
@@ -155,24 +158,50 @@ public class EntityManagerImpl implements EntityManager {
         }
     }
 
-    private void handleInsertSchemaCoreEntities(EntityRecord record, Transaction transaction) throws GeminiException {
-        Entity entity = record.getEntity();
-        switch (entity.getName()) {
-            case ENTITY:
-                Entity entityFromRecord = getEntityFromRecord(record);
-                if (entityFromRecord != null) { // it must be inexistent entity
-                    throw EntityException.ENTITY_FOUND(entityFromRecord);
-                }
-                Entity newEntity = createNewEntity(record);
-                schemaManager.addNewRuntimeEntity(newEntity, transaction);
-                break;
-            case FIELD:
-                EntityField fieldFromRecord = getEntityFieldFromRecord(record);
-                if (!checkFieldisNew(fieldFromRecord)) {
-                    throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(fieldFromRecord);
-                }
-                schemaManager.addNewRuntimeEntityField(fieldFromRecord, transaction);
+    private EntityRecord update(EntityRecord record, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
+        assertDynamicSchema(record);
+        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(record.getEntity(), logicalKey, transaction);
+        if (persistedRecordOpt.isPresent()) {
+            // can update
+            EntityRecord persistedRecord = persistedRecordOpt.get();
+            persistedRecord.update(record);
+            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
         }
+        throw EntityRecordException.LK_NOTFOUND(record.getEntity(), logicalKey);
+    }
+
+    private EntityRecord update(EntityRecord record, UUID uuid, Transaction transaction) throws GeminiException {
+        assertDynamicSchema(record);
+        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(record.getEntity(), uuid, transaction);
+        if (persistedRecordOpt.isPresent()) {
+            EntityRecord persistedRecord = persistedRecordOpt.get();
+            Optional<EntityRecord> lkRecord = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
+            if (lkRecord.isPresent()) {
+                // the uuid / id must be the same.. otherwise we lack the logical key uniqueness
+                EntityRecord lkEntityRecord = lkRecord.get();
+                assert persistedRecord.getID() != null && lkEntityRecord.getID() != null;
+                if (!persistedRecord.getID().equals(lkEntityRecord.getID())) {
+                    throw EntityRecordException.MULTIPLE_LK_FOUND(record);
+                }
+            }
+            // can update
+            persistedRecord.update(record);
+            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
+        }
+        throw EntityRecordException.UUID_NOTFOUND(record.getEntity(), uuid);
+    }
+
+    private EntityRecord delete(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
+        assertDynamicSchema(entity);
+        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
+        if (persistedRecordOpt.isPresent()) {
+            EntityRecord persistedRecord = persistedRecordOpt.get();
+            // // TODO enable when dynamic schema -- handleDeleteSchemaCoreEntities(persistedRecord, transaction);
+            handleDeleteResolution(persistedRecord, transaction);
+            persistenceEntityManager.deleteEntityRecordByID(persistedRecord, transaction);
+            return persistedRecord;
+        }
+        throw EntityRecordException.LK_NOTFOUND(entity, logicalKey);
     }
 
     private EntityField getEntityFieldFromRecord(EntityRecord record) throws FieldException {
@@ -194,6 +223,7 @@ public class EntityManagerImpl implements EntityManager {
         return entityFieldBuilder.build();
     }
 
+
     private boolean checkFieldisNew(EntityField fieldFromRecord) {
         Entity entity = fieldFromRecord.getEntity();
         Set<EntityField> schemaEntityFields = entity.getSchemaEntityFields();
@@ -201,7 +231,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private Entity getEntityFromRecord(EntityRecord record) {
-        String name = record.get(NAME);
+        String name = record.get(EntityRef.FIELDS.NAME, String.class).toUpperCase();
         return schemaManager.getEntity(name);
     }
 
@@ -218,53 +248,30 @@ public class EntityManagerImpl implements EntityManager {
         return new EntityBuilder(name, runtimeModule).build();
     }
 
-    private EntityRecord update(EntityRecord record, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
-        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(record.getEntity(), logicalKey, transaction);
-        if (persistedRecordOpt.isPresent()) {
-            // can update
-            EntityRecord persistedRecord = persistedRecordOpt.get();
-            persistedRecord.update(record);
-            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
-        }
-        throw EntityRecordException.LK_NOTFOUND(record.getEntity(), logicalKey);
-    }
-
-    private EntityRecord update(EntityRecord record, UUID uuid, Transaction transaction) throws GeminiException {
-
-        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(record.getEntity(), uuid, transaction);
-        if (persistedRecordOpt.isPresent()) {
-            EntityRecord persistedRecord = persistedRecordOpt.get();
-            Optional<EntityRecord> lkRecord = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
-            if (lkRecord.isPresent()) {
-                // the uuid / id must be the same.. otherwise we lack the logical key uniqueness
-                EntityRecord lkEntityRecord = lkRecord.get();
-                assert persistedRecord.getID() != null && lkEntityRecord.getID() != null;
-                if (!persistedRecord.getID().equals(lkEntityRecord.getID())) {
-                    throw EntityRecordException.MULTIPLE_LK_FOUND(record);
-                }
-            }
-            // can update
-            persistedRecord.update(record);
-            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
-        }
-        throw EntityRecordException.UUID_NOTFOUND(record.getEntity(), uuid);
-    }
-
-    private EntityRecord delete(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
-        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
-        if (persistedRecordOpt.isPresent()) {
-            EntityRecord persistedRecord = persistedRecordOpt.get();
-            handleDeleteSchemaCoreEntities(persistedRecord, transaction);
-            handleDeleteResolution(persistedRecord, transaction);
-            persistenceEntityManager.deleteEntityRecordByID(persistedRecord, transaction);
-            return persistedRecord;
-        }
-        throw EntityRecordException.LK_NOTFOUND(entity, logicalKey);
-    }
-
     private void handleDeleteResolution(EntityRecord entityRecord, Transaction transaction) throws GeminiException {
         ResolutionExecutor resolutionExecutor = ResolutionExecutor.forDelete(entityRecord, persistenceEntityManager, schemaManager, transaction);
         resolutionExecutor.run();
+    }
+
+    /* // TODO dynamic entity record
+    private void handleInsertSchemaCoreEntities(EntityRecord record, Transaction transaction) throws GeminiException {
+        Entity entity = record.getEntity();
+        switch (entity.getName()) {
+            case ENTITY:
+                Entity entityFromRecord = getEntityFromRecord(record);
+                if (entityFromRecord != null) { // it must be inexistent entity
+                    throw EntityException.ENTITY_FOUND(entityFromRecord);
+                }
+                Entity newEntity = createNewEntity(record);
+                schemaManager.addNewRuntimeEntity(newEntity, transaction);
+                break;
+            case FIELD:
+                EntityField fieldFromRecord = getEntityFieldFromRecord(record);
+                if (!checkFieldisNew(fieldFromRecord)) {
+                    throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(fieldFromRecord);
+                }
+                schemaManager.addNewRuntimeEntityField(fieldFromRecord, transaction);
+        }
     }
 
     private void handleDeleteSchemaCoreEntities(EntityRecord record, Transaction transaction) throws GeminiException {
@@ -285,6 +292,7 @@ public class EntityManagerImpl implements EntityManager {
                 schemaManager.deleteRuntimeEntityField(fieldFromRecord, transaction);
         }
     }
+    */
 
     private EntityRecord get(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
         Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
@@ -306,6 +314,24 @@ public class EntityManagerImpl implements EntityManager {
         State actualState = stateManager.getActualState();
         if (actualState.compareTo(State.SCHEMA_INITIALIZED) < 0) {
             throw InvalidStateException.STATE_LESS_THAN(actualState, State.SCHEMA_INITIALIZED);
+        }
+    }
+
+    private void assertDynamicSchema(EntityRecord record) throws SchemaException {
+        assertDynamicSchema(record.getEntity());
+    }
+
+    private void assertDynamicSchema(Entity entity) throws SchemaException {
+        DynamicSchema dynamicSchema = configurationService.getDynamicSchema();
+        switch (dynamicSchema) {
+            case ALL:
+                break;
+            case DISABLED:
+                String name = entity.getName();
+                Set<String> core_entities = Set.of(EntityRef.NAME, FieldRef.NAME);
+                if (core_entities.contains(name)) {
+                    throw SchemaException.DYNAMIC_SCHEMA_NOT_ENABLED(name);
+                }
         }
     }
 }

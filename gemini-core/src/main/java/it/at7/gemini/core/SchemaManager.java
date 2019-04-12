@@ -1,6 +1,5 @@
 package it.at7.gemini.core;
 
-import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 
@@ -18,13 +17,14 @@ public interface SchemaManager {
 
     Module getModule(String module);
 
+    /*
     void addNewRuntimeEntity(Entity newEntity, Transaction transaction) throws GeminiException;
 
     void addNewRuntimeEntityField(EntityField newEntityField, Transaction transaction) throws GeminiException;
 
     void deleteRuntimeEntity(Entity entityFromRecord, Transaction transaction) throws GeminiException;
 
-    void deleteRuntimeEntityField(EntityField fieldFromRecord, Transaction transaction) throws GeminiException;
+    void deleteRuntimeEntityField(EntityField fieldFromRecord, Transaction transaction) throws GeminiException; */
 
     List<EntityField> getEntityReferenceFields(Entity targetEntity);
 }

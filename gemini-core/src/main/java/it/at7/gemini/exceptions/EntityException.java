@@ -12,7 +12,7 @@ public class EntityException extends GeminiException {
         ENTITY_FOUND,
         ENTITY_NOT_FOUND,
         ENTITY_FIELD_FOUND,
-        API_NOT_ALLOWED_ON_EMBEDABLE;
+        API_NOT_ALLOWED_ON_EMBEDABLE
     }
 
     public EntityException(EntityException.Code errorCode, String message, Entity entity) {

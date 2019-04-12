@@ -55,6 +55,29 @@ public class SchemaManagerImpl implements SchemaManager {
     }
 
     @Override
+    public void initializeSchemas(Map<String, Module> modules) throws Exception {
+        this.modules = modules;
+        try (Transaction transaction = transactionManager.openTransaction()) {
+            persistenceSchemaManager.beforeLoadSchema(modules, transaction);
+            loadModuleSchemas(modules.values());
+            Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap = loadModuleRecords(modules.values());
+            this.entities = checkSchemasAndCreateObjectEntities(schemaRawRecordsMap);
+            Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
+                    .flatMap(m -> m.entrySet().stream())
+                    .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
+
+            persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
+
+            // entity records for entity, field / core entities
+            Map<String, List<EntityRecord>> fieldRecordsByEntityName = handleSchemasEntityRecords(entities.values(), transaction);
+
+            createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
+            // setDefaultsForFields(fieldRecordsByEntityName, transaction);
+            transaction.commit();
+        }
+    }
+
+    @Override
     @Nullable
     public Entity getEntity(String entity) {
         return entities.get(entity.toUpperCase());
@@ -66,6 +89,7 @@ public class SchemaManagerImpl implements SchemaManager {
         return modules.get(module.toUpperCase());
     }
 
+    /* TODO runtime entity handler
     @Override
     public synchronized void addNewRuntimeEntity(Entity newEntity, Transaction transaction) throws GeminiException {
         Module module = newEntity.getModule();
@@ -100,6 +124,7 @@ public class SchemaManagerImpl implements SchemaManager {
         persistenceSchemaManager.handleSchemaStorage(transaction, entity);
         saveOrUpdateEntityInSchemaFile(entity);
     }
+    */
 
     @Override
     public List<EntityField> getEntityReferenceFields(Entity targetEntity) {
@@ -172,28 +197,6 @@ public class SchemaManagerImpl implements SchemaManager {
             RawSchema rawSchema = entry.getValue();
             rawSchema.getRawEntityInterfaces().forEach(model -> action.accept(module, model));
         });
-    }
-
-    public void initializeSchemas(Map<String, Module> modules) throws Exception {
-        this.modules = modules;
-        try (Transaction transaction = transactionManager.openTransaction()) {
-            persistenceSchemaManager.beforeLoadSchema(modules, transaction);
-            loadModuleSchemas(modules.values());
-            Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap = loadModuleRecords(modules.values());
-            this.entities = checkSchemasAndCreateObjectEntities(schemaRawRecordsMap);
-            Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
-                    .flatMap(m -> m.entrySet().stream())
-                    .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
-
-            persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
-
-            // entity records for entity, field / core entities
-            Map<String, List<EntityRecord>> fieldRecordsByEntityName = handleSchemasEntityRecords(entities.values(), transaction);
-
-            createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
-            // setDefaultsForFields(fieldRecordsByEntityName, transaction);
-            transaction.commit();
-        }
     }
 
     // TODO capire come gestire i default per i valueStragy
