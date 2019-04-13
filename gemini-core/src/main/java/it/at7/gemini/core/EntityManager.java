@@ -34,6 +34,8 @@ public interface EntityManager {
 
     EntityRecord delete(Entity e, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
 
+    EntityRecord delete(Entity e, UUID uuid) throws GeminiException;
+
     default EntityRecord get(EntityRecord entityRecord) throws GeminiException {
         return get(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
     }

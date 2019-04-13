@@ -209,9 +209,14 @@ public class RestAPIController {
         }
     }
 
-    private EntityRecord handleDeleteRecord(Entity e, String... logicalKey) throws GeminiException {
-        List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
-        return entityManager.delete(e, logicalKeyValues);
+    private EntityRecord handleDeleteRecord(Entity entity, String... logicalKey) throws GeminiException {
+        try {
+            UUID uuid = UUID.fromString(logicalKey[0]);
+            return entityManager.delete(entity, uuid);
+        } catch (IllegalArgumentException e1) {
+            List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(entity, logicalKey);
+            return entityManager.delete(entity, logicalKeyValues);
+        }
     }
 
     private EntityRecord handleGetRecord(Entity e, String... logicalKey) throws GeminiException {

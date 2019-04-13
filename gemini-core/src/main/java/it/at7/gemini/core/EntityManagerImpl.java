@@ -96,6 +96,15 @@ public class EntityManagerImpl implements EntityManager {
         });
     }
 
+
+    @Override
+    public EntityRecord delete(Entity entity, UUID uuid) throws GeminiException {
+        checkEnabledState();
+        return transactionManager.executeInSingleTrasaction(transaction -> {
+            return delete(entity, uuid, transaction);
+        });
+    }
+
     @Override
     public EntityRecord get(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException {
         checkEnabledState();
@@ -195,13 +204,25 @@ public class EntityManagerImpl implements EntityManager {
         assertDynamicSchema(entity);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
-            EntityRecord persistedRecord = persistedRecordOpt.get();
-            // // TODO enable when dynamic schema -- handleDeleteSchemaCoreEntities(persistedRecord, transaction);
-            handleDeleteResolution(persistedRecord, transaction);
-            persistenceEntityManager.deleteEntityRecordByID(persistedRecord, transaction);
-            return persistedRecord;
+            return deleteInner(transaction, persistedRecordOpt.get());
         }
         throw EntityRecordException.LK_NOTFOUND(entity, logicalKey);
+    }
+
+    private EntityRecord delete(Entity entity, UUID uuid, Transaction transaction) throws GeminiException {
+        assertDynamicSchema(entity);
+        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(entity, uuid, transaction);
+        if (persistedRecordOpt.isPresent()) {
+            return deleteInner(transaction, persistedRecordOpt.get());
+        }
+        throw EntityRecordException.UUID_NOTFOUND(entity, uuid);
+    }
+
+    private EntityRecord deleteInner(Transaction transaction, EntityRecord persistedRecord) throws GeminiException {
+        // // TODO enable when dynamic schema -- handleDeleteSchemaCoreEntities(persistedRecord, transaction);
+        handleDeleteResolution(persistedRecord, transaction);
+        persistenceEntityManager.deleteEntityRecordByID(persistedRecord, transaction);
+        return persistedRecord;
     }
 
     private EntityField getEntityFieldFromRecord(EntityRecord record) throws FieldException {
