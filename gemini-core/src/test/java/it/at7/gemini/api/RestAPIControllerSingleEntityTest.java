@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static it.at7.gemini.api.ApiUtility.GEMINI_DATA_TYPE;
-import static it.at7.gemini.api.RestAPIController.GEMINI_HEADER;
+import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;

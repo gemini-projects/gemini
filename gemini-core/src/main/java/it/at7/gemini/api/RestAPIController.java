@@ -30,8 +30,6 @@ import static it.at7.gemini.api.ApiUtility.*;
 @RequestMapping("/api/{entity}")
 public class RestAPIController {
     public static final String SEARCH_PARAMETER = "search";
-    public static final String GEMINI_HEADER = "Gemini";
-
 
     private EntityManager entityManager;
 

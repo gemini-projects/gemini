@@ -22,6 +22,7 @@ public class APIExceptionHandlerController {
                 httpStatus = HttpStatus.CONFLICT;
                 break;
             case LK_NOTFOUND:
+            case UUID_NOTFOUND:
             case INSERTED_RECORD_NOT_FOUND:
                 httpStatus = HttpStatus.NOT_FOUND;
                 break;

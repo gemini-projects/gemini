@@ -43,6 +43,7 @@ public abstract class UnitTestBase {
         ConfigurableApplicationContext parent = (ConfigurableApplicationContext) webApp.getParent();
         parent.close();
         webApp.close();
+        contextInitialized = false;
     }
 
     public void setupWebMockMvc(ConfigurableApplicationContext wApp) {

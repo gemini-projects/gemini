@@ -3,6 +3,7 @@ package it.at7.gemini.api;
 import java.util.List;
 
 public class ApiUtility {
+    public static final String GEMINI_HEADER = "Gemini";
     public static final String GEMINI_SIMPLE_DATA_TYPE = "gemini.api.nometa";
     public static final String GEMINI_DATA_TYPE = "gemini.api";
 
