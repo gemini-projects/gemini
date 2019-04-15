@@ -24,7 +24,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
 
     @Test
     public void n1_putIfAbsent() throws GeminiException {
-        // put withGeminiSearchString a simple logical key (string) -- others values are default
+        // put with Gemini a simple logical key (string) -- others values are default
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         testDefaulValues(testEntity, "logKey");

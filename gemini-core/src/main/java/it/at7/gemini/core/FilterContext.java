@@ -1,12 +1,20 @@
 package it.at7.gemini.core;
 
 public class FilterContext {
-    private final String searchString;
-    private final SearchType searchType;
+    private String searchString;
+    private SearchType searchType;
+    private int limit;
 
-    public FilterContext(SearchType searchType, String searchString) {
+    public FilterContext(SearchType searchType, int limit) {
+        this.searchString = "";
+        this.searchType = searchType;
+        this.limit = limit;
+    }
+
+    public FilterContext(SearchType searchType, String searchString, int limit) {
         this.searchType = searchType;
         this.searchString = searchString;
+        this.limit = limit;
     }
 
     public String getSearchString() {
@@ -17,48 +25,18 @@ public class FilterContext {
         return searchType;
     }
 
+    public int getLimit() {
+        return limit;
+    }
+
     // ============ static binding to builder ===========
 
     public static FilterContext withGeminiSearchString(String searchString){
-        return new Builder().withGeminiSearchString(searchString).build();
+        return new SearchContextBuilder().withGeminiSearchString(searchString).build();
     }
-
-
-    // ======================
 
     public enum SearchType {
         GEMINI,
         PERSISTENCE
     }
-
-    // ============== BUILDER ========== //
-
-    public static class Builder {
-        private String searchString;
-        private SearchType searchType;
-
-        public Builder() {
-        }
-
-        public Builder withGeminiSearchString(String searchString) {
-            this.searchType = SearchType.GEMINI;
-            this.searchString = searchString;
-            return this;
-        }
-
-        public Builder withPersistenceTypeSearchString(String searchString) {
-            this.searchType = SearchType.PERSISTENCE;
-            this.searchString = searchString;
-            return this;
-        }
-
-        public FilterContext build() {
-            return new FilterContext(searchType, searchString);
-        }
-    }
-
-    public static Builder BUILDER() {
-        return new Builder();
-    }
-
 }

@@ -8,9 +8,16 @@ import org.springframework.stereotype.Service;
 public class ConfigurationService {
 
     @Value("${gemini.dynamicSchema:DISABLED}")
-    String dynamicSchema;
+    private String dynamicSchema;
 
     public DynamicSchema getDynamicSchema() {
         return DynamicSchema.valueOf(this.dynamicSchema);
+    }
+
+    @Value("${gemini.api.list.limit:100}")
+    private int apiListLimit;
+
+    public int getApiListLimit() {
+        return apiListLimit;
     }
 }

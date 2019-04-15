@@ -13,11 +13,11 @@ import static it.at7.gemini.core.EntityResolutionContext.DEFAULT;
 
 public interface PersistenceEntityManager {
 
-    List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFieldValueType, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException;
-
     default List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException {
         return getEntityRecordsMatching(entity, filterFieldValueType, DEFAULT, transaction);
     }
+
+    List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFieldValueType, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException;
 
     List<EntityRecord> getEntityRecordsMatching(Entity entity, FilterContext filterContext, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException;
 

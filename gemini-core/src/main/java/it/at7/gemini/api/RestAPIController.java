@@ -1,9 +1,6 @@
 package it.at7.gemini.api;
 
-import it.at7.gemini.core.EntityManager;
-import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.FilterContext;
-import it.at7.gemini.core.RecordConverters;
+import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.EntityException;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.InvalidRequesException;
@@ -29,13 +26,14 @@ import static it.at7.gemini.api.ApiUtility.*;
 @RestController
 @RequestMapping("/api/{entity}")
 public class RestAPIController {
-    public static final String SEARCH_PARAMETER = "search";
 
     private EntityManager entityManager;
+    private ConfigurationService configurationService;
 
     @Autowired
-    public RestAPIController(EntityManager entityManager) {
+    public RestAPIController(EntityManager entityManager, ConfigurationService configurationService) {
         this.entityManager = entityManager;
+        this.configurationService = configurationService;
     }
 
 
@@ -137,20 +135,13 @@ public class RestAPIController {
 
 
     private GeminiWrappers.EntityRecordsList handleGetEntityList(Entity e, Map<String, String[]> parameters) throws GeminiException {
-        String searchString = getSearchFromParameters(parameters.get(SEARCH_PARAMETER));
-        FilterContext filterContext = FilterContext.BUILDER()
-                .withGeminiSearchString(searchString)
+        FilterContext filterContext = new SearchContextBuilder(configurationService)
+                .fromParameters(parameters)
                 .build();
         List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterContext);
         return GeminiWrappers.EntityRecordsList.of(recordList);
     }
 
-    private String getSearchFromParameters(String[] searchParams) {
-        if (searchParams != null && searchParams.length > 0) {
-            return searchParams[0]; // only the first supporterd
-        }
-        return "";
-    }
 
     private Object handleInsertRecord(Entity e, List<String> geminiHeader, Object body) throws GeminiException {
         if (geminiDataType(geminiHeader)) {

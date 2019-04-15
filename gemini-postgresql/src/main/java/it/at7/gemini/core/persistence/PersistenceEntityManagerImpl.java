@@ -53,7 +53,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         record.setUUID(getUUIDforEntityRecord(record));
         QueryWithParams queryWithParams = makeInsertQuery(record, transaction);
         try {
-            long recordId = transactionImpl.executeInsert(queryWithParams.sql, queryWithParams.params);
+            long recordId = transactionImpl.executeInsert(queryWithParams.getSql(), queryWithParams.getParams());
             Optional<EntityRecord> insertedRecord = getEntityRecordById(record.getEntity(), recordId, transactionImpl);
             checkInsertedRecord(recordId, record, insertedRecord);
             return insertedRecord.get();
@@ -73,7 +73,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         try {
             record.setUUID(getUUIDforEntityRecord(record));
             QueryWithParams queryWithParams = makeModifyQueryFromID(record, transaction);
-            transactionImpl.executeUpdate(queryWithParams.sql, queryWithParams.params);
+            transactionImpl.executeUpdate(queryWithParams.getSql(), queryWithParams.getParams());
             Optional<EntityRecord> recordById = getEntityRecordById(record.getEntity(), (long) id, transactionImpl);
             assert recordById.isPresent();
             return recordById.get();
@@ -91,7 +91,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
         try {
             QueryWithParams queryWithParams = makeDeleteQueryByID(record, transaction);
-            transactionImpl.executeUpdate(queryWithParams.sql, null);
+            transactionImpl.executeUpdate(queryWithParams.getSql(), null);
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
         }
@@ -133,7 +133,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         Set<EntityRecord.EntityFieldValue> filter = convertToEntityFieldValues(entity, filterFielValue);
         try {
             QueryWithParams queryWithParams = makeSelectQueryFilteringFiledValue(entity, filter, transaction);
-            return transactionImpl.executeQuery(queryWithParams.sql, queryWithParams.params, resultSet -> {
+            return transactionImpl.executeQuery(queryWithParams.getSql(), queryWithParams.getParams(), resultSet -> {
                 return fromResultSetToEntityRecord(resultSet, entity, resolutionContext, transaction);
             });
         } catch (SQLException e) {
@@ -146,8 +146,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         try {
             QueryWithParams query = createSelectQueryFor(entity);
-            addFilterRequestTo(query, filterContext, entity);
-            return transactionImpl.executeQuery(query.sql, query.params, resultSet -> {
+            addSearchRequestTo(query, filterContext, entity);
+            addLimitTo(query, filterContext, entity);
+            return transactionImpl.executeQuery(query.getSql(), query.getParams(), resultSet -> {
                 return fromResultSetToEntityRecord(resultSet, entity, resolutionContext, transaction);
             });
         } catch (SQLException e) {
@@ -180,7 +181,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private Optional<EntityRecord> executeOptionalEntityRecordQuery(Entity entity, TransactionImpl transactionImpl, QueryWithParams query) throws SQLException, GeminiException {
-        return transactionImpl.executeQuery(query.sql, query.params, resultSet -> {
+        return transactionImpl.executeQuery(query.getSql(), query.getParams(), resultSet -> {
             List<EntityRecord> entityRecords = fromResultSetToEntityRecord(resultSet, entity, null, transactionImpl);
             assert entityRecords.size() <= 1;
             return entityRecords.size() == 0 ? Optional.empty() : Optional.of(entityRecords.get(0));
@@ -188,14 +189,14 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private void addIdCondition(Entity entity, long recordId, QueryWithParams query) {
-        query.sql += String.format("WHERE %s.%s = %d", entity.getName().toUpperCase(), entity.getIdEntityField().getName(), recordId);
+        query.addToSql(String.format("WHERE %s.%s = %d", entity.getName().toUpperCase(), entity.getIdEntityField().getName(), recordId));
     }
 
     private void addUUIDCondition(Entity entity, UUID uuid, QueryWithParams query) {
-        query.sql += String.format("WHERE %s.%s = '%s'", entity.getName().toUpperCase(), Field.UUID_NAME, uuid.toString());
+        query.addToSql(String.format("WHERE %s.%s = '%s'", entity.getName().toUpperCase(), Field.UUID_NAME, uuid.toString()));
     }
 
-    private void addFilterRequestTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
+    private void addSearchRequestTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
         String sqlFilter = "";
         FilterContext.SearchType searchType = filterContext.getSearchType();
         if (searchType == FilterContext.SearchType.GEMINI && !filterContext.getSearchString().isEmpty()) {
@@ -205,7 +206,22 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         if (searchType == FilterContext.SearchType.PERSISTENCE) {
             sqlFilter += " WHERE " + filterContext.getSearchString();
         }
-        query.sql += sqlFilter;
+        query.addToSql(sqlFilter);
+    }
+
+    private void addLimitTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
+        if (filterContext.getLimit() > 0) {
+            // TODO add updated before order by (if order by is not already provided)
+            Entity.LogicalKey logicalKey = entity.getLogicalKey();
+            StringJoiner sj = new StringJoiner(", ");
+            for (EntityField field : logicalKey.getLogicalKeyList()) {
+                sj.add(field.getName());
+            }
+            if (sj.length() > 0) {
+                query.addToSql(" ORDER BY " + sj.toString());
+            }
+            query.addToSql(String.format(" LIMIT %d", filterContext.getLimit()));
+        }
     }
 
     private String createSelectQuerySQLFor(Entity entity) {
@@ -508,8 +524,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return new QueryWithParams(sql, params);
     }
 
-    private String handleSingleColumnSelectBasicType(String entityName, Map<String, Object> params, DynamicRecord.FieldValue fieldValue, Transaction transaction) throws
-            SQLException, GeminiException {
+    private String handleSingleColumnSelectBasicType(String entityName, Map<String, Object> params, DynamicRecord.FieldValue fieldValue, Transaction transaction) throws SQLException, GeminiException {
         String colName = fieldValue.getField().getName();
         Object value = fromFieldToPrimitiveValue(fieldValue, /* TODO  */ Map.of(), transaction);
         String res = String.format(" %s.%s = :%2$s ", entityName, colName);
@@ -728,17 +743,30 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     class QueryWithParams {
-        String sql;
-        Map<String, Object> params;
+        private StringBuilder sqlBuilder;
+        private Map<String, Object> params;
 
         public QueryWithParams(String sql) {
-            this.sql = sql;
+            this.sqlBuilder = new StringBuilder(sql);
             this.params = new HashMap<>();
         }
 
         public QueryWithParams(String sql, Map<String, Object> params) {
-            this.sql = sql;
+            this.sqlBuilder = new StringBuilder(sql);
             this.params = params;
+        }
+
+        public QueryWithParams addToSql(String sql) {
+            sqlBuilder.append(sql);
+            return this;
+        }
+
+        public String getSql() {
+            return sqlBuilder.toString();
+        }
+
+        public Map<String, Object> getParams() {
+            return params;
         }
     }
 }

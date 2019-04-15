@@ -15,7 +15,7 @@ import java.util.Optional;
 public abstract class FilterEntityManagerAbsTest {
 
     @Test
-    public void n1_testStringFilter() throws GeminiException {
+    public void n1_testStringSearchQuery() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
         Entity fieldEntity = entityManager.getEntity("FIELD");
 
@@ -113,6 +113,18 @@ public abstract class FilterEntityManagerAbsTest {
         Assert.assertTrue(field.isPresent());
 
         // todo other operators ??
+    }
+
+    @Test
+    public void n3_testLimit() throws GeminiException {
+        EntityManager entityManager = Services.getEntityManager();
+        for (int i = 0; i < 20; i++) {
+            EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord(String.format("logKey-%d", i));
+            entityManager.putIfAbsent(entityRecord);
+        }
+        FilterContext filterContext = new FilterContext(FilterContext.SearchType.GEMINI, 10);
+        List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
+        Assert.assertEquals(10, records.size());
     }
 
 }
