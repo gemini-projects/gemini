@@ -4,17 +4,13 @@ public class FilterContext {
     private String searchString;
     private FilterType filterType;
     private int limit;
+    private final int start;
 
-    public FilterContext(FilterType filterType, int limit) {
-        this.searchString = "";
-        this.filterType = filterType;
-        this.limit = limit;
-    }
-
-    public FilterContext(FilterType filterType, String searchString, int limit) {
+    public FilterContext(FilterType filterType, String searchString, int limit, int start) {
         this.filterType = filterType;
         this.searchString = searchString;
         this.limit = limit;
+        this.start = start;
     }
 
     public String getSearchString() {
@@ -27,6 +23,10 @@ public class FilterContext {
 
     public int getLimit() {
         return limit;
+    }
+
+    public int getStart() {
+        return start;
     }
 
     // ============ static binding to builder ===========

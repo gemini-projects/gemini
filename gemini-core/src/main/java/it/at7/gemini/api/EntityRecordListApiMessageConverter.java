@@ -14,6 +14,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import static it.at7.gemini.core.FilterContextBuilder.LIMIT_PARAMETER;
+import static it.at7.gemini.core.FilterContextBuilder.START_PARAMETER;
 
 public class EntityRecordListApiMessageConverter extends MappingJackson2HttpMessageConverter {
 
@@ -43,6 +44,9 @@ public class EntityRecordListApiMessageConverter extends MappingJackson2HttpMess
         FilterContext filterContext = record.getFilterContext();
         if (filterContext.getLimit() > 0) {
             meta.put(LIMIT_PARAMETER, filterContext.getLimit());
+        }
+        if (filterContext.getStart() > 0) {
+            meta.put(START_PARAMETER, filterContext.getStart());
         }
         return meta;
     }

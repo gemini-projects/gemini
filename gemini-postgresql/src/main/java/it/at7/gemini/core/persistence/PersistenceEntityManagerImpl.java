@@ -146,8 +146,10 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         try {
             QueryWithParams query = createSelectQueryFor(entity);
-            addSearchRequestTo(query, filterContext, entity);
-            addLimitTo(query, filterContext, entity);
+            addFilter(query, filterContext, entity);
+            addOrderBy(query, filterContext, entity);
+            addLimit(query, filterContext);
+            addOffset(query, filterContext);
             return transactionImpl.executeQuery(query.getSql(), query.getParams(), resultSet -> {
                 return fromResultSetToEntityRecord(resultSet, entity, resolutionContext, transaction);
             });
@@ -196,7 +198,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         query.addToSql(String.format("WHERE %s.%s = '%s'", entity.getName().toUpperCase(), Field.UUID_NAME, uuid.toString()));
     }
 
-    private void addSearchRequestTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
+    private void addFilter(QueryWithParams query, FilterContext filterContext, Entity entity) {
         String sqlFilter = "";
         FilterContext.FilterType filterType = filterContext.getFilterType();
         if (filterType == FilterContext.FilterType.GEMINI && !filterContext.getSearchString().isEmpty()) {
@@ -209,18 +211,27 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         query.addToSql(sqlFilter);
     }
 
-    private void addLimitTo(QueryWithParams query, FilterContext filterContext, Entity entity) {
+    private void addOrderBy(QueryWithParams query, FilterContext filterContext, Entity entity) {
+        // TODO add updated before order by (if order by is not already provided)
+        Entity.LogicalKey logicalKey = entity.getLogicalKey();
+        StringJoiner sj = new StringJoiner(", ");
+        for (EntityField field : logicalKey.getLogicalKeyList()) {
+            sj.add(field.getName());
+        }
+        if (sj.length() > 0) {
+            query.addToSql(" ORDER BY " + sj.toString());
+        }
+    }
+
+    private void addLimit(QueryWithParams query, FilterContext filterContext) {
         if (filterContext.getLimit() > 0) {
-            // TODO add updated before order by (if order by is not already provided)
-            Entity.LogicalKey logicalKey = entity.getLogicalKey();
-            StringJoiner sj = new StringJoiner(", ");
-            for (EntityField field : logicalKey.getLogicalKeyList()) {
-                sj.add(field.getName());
-            }
-            if (sj.length() > 0) {
-                query.addToSql(" ORDER BY " + sj.toString());
-            }
             query.addToSql(String.format(" LIMIT %d", filterContext.getLimit()));
+        }
+    }
+
+    private void addOffset(QueryWithParams query, FilterContext filterContext) {
+        if (filterContext.getStart() > 0) {
+            query.addToSql(String.format(" OFFSET %d", filterContext.getStart()));
         }
     }
 

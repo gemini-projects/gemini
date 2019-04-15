@@ -18,6 +18,7 @@ import java.util.Map;
 import static it.at7.gemini.api.ApiUtility.GEMINI_DATA_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
 import static it.at7.gemini.core.FilterContextBuilder.LIMIT_PARAMETER;
+import static it.at7.gemini.core.FilterContextBuilder.START_PARAMETER;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -43,7 +44,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
                 });
         Assert.assertEquals(10, listRecord.size());
 
-        // with gemini API Data Type
+        // with gemini API Data Type - default limit
         mockMvc.perform(get(API_PATH + "/TestDataType")
                 .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
                 .contentType(APPLICATION_JSON)
@@ -92,6 +93,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
                 });
         Assert.assertEquals(30, listRecord.size());
 
+        // gemini Api Meta - have limit
         mockMvc.perform(get(API_PATH + "/TestDataType")
                 .param(LIMIT_PARAMETER, "30")
                 .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
@@ -118,7 +120,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
         // the sum of the previously inserted records
         Assert.assertEquals(160, listRecord.size());
 
-        // no limit
+        // gemini Api Meta - no limit
         mockMvc.perform(get(API_PATH + "/TestDataType")
                 .param(LIMIT_PARAMETER, "0")
                 .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
@@ -129,5 +131,34 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
                         .json("{'meta':{}}"));
     }
 
+
+    @Test
+    public void n5_getLisLimitPlusStart() throws Exception {
+        MvcResult result = mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(LIMIT_PARAMETER, "50")
+                .param(START_PARAMETER, "150")
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        String stringResponseBody = result.getResponse().getContentAsString();
+        List<Map<String, Object>> listRecord = new ObjectMapper().readValue(stringResponseBody,
+                new TypeReference<List<Map<String, Object>>>() {
+                });
+
+        // the sum of the previously inserted records - from 150 to 160 are 10
+        Assert.assertEquals(10, listRecord.size());
+
+        // gemini Api Meta
+        mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(LIMIT_PARAMETER, "50")
+                .param(START_PARAMETER, "150")
+                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .json("{'meta':{'limit': 50, 'start': 150}}"));
+    }
 
 }

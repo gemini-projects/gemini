@@ -122,9 +122,20 @@ public abstract class FilterEntityManagerAbsTest {
             EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord(String.format("logKey-%d", i));
             entityManager.putIfAbsent(entityRecord);
         }
-        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, 10);
+        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0);
         List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
         Assert.assertEquals(10, records.size());
+
+    }
+
+    @Test
+    public void n4_testStart() throws GeminiException {
+        EntityManager entityManager = Services.getEntityManager();
+        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 15);
+        List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
+
+        // 6 because we have inserted 20 in test n3 and 1 in n1
+        Assert.assertEquals(6, records.size());
     }
 
 }
