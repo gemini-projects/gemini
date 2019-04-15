@@ -1,7 +1,9 @@
 package it.at7.gemini.api;
 
 import it.at7.gemini.core.EntityRecord;
+import it.at7.gemini.core.FilterContext;
 import it.at7.gemini.core.RecordConverters;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotWritableException;
@@ -10,6 +12,8 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
+
+import static it.at7.gemini.core.FilterContextBuilder.LIMIT_PARAMETER;
 
 public class EntityRecordListApiMessageConverter extends MappingJackson2HttpMessageConverter {
 
@@ -26,19 +30,28 @@ public class EntityRecordListApiMessageConverter extends MappingJackson2HttpMess
     @Override
     protected void writeInternal(Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         GeminiWrappers.EntityRecordListApiType record = GeminiWrappers.EntityRecordListApiType.class.cast(object);
+        GeminiWrappers.EntityRecordsList entityRecordList = record.getEntityRecordList(); // unwrap
 
-        GeminiWrappers.EntityRecordsList entityRecordList = record.getEntityRecordList();
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("meta", getMeta(entityRecordList));
+        responseBody.put("data", getData(entityRecordList));
+        super.writeInternal(responseBody, type, outputMessage);
+    }
 
-        Map<String, Object> results = new HashMap<>();
-        results.put("meta", "__TODOOOO___meta_data_here____from entity Record List");
+    private Map<String, Object> getMeta(GeminiWrappers.EntityRecordsList record) {
+        Map<String, Object> meta = new HashMap<>();
+        FilterContext filterContext = record.getFilterContext();
+        if (filterContext.getLimit() > 0) {
+            meta.put(LIMIT_PARAMETER, filterContext.getLimit());
+        }
+        return meta;
+    }
 
+    private List<Map<String, Object>> getData(GeminiWrappers.EntityRecordsList entityRecordList) {
         List<Map<String, Object>> dataList = new ArrayList<>();
-        //entityRecordList.getRecords();
         for (EntityRecord eRec : entityRecordList.getRecords()) {
             dataList.add(EntityRecordApiTypeMessageConverter.createGeminiApiEntityRecordMap(eRec));
         }
-        results.put("data", dataList);
-        super.writeInternal(results, type, outputMessage);
-
+        return dataList;
     }
 }

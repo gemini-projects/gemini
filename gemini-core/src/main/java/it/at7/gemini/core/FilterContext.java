@@ -2,17 +2,17 @@ package it.at7.gemini.core;
 
 public class FilterContext {
     private String searchString;
-    private SearchType searchType;
+    private FilterType filterType;
     private int limit;
 
-    public FilterContext(SearchType searchType, int limit) {
+    public FilterContext(FilterType filterType, int limit) {
         this.searchString = "";
-        this.searchType = searchType;
+        this.filterType = filterType;
         this.limit = limit;
     }
 
-    public FilterContext(SearchType searchType, String searchString, int limit) {
-        this.searchType = searchType;
+    public FilterContext(FilterType filterType, String searchString, int limit) {
+        this.filterType = filterType;
         this.searchString = searchString;
         this.limit = limit;
     }
@@ -21,8 +21,8 @@ public class FilterContext {
         return searchString;
     }
 
-    public SearchType getSearchType() {
-        return searchType;
+    public FilterType getFilterType() {
+        return filterType;
     }
 
     public int getLimit() {
@@ -32,10 +32,10 @@ public class FilterContext {
     // ============ static binding to builder ===========
 
     public static FilterContext withGeminiSearchString(String searchString){
-        return new SearchContextBuilder().withGeminiSearchString(searchString).build();
+        return new FilterContextBuilder().withGeminiSearchString(searchString).build();
     }
 
-    public enum SearchType {
+    public enum FilterType {
         GEMINI,
         PERSISTENCE
     }

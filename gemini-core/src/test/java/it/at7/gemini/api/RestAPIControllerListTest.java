@@ -6,51 +6,29 @@ import it.at7.gemini.UnitTestBase;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Services;
 import it.at7.gemini.core.entitymanager.TestData;
-import it.at7.gemini.exceptions.GeminiException;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.context.WebApplicationContext;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+import static it.at7.gemini.api.ApiUtility.GEMINI_DATA_TYPE;
+import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
+import static it.at7.gemini.core.FilterContextBuilder.LIMIT_PARAMETER;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class RestAPIControllerListTest extends UnitTestBase {
-/*
-    // TODO ADD PERSISTENCE IMPLEMENTATION
-
-
-    //==== GEMINI TEST PREAMBOLE - WEBAPP APPLICANTION CONTEXT ====/
-    static private MockMvc mockMvc;
-    static ConfigurableApplicationContext webApp;
-
-    @BeforeClass
-    public static void setup() throws SQLException, GeminiException {
-        webApp = setupFullWebAPP(RestAPIControllerSingleEntityTest.class);
-        mockMvc = webAppContextSetup((WebApplicationContext) webApp).build();
-    }
-
-    @AfterClass
-    public static void clean() {
-        ConfigurableApplicationContext parent = (ConfigurableApplicationContext) webApp.getParent();
-        parent.close();
-        webApp.close();
-    }
-    //=============================================================/
 
     @Test
-    public void n1_t() throws Exception {
-        // lets save 1000 entity records
-        for (int i = 1; i <= 1000; i++) {
+    public void n1_getList() throws Exception {
+        // lets save 10 entity records
+        for (int i = 1; i <= 10; i++) {
             EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-" + i);
             Services.getEntityManager().putIfAbsent(entityRecord);
         }
@@ -63,10 +41,93 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
         List<Map<String, Object>> listRecord = new ObjectMapper().readValue(stringResponseBody,
                 new TypeReference<List<Map<String, Object>>>() {
                 });
-        Assert.assertEquals(1000, listRecord.size());
+        Assert.assertEquals(10, listRecord.size());
+
+        // with gemini API Data Type
+        mockMvc.perform(get(API_PATH + "/TestDataType")
+                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .json("{'meta':{'limit': 100}}"));
     }
 
-    */
+    @Test
+    public void n2_getListDefaultLimit() throws Exception {
+        // lets save other 100 records
+        for (int i = 100; i < 200; i++) {
+            EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-" + i);
+            Services.getEntityManager().putIfAbsent(entityRecord);
+        }
+        MvcResult result = mockMvc.perform(get(API_PATH + "/TestDataType")
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        String stringResponseBody = result.getResponse().getContentAsString();
+        List<Map<String, Object>> listRecord = new ObjectMapper().readValue(stringResponseBody,
+                new TypeReference<List<Map<String, Object>>>() {
+                });
+        Assert.assertEquals(100, listRecord.size());
+
+        // no need to check the limit - done in n1
+    }
+
+    @Test
+    public void n3_getListLimitParameter() throws Exception {
+        for (int i = 2000; i < 2050; i++) {
+            EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-" + i);
+            Services.getEntityManager().putIfAbsent(entityRecord);
+        }
+        MvcResult result = mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(LIMIT_PARAMETER, "30")
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        String stringResponseBody = result.getResponse().getContentAsString();
+        List<Map<String, Object>> listRecord = new ObjectMapper().readValue(stringResponseBody,
+                new TypeReference<List<Map<String, Object>>>() {
+                });
+        Assert.assertEquals(30, listRecord.size());
+
+        mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(LIMIT_PARAMETER, "30")
+                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .json("{'meta':{'limit': 30}}"));
+    }
+
+    @Test
+    public void n4_getLisNoLimit() throws Exception {
+        MvcResult result = mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(LIMIT_PARAMETER, "0")
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        String stringResponseBody = result.getResponse().getContentAsString();
+        List<Map<String, Object>> listRecord = new ObjectMapper().readValue(stringResponseBody,
+                new TypeReference<List<Map<String, Object>>>() {
+                });
+
+        // the sum of the previously inserted records
+        Assert.assertEquals(160, listRecord.size());
+
+        // no limit
+        mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(LIMIT_PARAMETER, "0")
+                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .json("{'meta':{}}"));
+    }
 
 
 }

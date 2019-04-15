@@ -122,7 +122,7 @@ public abstract class FilterEntityManagerAbsTest {
             EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord(String.format("logKey-%d", i));
             entityManager.putIfAbsent(entityRecord);
         }
-        FilterContext filterContext = new FilterContext(FilterContext.SearchType.GEMINI, 10);
+        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, 10);
         List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
         Assert.assertEquals(10, records.size());
     }

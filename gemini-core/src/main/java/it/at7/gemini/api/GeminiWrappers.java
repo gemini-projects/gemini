@@ -1,19 +1,34 @@
 package it.at7.gemini.api;
 
 import it.at7.gemini.core.EntityRecord;
+import it.at7.gemini.core.FilterContext;
 
 import java.util.Collection;
 
 class GeminiWrappers {
     public static class EntityRecordsList {
         private Collection<EntityRecord> records;
+        private final FilterContext filterContext;
+
+        public EntityRecordsList(Collection<EntityRecord> records, FilterContext filterContext) {
+            this.records = records;
+            this.filterContext = filterContext;
+        }
 
         public EntityRecordsList(Collection<EntityRecord> records) {
-            this.records = records;
+            this(records, null);
         }
 
         public Collection<EntityRecord> getRecords() {
             return records;
+        }
+
+        public FilterContext getFilterContext() {
+            return filterContext;
+        }
+
+        public static EntityRecordsList of(Collection<EntityRecord> records, FilterContext filterContext) {
+            return new EntityRecordsList(records, filterContext);
         }
 
         public static EntityRecordsList of(Collection<EntityRecord> records) {
@@ -28,7 +43,7 @@ class GeminiWrappers {
             this.record = record;
         }
 
-        public EntityRecord get(){
+        public EntityRecord get() {
             return record;
         }
 

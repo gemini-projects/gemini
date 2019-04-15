@@ -135,11 +135,11 @@ public class RestAPIController {
 
 
     private GeminiWrappers.EntityRecordsList handleGetEntityList(Entity e, Map<String, String[]> parameters) throws GeminiException {
-        FilterContext filterContext = new SearchContextBuilder(configurationService)
+        FilterContext filterContext = new FilterContextBuilder(configurationService)
                 .fromParameters(parameters)
                 .build();
         List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterContext);
-        return GeminiWrappers.EntityRecordsList.of(recordList);
+        return GeminiWrappers.EntityRecordsList.of(recordList, filterContext);
     }
 
 
