@@ -57,9 +57,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             Optional<EntityRecord> insertedRecord = getEntityRecordById(record.getEntity(), recordId, transactionImpl);
             checkInsertedRecord(recordId, record, insertedRecord);
             return insertedRecord.get();
-        } catch (SQLException e) {
+        } catch (GeminiException e) {
             logger.error("createNewEntityRecord SQL Exception", e);
-            throw GeminiGenericException.wrap(e);
+            throw e;
         }
     }
 
@@ -70,16 +70,12 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         if (id == null) {
             throw IdFieldException.ID_FIELD_REQUIRED("update", record);
         }
-        try {
-            record.setUUID(getUUIDforEntityRecord(record));
-            QueryWithParams queryWithParams = makeModifyQueryFromID(record, transaction);
-            transactionImpl.executeUpdate(queryWithParams.getSql(), queryWithParams.getParams());
-            Optional<EntityRecord> recordById = getEntityRecordById(record.getEntity(), (long) id, transactionImpl);
-            assert recordById.isPresent();
-            return recordById.get();
-        } catch (SQLException e) {
-            throw GeminiGenericException.wrap(e);
-        }
+        record.setUUID(getUUIDforEntityRecord(record));
+        QueryWithParams queryWithParams = makeModifyQueryFromID(record, transaction);
+        transactionImpl.executeUpdate(queryWithParams.getSql(), queryWithParams.getParams());
+        Optional<EntityRecord> recordById = getEntityRecordById(record.getEntity(), (long) id, transactionImpl);
+        assert recordById.isPresent();
+        return recordById.get();
     }
 
     @Override
@@ -89,12 +85,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         if (id == null) {
             throw IdFieldException.ID_FIELD_REQUIRED("delete", record);
         }
-        try {
-            QueryWithParams queryWithParams = makeDeleteQueryByID(record, transaction);
-            transactionImpl.executeUpdate(queryWithParams.getSql(), null);
-        } catch (SQLException e) {
-            throw GeminiGenericException.wrap(e);
-        }
+        QueryWithParams queryWithParams = makeDeleteQueryByID(record, transaction);
+        transactionImpl.executeUpdate(queryWithParams.getSql(), null);
     }
 
     @Override

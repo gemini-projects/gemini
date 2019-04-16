@@ -14,15 +14,4 @@ public interface Transaction extends AutoCloseable{
 
     void rollback() throws GeminiException;
 
-
-    @FunctionalInterface
-    interface CallbackWithResultThrowingSqlException<R, T> {
-        R accept(T t) throws SQLException, GeminiException;
-    }
-
-    @FunctionalInterface
-    interface CallbackThrowingSqlException<T> {
-        void accept(T t) throws SQLException;
-    }
-
 }

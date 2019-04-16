@@ -81,47 +81,30 @@ public class TransactionImpl implements Transaction {
         }
     }
 
-    public int executeUpdate(String sql) throws SQLException {
+    public int executeUpdate(String sql) throws GeminiException {
         return executeUpdate(sql, null);
     }
 
-    public int executeUpdate(String sql, @Nullable Map<String, Object> parameters) throws SQLException {
-        try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
-            try {
-                return ps.executeUpdate();
-            } catch (SQLException e) {
-                logger.error(ps.unwrap(PreparedStatement.class).toString());
-                throw e;
-            }
-        }
+    public int executeUpdate(String sql, @Nullable Map<String, Object> parameters) throws GeminiException {
+        return createStatement(sql, parameters, PreparedStatement::executeUpdate);
     }
 
-    public long executeInsert(String sql, @Nullable Map<String, Object> parameters) throws SQLException {
-        try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
-            try {
-                ps.executeUpdate();
-                ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    return rs.getLong(1);
-                }
-            } catch (SQLException e) {
-                logger.error(ps.unwrap(PreparedStatement.class).toString());
-                throw e;
+    public long executeInsert(String sql, @Nullable Map<String, Object> parameters) throws GeminiException {
+        return createStatement(sql, parameters, ps -> {
+            ps.executeUpdate();
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getLong(1);
             }
-        }
-        return 0;
+            return 0L;
+        });
     }
 
     public <R> R executeQuery(String sql, @Nullable Map<String, Object> parameters, CallbackWithResultThrowingSqlException<R, ResultSet> callback) throws SQLException, GeminiException {
-        try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
-            try {
-                ResultSet resultSet = ps.executeQuery();
-                return callback.accept(resultSet);
-            } catch (SQLException e) {
-                logger.error(ps.unwrap(PreparedStatement.class).toString());
-                throw e;
-            }
-        }
+        return createStatement(sql, parameters, ps -> {
+            ResultSet resultSet = ps.executeQuery();
+            return callback.accept(resultSet);
+        });
     }
 
     public void executeQuery(String sql, CallbackThrowingSqlException<ResultSet> callback) throws GeminiException, SQLException {
@@ -129,15 +112,10 @@ public class TransactionImpl implements Transaction {
     }
 
     public void executeQuery(String sql, @Nullable Map<String, Object> parameters, CallbackThrowingSqlException<ResultSet> callback) throws GeminiException, SQLException {
-        try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
-            try {
-                ResultSet resultSet = ps.executeQuery();
-                callback.accept(resultSet);
-            } catch (SQLException e) {
-                logger.error(ps.unwrap(PreparedStatement.class).toString());
-                throw e;
-            }
-        }
+        createStatementVoid(sql, parameters, ps -> {
+            ResultSet resultSet = ps.executeQuery();
+            callback.accept(resultSet);
+        });
     }
 
     private PreparedStatement getPreparedStatement(String sql, @Nullable Map<String, ?> parameters) throws SQLException {
@@ -154,15 +132,46 @@ public class TransactionImpl implements Transaction {
         return preparedStatement;
     }
 
+    private <R> R createStatement(String sql, Map<String, Object> parameters, PsAccept<R> psa) throws GeminiException {
+        try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
+            try {
+                return psa.accept(ps);
+            } catch (SQLException e) {
+                logger.error(ps.unwrap(PreparedStatement.class).toString());
+                throw e;
+            }
+        } catch (SQLException e1) {
+            throw GeminiGenericException.wrap(e1);
+        }
+    }
+
+    private void createStatementVoid(String sql, Map<String, Object> parameters, PsAcceptVoid psv) throws GeminiException {
+        createStatement(sql, parameters, psa -> {
+            psv.accept(psa);
+            return true;
+        });
+    }
+
+
+    // ===== functional utilities
+
+    @FunctionalInterface
+    public interface PsAccept<R> {
+        R accept(PreparedStatement ps) throws SQLException, GeminiException;
+    }
+
+    @FunctionalInterface
+    public interface PsAcceptVoid {
+        void accept(PreparedStatement ps) throws SQLException, GeminiException;
+    }
+
     @FunctionalInterface
     public interface CallbackWithResultThrowingSqlException<R, T> {
-        R accept(T t) throws SQLException, GeminiException;
+        R accept(T t) throws GeminiException, SQLException;
     }
 
     @FunctionalInterface
     public interface CallbackThrowingSqlException<T> {
-        void accept(T t) throws SQLException, GeminiException;
+        void accept(T t) throws GeminiException, SQLException;
     }
-
-
 }

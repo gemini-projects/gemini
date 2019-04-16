@@ -140,13 +140,13 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         }
     }
 
-    private void deleteEntityStorage(Entity entity, Transaction transaction) throws SQLException {
+    private void deleteEntityStorage(Entity entity, Transaction transaction) throws  GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         transactionImpl.executeUpdate(String.format("DROP TABLE IF EXISTS %s", entity.getName()));
     }
 
 
-    private void deleteEntityFieldtorage(EntityField field, Transaction transaction) throws SQLException {
+    private void deleteEntityFieldtorage(EntityField field, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         transactionImpl.executeUpdate(String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s", field.getEntity().getName().toLowerCase(), field.getName().toLowerCase()));
     }
@@ -336,7 +336,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         return resultSet.getBoolean(1);
     }
 
-    private void createPkDomainForModel(String modelName, TransactionImpl transaction) throws SQLException {
+    private void createPkDomainForModel(String modelName, TransactionImpl transaction) throws  GeminiException {
         String domainSql = String.format(
                 "CREATE DOMAIN %s AS %s", pkForeignKeyDomainFromEntity(modelName), "BIGINT");
         transaction.executeUpdate(domainSql);
