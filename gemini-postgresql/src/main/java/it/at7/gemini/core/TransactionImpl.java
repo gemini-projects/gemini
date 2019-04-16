@@ -87,16 +87,26 @@ public class TransactionImpl implements Transaction {
 
     public int executeUpdate(String sql, @Nullable Map<String, Object> parameters) throws SQLException {
         try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
-            return ps.executeUpdate();
+            try {
+                return ps.executeUpdate();
+            } catch (SQLException e) {
+                logger.error(ps.unwrap(PreparedStatement.class).toString());
+                throw e;
+            }
         }
     }
 
     public long executeInsert(String sql, @Nullable Map<String, Object> parameters) throws SQLException {
         try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
-            ps.executeUpdate();
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getLong(1);
+            try {
+                ps.executeUpdate();
+                ResultSet rs = ps.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            } catch (SQLException e) {
+                logger.error(ps.unwrap(PreparedStatement.class).toString());
+                throw e;
             }
         }
         return 0;
@@ -104,8 +114,13 @@ public class TransactionImpl implements Transaction {
 
     public <R> R executeQuery(String sql, @Nullable Map<String, Object> parameters, CallbackWithResultThrowingSqlException<R, ResultSet> callback) throws SQLException, GeminiException {
         try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
-            ResultSet resultSet = ps.executeQuery();
-            return callback.accept(resultSet);
+            try {
+                ResultSet resultSet = ps.executeQuery();
+                return callback.accept(resultSet);
+            } catch (SQLException e) {
+                logger.error(ps.unwrap(PreparedStatement.class).toString());
+                throw e;
+            }
         }
     }
 
@@ -115,8 +130,13 @@ public class TransactionImpl implements Transaction {
 
     public void executeQuery(String sql, @Nullable Map<String, Object> parameters, CallbackThrowingSqlException<ResultSet> callback) throws GeminiException, SQLException {
         try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
-            ResultSet resultSet = ps.executeQuery();
-            callback.accept(resultSet);
+            try {
+                ResultSet resultSet = ps.executeQuery();
+                callback.accept(resultSet);
+            } catch (SQLException e) {
+                logger.error(ps.unwrap(PreparedStatement.class).toString());
+                throw e;
+            }
         }
     }
 
