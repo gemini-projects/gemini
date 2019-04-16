@@ -5,12 +5,14 @@ public class FilterContext {
     private FilterType filterType;
     private int limit;
     private final int start;
+    private final String[] orderBy;
 
-    public FilterContext(FilterType filterType, String searchString, int limit, int start) {
+    public FilterContext(FilterType filterType, String searchString, int limit, int start, String[] orderBy) {
         this.filterType = filterType;
         this.searchString = searchString;
         this.limit = limit;
         this.start = start;
+        this.orderBy = orderBy;
     }
 
     public String getSearchString() {
@@ -27,6 +29,10 @@ public class FilterContext {
 
     public int getStart() {
         return start;
+    }
+
+    public String[] getOrderBy() {
+        return orderBy;
     }
 
     // ============ static binding to builder ===========

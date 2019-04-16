@@ -204,14 +204,28 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private void addOrderBy(QueryWithParams query, FilterContext filterContext, Entity entity) {
-        // TODO add updated before order by (if order by is not already provided)
-        Entity.LogicalKey logicalKey = entity.getLogicalKey();
-        StringJoiner sj = new StringJoiner(", ");
-        for (EntityField field : logicalKey.getLogicalKeyList()) {
-            sj.add(field.getName());
-        }
-        if (sj.length() > 0) {
-            query.addToSql(" ORDER BY " + sj.toString());
+        String[] orderBy = filterContext.getOrderBy();
+        if (orderBy != null && orderBy.length > 0) {
+            StringJoiner oby = new StringJoiner(", ");
+            for (String obElem : orderBy) {
+                if (obElem.charAt(0) == '-') {
+                    oby.add(obElem.substring(1) + " DESC");
+                } else {
+                    oby.add(obElem + " ASC");
+                }
+            }
+            query.addToSql(" ORDER BY " + oby.toString());
+        } else {
+            // deterministic order by API
+            // TODO need order by update
+            Entity.LogicalKey logicalKey = entity.getLogicalKey();
+            StringJoiner sj = new StringJoiner(", ");
+            for (EntityField field : logicalKey.getLogicalKeyList()) {
+                sj.add(field.getName());
+            }
+            if (sj.length() > 0) {
+                query.addToSql(" ORDER BY " + sj.toString());
+            }
         }
     }
 

@@ -17,8 +17,7 @@ import java.util.Map;
 
 import static it.at7.gemini.api.ApiUtility.GEMINI_DATA_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
-import static it.at7.gemini.core.FilterContextBuilder.LIMIT_PARAMETER;
-import static it.at7.gemini.core.FilterContextBuilder.START_PARAMETER;
+import static it.at7.gemini.core.FilterContextBuilder.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -79,6 +78,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
     public void n3_getListLimitParameter() throws Exception {
         for (int i = 2000; i < 2050; i++) {
             EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-" + i);
+            entityRecord.put("numberLong", i);
             Services.getEntityManager().putIfAbsent(entityRecord);
         }
         MvcResult result = mockMvc.perform(get(API_PATH + "/TestDataType")
@@ -159,6 +159,63 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'meta':{'limit': 50, 'start': 150}}"));
+    }
+
+    @Test
+    public void n5_getLisLimitPlusStartAndOrderBy() throws Exception {
+
+        // DESCENDING
+        MvcResult result = mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(ORDER_BY_PARAMETER, "-numberLong")
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        String stringResponseBody = result.getResponse().getContentAsString();
+        List<Map<String, Object>> listRecord = new ObjectMapper().readValue(stringResponseBody,
+                new TypeReference<List<Map<String, Object>>>() {
+                });
+        // the default limit
+        Assert.assertEquals(100, listRecord.size());
+        for (int i = 0; i < 50; i++) {
+            Map<String, Object> theRec = listRecord.get(i);
+            int numberLong = (int) theRec.get("numberLong");
+            Assert.assertEquals(2049 - i, numberLong);
+        }
+
+
+        // ASCENDING
+        result = mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(ORDER_BY_PARAMETER, "numberLong")
+                .param(LIMIT_PARAMETER, "0")
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        stringResponseBody = result.getResponse().getContentAsString();
+        listRecord = new ObjectMapper().readValue(stringResponseBody,
+                new TypeReference<List<Map<String, Object>>>() {
+                });
+        // no limit
+        Assert.assertEquals(160, listRecord.size());
+        for (int i = 110; i < 160; i++) {
+            Map<String, Object> theRec = listRecord.get(i);
+            int numberLong = (int) theRec.get("numberLong");
+            // from 2000 to 2049 (inserted in n3)
+            Assert.assertEquals(2000 + i - 110, numberLong);
+        }
+
+
+/*    // TODO      // gemini Api Meta
+        mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(LIMIT_PARAMETER, "50")
+                .param(START_PARAMETER, "150")
+                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .json("{'meta':{'limit': 50, 'start': 150}}")); */
     }
 
 }

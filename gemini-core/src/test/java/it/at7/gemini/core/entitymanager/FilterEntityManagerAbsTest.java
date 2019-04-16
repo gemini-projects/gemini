@@ -120,9 +120,10 @@ public abstract class FilterEntityManagerAbsTest {
         EntityManager entityManager = Services.getEntityManager();
         for (int i = 0; i < 20; i++) {
             EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord(String.format("logKey-%d", i));
+            entityRecord.put("numberLong", 100 - i);
             entityManager.putIfAbsent(entityRecord);
         }
-        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0);
+        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0, null);
         List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
         Assert.assertEquals(10, records.size());
 
@@ -131,11 +132,24 @@ public abstract class FilterEntityManagerAbsTest {
     @Test
     public void n4_testStart() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
-        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 15);
+        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 15, null);
         List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
 
         // 6 because we have inserted 20 in test n3 and 1 in n1
         Assert.assertEquals(6, records.size());
     }
 
+    @Test
+    public void n5_testOrderBy() throws GeminiException {
+        EntityManager entityManager = Services.getEntityManager();
+        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 0, 0, new String[]{"-numberLong"});
+        List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
+
+        for (int i = 0; i < 20; i++) {
+            // inserted in n3
+            Assert.assertEquals((long) 100 - i, (long) records.get(i).get("numberLong", Long.class));
+        }
+        // in n1 we have inserted 10 value
+        Assert.assertEquals(10, (long) records.get(20).get("numberLong", Long.class));
+    }
 }

@@ -6,6 +6,9 @@ public class FilterContextBuilder {
     public static final String SEARCH_PARAMETER = "search";
     public static final String LIMIT_PARAMETER = "limit";
     public static final String START_PARAMETER = "start";
+    public static final String ORDER_BY_PARAMETER = "orderBy";
+
+    private static final String ORDER_BY_SEPARATOR = ",";
 
     private final ConfigurationService configurationService;
 
@@ -13,6 +16,7 @@ public class FilterContextBuilder {
     private FilterContext.FilterType filterType;
     private int limit;
     private int start;
+    private String[] orderBy;
 
     public FilterContextBuilder() {
         this.configurationService = null;
@@ -26,6 +30,7 @@ public class FilterContextBuilder {
         withGeminiSearchString(getSearchFromParameters(parameters.get(SEARCH_PARAMETER)));
         withLimit(getLimitFromParameters(parameters.get(LIMIT_PARAMETER)));
         withStart(getStartFromParameters(parameters.get(START_PARAMETER)));
+        withOrderBy(getOrderByFromParameters(parameters.get(ORDER_BY_PARAMETER)));
         return this;
     }
 
@@ -45,6 +50,11 @@ public class FilterContextBuilder {
         return this;
     }
 
+    private FilterContextBuilder withOrderBy(String[] orderByFromParameters) {
+        this.orderBy = orderByFromParameters;
+        return this;
+    }
+
     public FilterContextBuilder withPersistenceTypeSearchString(String searchString) {
         this.filterType = FilterContext.FilterType.PERSISTENCE;
         this.searchString = searchString;
@@ -52,7 +62,7 @@ public class FilterContextBuilder {
     }
 
     public FilterContext build() {
-        return new FilterContext(filterType, searchString, limit, start);
+        return new FilterContext(filterType, searchString, limit, start, orderBy);
     }
 
     private int getLimitFromParameters(String[] limitParams) {
@@ -74,5 +84,13 @@ public class FilterContextBuilder {
             return Integer.parseInt(startParams[0]); // only the first supporterd
         }
         return 0;
+    }
+
+    private String[] getOrderByFromParameters(String[] offsetParams) {
+        if (offsetParams != null && offsetParams.length > 0) {
+            return offsetParams[0].split(ORDER_BY_SEPARATOR);
+
+        }
+        return null;
     }
 }
