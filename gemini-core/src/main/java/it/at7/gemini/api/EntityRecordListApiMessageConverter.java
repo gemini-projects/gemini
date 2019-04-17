@@ -13,8 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static it.at7.gemini.core.FilterContextBuilder.LIMIT_PARAMETER;
-import static it.at7.gemini.core.FilterContextBuilder.START_PARAMETER;
+import static it.at7.gemini.core.FilterContextBuilder.*;
 
 public class EntityRecordListApiMessageConverter extends MappingJackson2HttpMessageConverter {
 
@@ -47,6 +46,9 @@ public class EntityRecordListApiMessageConverter extends MappingJackson2HttpMess
         }
         if (filterContext.getStart() > 0) {
             meta.put(START_PARAMETER, filterContext.getStart());
+        }
+        if (filterContext.getOrderBy() != null && filterContext.getOrderBy().length > 0) {
+            meta.put(ORDER_BY_PARAMETER, filterContext.getOrderBy());
         }
         return meta;
     }

@@ -162,7 +162,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
     }
 
     @Test
-    public void n5_getLisLimitPlusStartAndOrderBy() throws Exception {
+    public void n6_getLisLimitPlusStartAndOrderBy() throws Exception {
 
         // DESCENDING
         MvcResult result = mockMvc.perform(get(API_PATH + "/TestDataType")
@@ -182,6 +182,15 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
             int numberLong = (int) theRec.get("numberLong");
             Assert.assertEquals(2049 - i, numberLong);
         }
+
+        mockMvc.perform(get(API_PATH + "/TestDataType")
+                .param(ORDER_BY_PARAMETER, "-numberLong")
+                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .contentType(APPLICATION_JSON)
+                .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .json("{'meta':{'limit': 100, orderBy: ['-numberLong']}}"));
 
 
         // ASCENDING
@@ -205,17 +214,14 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
             Assert.assertEquals(2000 + i - 110, numberLong);
         }
 
-
-/*    // TODO      // gemini Api Meta
         mockMvc.perform(get(API_PATH + "/TestDataType")
-                .param(LIMIT_PARAMETER, "50")
-                .param(START_PARAMETER, "150")
+                .param(ORDER_BY_PARAMETER, "numberLong")
                 .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
                 .contentType(APPLICATION_JSON)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'meta':{'limit': 50, 'start': 150}}")); */
+                        .json("{'meta':{orderBy: ['numberLong']}}"));
     }
 
 }
