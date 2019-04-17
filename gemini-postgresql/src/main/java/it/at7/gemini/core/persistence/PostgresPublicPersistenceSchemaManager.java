@@ -203,10 +203,10 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     private void createEntityStorage(Entity entity, TransactionImpl transaction) throws GeminiException {
         logger.info("{}: creating Entity {}", entity.getModule().getName(), entity.getName());
         StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("CREATE TABLE ").append(entity.getName().toLowerCase()).append(" ( ");
+        sqlBuilder.append("CREATE TABLE ").append(wrapDoubleQuotes(entity.getName().toLowerCase())).append(" ( ");
         sqlBuilder.append(primaryKeyField(Field.ID_NAME));
         if (!entity.isEmbedable()) {
-            sqlBuilder.append(uuidField(Field.UUID_NAME));
+            sqlBuilder.append(uuidField());
         }
         entity.getSchemaEntityFields().forEach(f -> {
             if (!typeNotNeedColumns(f.getType()))
@@ -218,7 +218,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         // TODO for runtime is better unique constrain or index ?? check later
         // checkOrCreteLogicalKeyUniqueIndex(entity.getName(), entity.getLogicalKey(), transaction);
     }
-
 
     private void updateEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException, GeminiException {
         logger.info("{}: check/update Fields for {}", entity.getModule().getName(), entity.getName());
@@ -256,7 +255,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         List<EntityField> logicalKeyList = entity.getLogicalKey().getLogicalKeyList();
         if (logicalKeyList != null && logicalKeyList.size() > 0) {
             String constraintName = entity.getName().toLowerCase() + "_lk";
-            sqlBuilder.append(String.format(",CONSTRAINT %s UNIQUE (", constraintName));
+            sqlBuilder.append(String.format(", CONSTRAINT %s UNIQUE (", wrapDoubleQuotes(constraintName)));
             for (int i = 0; i < logicalKeyList.size(); i++) {
                 Field field = logicalKeyList.get(i);
                 sqlBuilder.append(fieldUnique(field));
@@ -267,7 +266,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         }
     }
 
-    private void checkOrCreatePKDomainForModel(String modelName, TransactionImpl transaction) throws SQLException, GeminiException {
+    private void checkOrCreatePKDomainForModel(String entityName, TransactionImpl transaction) throws SQLException, GeminiException {
         String sqlDomainExists = "" +
                 "   SELECT EXISTS ( " +
                 "       SELECT 1" +
@@ -277,10 +276,10 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 "   );";
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("domain_schema", "public");
-        parameters.put("domain_name", pkForeignKeyDomainFromEntity(modelName));
+        parameters.put("domain_name", pkForeignKeyDomainFromEntity(entityName));
         transaction.executeQuery(sqlDomainExists, parameters, resultSet -> {
             if (!exists(resultSet)) {
-                createPkDomainForModel(modelName, transaction);
+                createPkDomainForModel(entityName, transaction);
             }
         });
     }
@@ -418,11 +417,11 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     }
 
     private String primaryKeyField(String id) {
-        return String.format("%s BIGSERIAL PRIMARY KEY", id);
+        return String.format("%s BIGSERIAL PRIMARY KEY", wrapDoubleQuotes(id));
     }
 
-    private String uuidField(Object uuidName) {
-        return String.format(", %s uuid UNIQUE", uuidName);
+    private String uuidField() {
+        return String.format(", %s uuid UNIQUE", wrapDoubleQuotes(Field.UUID_NAME));
     }
 
     private String field(Field field) {
@@ -432,7 +431,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     private String field(Field field, boolean isAlterColumn) {
         FieldType type = field.getType();
         if (oneToOneType(type) || entityType(type)) {
-            return field.getName().toLowerCase() + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
+            return wrapDoubleQuotes(field.getName().toLowerCase()) + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
         }
         throw new RuntimeException(String.format("%s - Field of type %s Not Implemented", field.getName(), field.getType())); // TODO
     }
@@ -440,7 +439,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     private String fieldUnique(Field field) {
         FieldType type = field.getType();
         if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
-            return field.getName().toLowerCase();
+            return wrapDoubleQuotes(field.getName().toLowerCase());
         }
         throw new RuntimeException(String.format("%s - Unique Field Not Implemented", field.getName()));
     }

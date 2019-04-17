@@ -63,4 +63,8 @@ public class FieldTypePersistenceUtility {
     public static String pkForeignKeyDomainFromEntity(String entityName) {
         return entityName.toLowerCase() + "_pk";
     }
+
+    public static String wrapDoubleQuotes(String st) {
+        return '"' + st + '"';
+    }
 }
