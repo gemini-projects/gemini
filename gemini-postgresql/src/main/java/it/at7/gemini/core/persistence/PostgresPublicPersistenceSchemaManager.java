@@ -140,7 +140,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         }
     }
 
-    private void deleteEntityStorage(Entity entity, Transaction transaction) throws  GeminiException {
+    private void deleteEntityStorage(Entity entity, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         transactionImpl.executeUpdate(String.format("DROP TABLE IF EXISTS %s", entity.getName()));
     }
@@ -200,22 +200,21 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         return transaction.executeQuery(sqlTableExists, parameters, this::exists);
     }
 
-    private void createEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException, GeminiException {
+    private void createEntityStorage(Entity entity, TransactionImpl transaction) throws GeminiException {
         logger.info("{}: creating Entity {}", entity.getModule().getName(), entity.getName());
         StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("CREATE TABLE " + entity.getName().toLowerCase() + " ( ");
+        sqlBuilder.append("CREATE TABLE ").append(entity.getName().toLowerCase()).append(" ( ");
         sqlBuilder.append(primaryKeyField(Field.ID_NAME));
         if (!entity.isEmbedable()) {
             sqlBuilder.append(uuidField(Field.UUID_NAME));
         }
         entity.getSchemaEntityFields().forEach(f -> {
             if (!typeNotNeedColumns(f.getType()))
-                sqlBuilder.append(", " + field(f));
+                sqlBuilder.append(", ").append(field(f));
         });
         handleUniqueLogicalKeyConstraint(sqlBuilder, entity);
         sqlBuilder.append(" );");
         transaction.executeUpdate(sqlBuilder.toString());
-        checkOrCreatePKDomainForModel(entity.getName(), transaction);
         // TODO for runtime is better unique constrain or index ?? check later
         // checkOrCreteLogicalKeyUniqueIndex(entity.getName(), entity.getLogicalKey(), transaction);
     }
@@ -336,7 +335,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         return resultSet.getBoolean(1);
     }
 
-    private void createPkDomainForModel(String modelName, TransactionImpl transaction) throws  GeminiException {
+    private void createPkDomainForModel(String modelName, TransactionImpl transaction) throws GeminiException {
         String domainSql = String.format(
                 "CREATE DOMAIN %s AS %s", pkForeignKeyDomainFromEntity(modelName), "BIGINT");
         transaction.executeUpdate(domainSql);
