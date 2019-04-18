@@ -90,11 +90,12 @@ public class RestAPIController {
             int requestLkLenght = paths.size() - 2;
             Entity.LogicalKey logicalKey = e.getLogicalKey();
             List<EntityField> logicalKeyList = logicalKey.getLogicalKeyList();
-            if (logicalKeyList.size() < requestLkLenght) {
+            if (requestLkLenght != 1 && logicalKeyList.size() < requestLkLenght) {
+                // it is not a UUID and it is a multi lk entity request
                 throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
             }
-            if (logicalKeyList.size() == requestLkLenght) {
-                // the entity.. we can update or delete
+            if (requestLkLenght == 1 || logicalKeyList.size() == requestLkLenght) {
+                // we can query a entity record so we can GET/UPDATE/DELETE
                 String[] lkStringsArray = decodeLogicalKeyStrings(paths);
                 switch (method) {
                     case "GET":
