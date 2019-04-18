@@ -22,8 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.at7.gemini.core.FieldConverters.logicalKeyFromObject;
-import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.entityType;
-import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.oneToOneType;
+import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.*;
 
 @Service
 public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
@@ -183,11 +182,11 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private void addIdCondition(Entity entity, long recordId, QueryWithParams query) {
-        query.addToSql(String.format("WHERE %s.%s = %d", entity.getName().toUpperCase(), entity.getIdEntityField().getName(), recordId));
+        query.addToSql(String.format("WHERE \"%s\".\"%s\" = %d", entity.getName().toLowerCase(), entity.getIdEntityField().getName().toLowerCase(), recordId));
     }
 
     private void addUUIDCondition(Entity entity, UUID uuid, QueryWithParams query) {
-        query.addToSql(String.format("WHERE %s.%s = '%s'", entity.getName().toUpperCase(), Field.UUID_NAME, uuid.toString()));
+        query.addToSql(String.format("WHERE \"%s\".\"%s\" = '%s'", entity.getName().toUpperCase().toLowerCase(), Field.UUID_NAME.toLowerCase(), uuid.toString()));
     }
 
     private void addFilter(QueryWithParams query, FilterContext filterContext, Entity entity) {
@@ -208,10 +207,11 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         if (orderBy != null && orderBy.length > 0) {
             StringJoiner oby = new StringJoiner(", ");
             for (String obElem : orderBy) {
+                obElem = obElem.toLowerCase();
                 if (obElem.charAt(0) == '-') {
-                    oby.add(obElem.substring(1) + " DESC");
+                    oby.add(wrapDoubleQuotes(obElem.substring(1)) + " DESC");
                 } else {
-                    oby.add(obElem + " ASC");
+                    oby.add(wrapDoubleQuotes(obElem) + " ASC");
                 }
             }
             query.addToSql(" ORDER BY " + oby.toString());
@@ -221,7 +221,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             Entity.LogicalKey logicalKey = entity.getLogicalKey();
             StringJoiner sj = new StringJoiner(", ");
             for (EntityField field : logicalKey.getLogicalKeyList()) {
-                sj.add(field.getName());
+                sj.add(wrapDoubleQuotes(field.getName()));
             }
             if (sj.length() > 0) {
                 query.addToSql(" ORDER BY " + sj.toString());
@@ -242,8 +242,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private String createSelectQuerySQLFor(Entity entity) {
-        String entityName = entity.getName().toUpperCase();
-        return String.format("SELECT %1$s.* FROM %1$s ", entityName);
+        String entityName = entity.getName().toLowerCase();
+        return String.format("SELECT %1$s.* FROM %1$s ", wrapDoubleQuotes(entityName));
     }
 
     private QueryWithParams createSelectQueryFor(Entity entity) {
@@ -431,7 +431,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
         Map<EntityField, EntityRecord> embededEntityRecords = checkAndCreateEmbededEntity(record, transaction);
 
-        StringBuilder sql = new StringBuilder(String.format("INSERT INTO %s", entity.getName().toLowerCase()));
+        StringBuilder sql = new StringBuilder(String.format("INSERT INTO %s", wrapDoubleQuotes(entity.getName().toLowerCase())));
         Map<String, Object> params = new HashMap<>();
         List<? extends DynamicRecord.FieldValue> sortedFields = sortFields(record.getAllSchemaEntityFieldValues());
         boolean first = true;
@@ -444,7 +444,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             if (oneToOneType(type) || entityType(type)) {
                 sql.append(first ? "(" : ",");
                 first = false;
-                sql.append(field.getField().getName().toLowerCase());
+                sql.append(wrapDoubleQuotes(field.getField().getName().toLowerCase()));
             }
         }
         sql.append(") VALUES ");
@@ -526,7 +526,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
     private QueryWithParams makeSelectQueryFilteringFiledValue(Entity entity, Set<EntityRecord.EntityFieldValue> filterValues, Transaction transaction) throws SQLException, GeminiException {
         String entityName = entity.getName().toLowerCase();
-        String sql = String.format("SELECT %1$s.* FROM %1$s WHERE ", entityName);
+        String sql = String.format("SELECT %1$s.* FROM %1$s WHERE ", wrapDoubleQuotes(entityName));
         Map<String, Object> params = new HashMap<>();
         boolean needAnd = false;
         for (DynamicRecord.FieldValue filterValue : filterValues) {
@@ -544,15 +544,15 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     private String handleSingleColumnSelectBasicType(String entityName, Map<String, Object> params, DynamicRecord.FieldValue fieldValue, Transaction transaction) throws SQLException, GeminiException {
         String colName = fieldValue.getField().getName();
         Object value = fromFieldToPrimitiveValue(fieldValue, /* TODO  */ Map.of(), transaction);
-        String res = String.format(" %s.%s = :%2$s ", entityName, colName);
-        params.put(colName, value);
+        String res = String.format(" \"%s\".\"%s\" = :%s ", entityName.toLowerCase(), colName.toLowerCase(), colName.toLowerCase());
+        params.put(colName.toLowerCase(), value);
         return res;
     }
 
     private QueryWithParams makeDeleteQueryByID(EntityRecord record, Transaction transaction) throws GeminiException {
         Entity entity = record.getEntity();
         checkAndDeleteEmbededEntity(record, transaction);
-        String sql = String.format("DELETE FROM %s WHERE %s = %s", entity.getName().toLowerCase(), Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class));
+        String sql = String.format("DELETE FROM %s WHERE %s = %s", wrapDoubleQuotes(entity.getName().toLowerCase()), Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class));
         return new QueryWithParams(sql, null);
     }
 
