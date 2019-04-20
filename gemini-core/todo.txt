@@ -1,4 +1,3 @@
-- Entita senza codice non può essere usate nelle API
 - Gestione callback campi - Gestione dipendenze campi - (default, dipendenti)
 - Gestione tipo traducibile
 - Gestione chiavi generiche
@@ -6,3 +5,5 @@
 - Gestione Array di tipo Riferimento
 - Gestione entità collegate (collezioni)
 - FIX resolution delete (cascade)
+- Salvare lo schema precedente per poi controllare i campi non più presenti.. invece che leggerli dal DB ?? Potrebbe
+  essere utile per i campi meta

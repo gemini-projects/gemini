@@ -218,6 +218,10 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     private void updateEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException, GeminiException {
         logger.info("{}: check/update Fields for {}", entity.getModule().getName(), entity.getName());
 
+        /*
+            NB meta fields columns are creted or updated always starting from the schema file.
+            If you delete the field from the schema, the column isn't removed from the database.
+         */
         HashSet<EntityField> updateSet = new HashSet<>(entity.getMetaEntityFields());
         updateSet.addAll(entity.getDataEntityFields());
 

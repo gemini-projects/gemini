@@ -6,7 +6,7 @@
 INTERFACE CoreMeta {
     DATETIME    created
     DATETIME    modified
-   # BOOL        disabled
+    # BOOL        disabled
 }
 
 ENTITY Entity {

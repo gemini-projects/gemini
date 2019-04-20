@@ -114,8 +114,7 @@ public class SchemaManagerImpl implements SchemaManager {
 
     private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, Entity entity) throws GeminiException {
         List<EntityRecord> fieldRecords = new ArrayList<>();
-        Set<EntityField> fields = new HashSet<>(entity.getMetaEntityFields());
-        fields.addAll(entity.getDataEntityFields());
+        Set<EntityField> fields = entity.getDataEntityFields(); // don't want fields records for meta fields
         for (EntityField field : fields) {
             logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
             EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();
