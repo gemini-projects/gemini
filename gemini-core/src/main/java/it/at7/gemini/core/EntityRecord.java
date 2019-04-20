@@ -6,7 +6,6 @@ import it.at7.gemini.schema.EntityField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-import javax.validation.constraints.Null;
 import java.util.*;
 
 public class EntityRecord implements RecordBase {
@@ -41,7 +40,7 @@ public class EntityRecord implements RecordBase {
     }
 
     public boolean put(EntityField field, Object value) throws EntityFieldException {
-        if (!(this.entity.getSchemaEntityFields().contains(field) || this.entity.getIdEntityField().equals(field))) {
+        if (!(this.entity.getDataEntityFields().contains(field) || this.entity.getIdEntityField().equals(field))) {
             throw EntityFieldException.ENTITYFIELD_NOT_FOUND(field);
         }
         Object convertedValue = FieldConverters.getConvertedFieldValue(field, value);
@@ -67,7 +66,7 @@ public class EntityRecord implements RecordBase {
      * @return
      */
     public Set<EntityFieldValue> getAllSchemaEntityFieldValues() {
-        return getEntityFieldValue(entity.getSchemaEntityFields());
+        return getEntityFieldValue(entity.getDataEntityFields());
     }
 
     public Set<EntityFieldValue> getOnlyModifiedEntityFieldValue() {

@@ -111,7 +111,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         EntityField idField = entityRecord.getEntity().getIdEntityField();
         Object persistedID = persistedRecord.get(idField);
         entityRecord.put(idField, persistedID);
-        for (EntityField field : entityRecord.getEntity().getSchemaEntityFields()) {
+        for (EntityField field : entityRecord.getEntity().getDataEntityFields()) {
             if (field.getType().equals(FieldType.ENTITY_EMBEDED) && entityRecord.get(field) != null) {
                 setALLpersistenceIDs(entityRecord.get(field), persistedRecord.get(field));
             }
@@ -334,7 +334,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             if (!entity.isEmbedable()) {
                 er.setUUID(rs.getObject(Field.UUID_NAME, UUID.class));
             }
-            for (EntityField field : entity.getSchemaEntityFields()) {
+            for (EntityField field : entity.getDataEntityFields()) {
                 FieldType type = field.getType();
                 String fieldName = field.getName().toLowerCase();
                 boolean handled = false;

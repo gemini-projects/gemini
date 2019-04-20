@@ -16,16 +16,19 @@ import static java.util.stream.Collectors.toSet;
 public class Entity {
     public static final String ENTITY = "ENTITY";
     public static final String FIELD_RESOLUTION = "FIELDRESOLUTION";
+    public static final String CORE_META = "COREMETA";
 
     public static final String NAME = "name";
 
     private final Module module;
     private final String name;
     private final Map<String, Object> defaultRecord;
-    private final Set<EntityField> schemaFields;
+    private final Set<EntityField> dataFields;
+    private final Map<String, EntityField> metaFieldsByName;
+    private final Map<String, EntityField> dataFieldsByName;
+    private final Set<EntityField> metaFields;
     private final LogicalKey logicalKey;
     private final EntityField idField;
-    private final Map<String, EntityField> schemaMapFields;
     private final boolean embedable;
     private Object idValue;
 
@@ -37,29 +40,13 @@ public class Entity {
         this.embedable = embedable;
         this.defaultRecord = defaultRecord == null ? new HashMap<>() : (Map<String, Object>) defaultRecord;
         fieldsBuilders.forEach(f -> f.setEntity(this));
-        this.schemaFields = fieldsBuilders.stream().map(EntityFieldBuilder::build).collect(toSet());
-        this.schemaMapFields = schemaFields.stream().collect(Collectors.toMap(e -> e.getName().toLowerCase(), e -> e));
-        this.logicalKey = extractLogicalKeyFrom(schemaFields);
+        this.dataFields = fieldsBuilders.stream().filter(e -> e.getScope().equals(EntityField.Scope.DATA)).map(EntityFieldBuilder::build).collect(toSet());
+        this.dataFieldsByName = dataFields.stream().collect(Collectors.toMap(e -> e.getName().toLowerCase(), e -> e));
+        this.metaFields = fieldsBuilders.stream().filter(e -> e.getScope().equals(EntityField.Scope.META)).map(EntityFieldBuilder::build).collect(toSet());
+        this.metaFieldsByName = metaFields.stream().collect(Collectors.toMap(e -> e.getName().toLowerCase(), e -> e));
+        this.logicalKey = extractLogicalKeyFrom(dataFields);
         this.idField = EntityFieldBuilder.ID(this);
         idValue = null;
-    }
-
-    public void addField(EntityField entityField) throws EntityFieldException {
-        if (this.schemaMapFields.containsKey(entityField.getName().toLowerCase())) {
-            throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(entityField);
-        }
-        this.schemaFields.add(entityField);
-        this.schemaMapFields.put(entityField.getName().toLowerCase(), entityField);
-    }
-
-    public void removeField(EntityField entityField) throws EntityFieldException {
-        String key = entityField.getName().toLowerCase();
-        EntityField ef = schemaMapFields.get(key);
-        if (ef == null) {
-            throw EntityFieldException.ENTITYFIELD_NOT_FOUND(entityField);
-        }
-        this.schemaFields.remove(ef);
-        this.schemaMapFields.remove(key);
     }
 
     public String getName() {
@@ -80,7 +67,7 @@ public class Entity {
         if (idField.getName().toLowerCase().equals(fieldName)) {
             return idField; // id is a special field
         }
-        EntityField entityField = schemaMapFields.get(fieldName);
+        EntityField entityField = dataFieldsByName.get(fieldName);
         if (entityField == null) {
             throw EntityFieldException.ENTITYFIELD_NOT_FOUND(entityField);
         }
@@ -92,8 +79,12 @@ public class Entity {
         return RecordConverters.entityRecordFromMap(this, copyDefaultRecord());
     }
 
-    public Set<EntityField> getSchemaEntityFields() {
-        return Collections.unmodifiableSet(schemaFields);
+    public Set<EntityField> getDataEntityFields() {
+        return Collections.unmodifiableSet(dataFields);
+    }
+
+    public Set<EntityField> getMetaEntityFields() {
+        return Collections.unmodifiableSet(metaFields);
     }
 
     public LogicalKey getLogicalKey() {
@@ -103,6 +94,27 @@ public class Entity {
     public EntityField getIdEntityField() {
         return idField;
     }
+
+
+    /* TODO runtime entities ?
+    public void addField(EntityField entityField) throws EntityFieldException {
+        if (this.dataFieldsByName.containsKey(entityField.getName().toLowerCase())) {
+            throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(entityField);
+        }
+        this.dataFields.add(entityField);
+        this.dataFieldsByName.put(entityField.getName().toLowerCase(), entityField);
+    }
+
+    public void removeField(EntityField entityField) throws EntityFieldException {
+        String key = entityField.getName().toLowerCase();
+        EntityField ef = dataFieldsByName.get(key);
+        if (ef == null) {
+            throw EntityFieldException.ENTITYFIELD_NOT_FOUND(entityField);
+        }
+        this.dataFields.remove(ef);
+        this.dataFieldsByName.remove(key);
+    }
+    */
 
     public EntityRecord toInitializationEntityRecord() {
         Map<String, Object> values = copyDefaultRecord();

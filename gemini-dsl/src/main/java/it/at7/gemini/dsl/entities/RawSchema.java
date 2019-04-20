@@ -11,6 +11,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.EMPTY_SET;
+
 public class RawSchema {
     private final Set<RawEntity> rawEntities;
     private final ReadWriteLock schemaLock;
@@ -18,7 +20,7 @@ public class RawSchema {
 
     public RawSchema(Set<RawEntity> rawEntities, Set<RawEntity> rawInterfaces) {
         this.rawEntities = new HashSet<>(rawEntities);
-        this.rawEntityInterfaces = rawInterfaces != null ? new HashSet<>(rawInterfaces) : Collections.EMPTY_SET;
+        this.rawEntityInterfaces = rawInterfaces != null ? new HashSet<>(rawInterfaces) : EMPTY_SET;
         schemaLock = new ReentrantReadWriteLock();
     }
 

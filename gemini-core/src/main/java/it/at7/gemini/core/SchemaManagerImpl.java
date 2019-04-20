@@ -61,7 +61,7 @@ public class SchemaManagerImpl implements SchemaManager {
             persistenceSchemaManager.beforeLoadSchema(modules, transaction);
             loadModuleSchemas(modules.values());
             Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap = loadModuleRecords(modules.values());
-            this.entities = checkSchemasAndCreateObjectEntities(schemaRawRecordsMap);
+            checkSchemaAndCreateEntitiesCoreObj(schemaRawRecordsMap);
             Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
                     .flatMap(m -> m.entrySet().stream())
                     .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
@@ -89,65 +89,16 @@ public class SchemaManagerImpl implements SchemaManager {
         return modules.get(module.toUpperCase());
     }
 
-    /* TODO runtime entity handler
-    @Override
-    public synchronized void addNewRuntimeEntity(Entity newEntity, Transaction transaction) throws GeminiException {
-        Module module = newEntity.getModule();
-        assert module.editable();
-        persistenceSchemaManager.handleSchemaStorage(transaction, newEntity);
-        saveOrUpdateEntityInSchemaFile(newEntity);
-    }
-
-    @Override
-    public synchronized void addNewRuntimeEntityField(EntityField newEntityField, Transaction transaction) throws GeminiException {
-        Entity entity = newEntityField.getEntity();
-        assert entity.getModule().editable();
-        entity.addField(newEntityField);
-        persistenceSchemaManager.handleSchemaStorage(transaction, entity);
-        saveOrUpdateEntityInSchemaFile(entity);
-    }
-
-    @Override
-    public void deleteRuntimeEntity(Entity entity, Transaction transaction) throws GeminiException {
-        Module module = entity.getModule();
-        assert module.editable();
-        persistenceSchemaManager.handleSchemaStorage(transaction, entity);
-        saveOrUpdateEntityInSchemaFile(entity);
-    }
-
-    @Override
-    public void deleteRuntimeEntityField(EntityField field, Transaction transaction) throws GeminiException {
-        Entity entity = field.getEntity();
-        Module module = entity.getModule();
-        assert module.editable();
-        entity.removeField(field);
-        persistenceSchemaManager.handleSchemaStorage(transaction, entity);
-        saveOrUpdateEntityInSchemaFile(entity);
-    }
-    */
 
     @Override
     public List<EntityField> getEntityReferenceFields(Entity targetEntity) {
         return this.entities.values().stream()
-                .flatMap(e -> e.getSchemaEntityFields().stream())
+                .flatMap(e -> e.getDataEntityFields().stream())
                 .filter(f -> f.getType().equals(FieldType.ENTITY_REF))
                 .filter(f -> Objects.nonNull(f.getEntityRef()) && f.getEntityRef().equals(targetEntity))
                 .collect(Collectors.toList());
     }
 
-    private void saveOrUpdateEntityInSchemaFile(Entity entity) throws UnableToUpdateSchemaFIle {
-        Module module = entity.getModule();
-        RawSchema rawSchema = schemas.get(module);
-        RuntimeModule rtm = RuntimeModule.class.cast(module);
-        List<RawEntity.Entry> entries = entity.getSchemaEntityFields().stream().map(ef -> new RawEntity.Entry(ef.getType().name(), ef.getName(), ef.isLogicalKey())).collect(toList());
-        rawSchema.addOrUpdateRawEntity(new RawEntity(entity.getName(), false /**/, entries, Collections.EMPTY_LIST));
-        entities.putIfAbsent(entity.getName(), entity);
-        try {
-            rawSchema.persist(rtm.getSchemaLocation());
-        } catch (IOException e) {
-            throw new UnableToUpdateSchemaFIle();
-        }
-    }
 
     private Map<String, List<EntityRecord>> handleSchemasEntityRecords(Collection<Entity> entities, Transaction transaction) throws SQLException, GeminiException {
         Map<String, List<EntityRecord>> fieldsRecordByEntityName = new HashMap<>();
@@ -163,7 +114,8 @@ public class SchemaManagerImpl implements SchemaManager {
 
     private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, Entity entity) throws GeminiException {
         List<EntityRecord> fieldRecords = new ArrayList<>();
-        Set<EntityField> fields = entity.getSchemaEntityFields();
+        Set<EntityField> fields = new HashSet<>(entity.getMetaEntityFields());
+        fields.addAll(entity.getDataEntityFields());
         for (EntityField field : fields) {
             logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
             EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();
@@ -327,14 +279,16 @@ public class SchemaManagerImpl implements SchemaManager {
         }
     }
 
-    private Map<String, Entity> checkSchemasAndCreateObjectEntities(Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap) {
+    private void checkSchemaAndCreateEntitiesCoreObj(Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap) {
         /* TODO entità estendibii per modulo
             caricare ogni modulo a se stante.. con le entità.. poi fare il merge delle
             entries (ognuna contenente il modulo da dove viene)
             ... vale anche per i record
         */
+
         // first of all get all the interfaces and entities (to resolve dependencies without ordering)
         Map<String, EntityBuilder> interfaceBuilders = new HashMap<>();
+        Map<String, EntityBuilder> entityBuilders = new HashMap<>();
         iterateThroughtRawInterfaces(
                 (Module module, RawEntity rawEntityInterface) -> {
                     EntityBuilder entityB = new EntityBuilder(rawEntityInterface, module);
@@ -344,7 +298,6 @@ public class SchemaManagerImpl implements SchemaManager {
                     }
                     interfaceBuilders.put(entityName, entityB);
                 });
-        Map<String, EntityBuilder> entityBuilders = new HashMap<>();
         iterateThroughtRawEntitySchemas((Module module, RawEntity rawEntity) -> {
             EntityBuilder entityB = new EntityBuilder(rawEntity, module);
             String entityName = entityB.getName();
@@ -362,23 +315,28 @@ public class SchemaManagerImpl implements SchemaManager {
             entityBuilders.put(entityName, entityB);
         });
 
-
         // now we can resolve entity fields
         for (Map.Entry<String, EntityBuilder> entityEntry : entityBuilders.entrySet()) {
             EntityBuilder entityB = entityEntry.getValue();
 
-            // merging withGeminiSearchString interface if found
+            // add the meta information to the current entity
+            // NB: (CORE_META must be found... otherwise its ok to have a null runtime excp)
+            for (RawEntity.Entry entry : interfaceBuilders.get(Entity.CORE_META).getRawEntity().getEntries()) {
+                checkAndSetType(entityBuilders, entityB, entry, EntityField.Scope.META);
+            }
+
+            // merging Gemini interface if found
             for (String implementsInteface : entityB.getRawEntity().getImplementsIntefaces()) {
                 // entity implements a common specification
                 EntityBuilder enitityImplementsInterface = interfaceBuilders.get(implementsInteface.toUpperCase());
                 for (RawEntity.Entry entry : enitityImplementsInterface.getRawEntity().getEntries()) {
-                    checkAndSetType(entityBuilders, entityB, entry);
+                    checkAndSetType(entityBuilders, entityB, entry, EntityField.Scope.DATA);
                 }
             }
 
-            // continue withGeminiSearchString entity entries
+            // continue with Gemini entity entries
             for (RawEntity.Entry entry : entityB.getRawEntity().getEntries()) {
-                checkAndSetType(entityBuilders, entityB, entry);
+                checkAndSetType(entityBuilders, entityB, entry, EntityField.Scope.DATA);
             }
         }
 
@@ -390,10 +348,10 @@ public class SchemaManagerImpl implements SchemaManager {
         }
 
         // TODO CHECK embeded fields should not be logicalKey
-        return entities;
+        this.entities = entities;
     }
 
-    private void checkAndSetType(Map<String, EntityBuilder> entityBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry) throws TypeNotFoundException {
+    private void checkAndSetType(Map<String, EntityBuilder> entityBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry, EntityField.Scope scope) throws TypeNotFoundException {
         String type = entry.getType().toUpperCase();
 
         Optional<FieldType> fieldType = FieldType.of(type);
@@ -403,7 +361,7 @@ public class SchemaManagerImpl implements SchemaManager {
             // try to get an alias
             Optional<FieldType> aliasOfType = FieldType.getAliasOfType(type);
             if (aliasOfType.isPresent()) {
-                entityBuilder.addField(aliasOfType.get(), entry);
+                entityBuilder.addField(aliasOfType.get(), entry, scope);
                 return;
             }
 
@@ -411,11 +369,7 @@ public class SchemaManagerImpl implements SchemaManager {
             EntityBuilder entityForType = entityBuilders.get(type);
             if (entityForType != null) {
                 boolean embedable = entityForType.getRawEntity().isEmbedable();
-                if (!embedable) {
-                    entityBuilder.addField(ENTITY_REF, entry, entityForType.getName());
-                } else {
-                    entityBuilder.addField(ENTITY_EMBEDED, entry, entityForType.getName());
-                }
+                entityBuilder.addField(embedable ? ENTITY_EMBEDED : ENTITY_REF, entry, entityForType.getName(), scope);
                 return;
             }
 
@@ -427,7 +381,7 @@ public class SchemaManagerImpl implements SchemaManager {
                     // TODO handle embedable entity ref
                     boolean embedable = entityForRefType.getRawEntity().isEmbedable();
                     if (!embedable) {
-                        entityBuilder.addField(ENTITY_REF_ARRAY, entry, entityForRefType.getName());
+                        entityBuilder.addField(ENTITY_REF_ARRAY, entry, entityForRefType.getName(), scope);
                         return;
                     }
                 }
@@ -435,7 +389,7 @@ public class SchemaManagerImpl implements SchemaManager {
 
             throw new FieldTypeNotKnown(entityBuilder.getName(), type, entry);
         } else {
-            entityBuilder.addField(fieldType.get(), entry);
+            entityBuilder.addField(fieldType.get(), entry, scope);
         }
     }
 
@@ -464,5 +418,62 @@ public class SchemaManagerImpl implements SchemaManager {
             }
         }
         return false;
+    } */
+
+
+    /* TODO runtime entity handler
+    @Override
+    public synchronized void addNewRuntimeEntity(Entity newEntity, Transaction transaction) throws GeminiException {
+        Module module = newEntity.getModule();
+        assert module.editable();
+        persistenceSchemaManager.handleSchemaStorage(transaction, newEntity);
+        saveOrUpdateEntityInSchemaFile(newEntity);
+    }
+
+    @Override
+    public synchronized void addNewRuntimeEntityField(EntityField newEntityField, Transaction transaction) throws GeminiException {
+        Entity entity = newEntityField.getEntity();
+        assert entity.getModule().editable();
+        entity.addField(newEntityField);
+        persistenceSchemaManager.handleSchemaStorage(transaction, entity);
+        saveOrUpdateEntityInSchemaFile(entity);
+    }
+
+    @Override
+    public void deleteRuntimeEntity(Entity entity, Transaction transaction) throws GeminiException {
+        Module module = entity.getModule();
+        assert module.editable();
+        persistenceSchemaManager.handleSchemaStorage(transaction, entity);
+        saveOrUpdateEntityInSchemaFile(entity);
+    }
+
+    @Override
+    public void deleteRuntimeEntityField(EntityField field, Transaction transaction) throws GeminiException {
+        Entity entity = field.getEntity();
+        Module module = entity.getModule();
+        assert module.editable();
+        entity.removeField(field);
+        persistenceSchemaManager.handleSchemaStorage(transaction, entity);
+        saveOrUpdateEntityInSchemaFile(entity);
+    }
+
+
+    */
+
+    /*
+    private void saveOrUpdateEntityInSchemaFile(Entity entity) throws UnableToUpdateSchemaFIle {
+        Module module = entity.getModule();
+        RawSchema rawSchema = schemas.get(module);
+        RuntimeModule rtm = RuntimeModule.class.cast(module);
+        List<RawEntity.Entry> entries = entity.getDataEntityFields().stream().map(ef -> new RawEntity.Entry(ef.getType().name(), ef.getName(), ef.isLogicalKey())).collect(toList());
+        rawSchema.addOrUpdateRawEntity(new RawEntity(entity.getName(), false , entries, Collections.EMPTY_LIST));
+        entities.putIfAbsent(entity.getName(), entity);
+        try {
+            rawSchema.persist(rtm.getSchemaLocation());
+        } catch (IOException e) {
+            throw new UnableToUpdateSchemaFIle();
+        }
+
+
     } */
 }

@@ -9,6 +9,7 @@ import it.at7.gemini.dsl.entities.RawSchema;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
 import it.at7.gemini.schema.*;
+import jdk.nashorn.api.tree.ReturnTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,12 @@ import static java.util.stream.Collectors.toList;
 
 @Service
 public class PostgresPublicPersistenceSchemaManager implements PersistenceSchemaManager {
+    private static final String META_PREFIX = "_meta_";
     private static final Logger logger = LoggerFactory.getLogger(PostgresPublicPersistenceSchemaManager.class);
 
     @Override
     public void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, IOException {
+        /* // TODO on dynamic schema (runtime)
         try {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
             for (Module module : modules.values()) {
@@ -37,7 +40,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             }
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
-        }
+        } */
     }
 
     @Override
@@ -64,7 +67,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             transactionImpl.executeQuery(sql, parameters, rs -> {
                 while (rs.next()) {
                     String name = rs.getString(1);
-                    transactionImpl.executeUpdate(String.format("DROP TABLE IF EXISTS %s", name));
+                    transactionImpl.executeUpdate(String.format("DROP TABLE IF EXISTS %s", wrapDoubleQuotes(name.toLowerCase())));
                 }
             });
             String deleteEntitiesSql = String.format("DELETE FROM entity WHERE %s NOT IN (:ids)", Field.ID_NAME);
@@ -99,8 +102,8 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 parameters.put("entityId", entity.getIDValue());
                 transactionImpl.executeQuery(sql, parameters, rs -> {
                     while (rs.next()) {
-                        String columnName = rs.getString(1);
-                        transactionImpl.executeUpdate(String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s", entity.getName(), columnName));
+                        String columnName = rs.getString(1).toLowerCase();
+                        transactionImpl.executeUpdate(String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s", wrapDoubleQuotes(entity.getName().toLowerCase()), wrapDoubleQuotes(columnName)));
                     }
                 });
                 String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
@@ -145,11 +148,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         transactionImpl.executeUpdate(String.format("DROP TABLE IF EXISTS %s", entity.getName()));
     }
 
-
-    private void deleteEntityFieldtorage(EntityField field, Transaction transaction) throws GeminiException {
-        TransactionImpl transactionImpl = (TransactionImpl) transaction;
-        transactionImpl.executeUpdate(String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s", field.getEntity().getName().toLowerCase(), field.getName().toLowerCase()));
-    }
 
     private void synchronizeRuntimeModules(RuntimeModule module, TransactionImpl transaction) throws IOException, SQLException, GeminiException {
         String schemaLocation = module.getSchemaLocation();
@@ -208,10 +206,8 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         if (!entity.isEmbedable()) {
             sqlBuilder.append(uuidField());
         }
-        entity.getSchemaEntityFields().forEach(f -> {
-            if (!typeNotNeedColumns(f.getType()))
-                sqlBuilder.append(", ").append(field(f));
-        });
+        entity.getMetaEntityFields().forEach(mf -> sqlBuilder.append(", ").append(field(mf)));
+        entity.getDataEntityFields().forEach(f -> sqlBuilder.append(", ").append(field(f)));
         handleUniqueLogicalKeyConstraint(sqlBuilder, entity);
         sqlBuilder.append(" );");
         transaction.executeUpdate(sqlBuilder.toString());
@@ -221,17 +217,18 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
 
     private void updateEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException, GeminiException {
         logger.info("{}: check/update Fields for {}", entity.getModule().getName(), entity.getName());
-        for (EntityField field : entity.getSchemaEntityFields()) {
-            if (typeNotNeedColumns(field.getType())) {
-                continue;
-            }
+
+        HashSet<EntityField> updateSet = new HashSet<>(entity.getMetaEntityFields());
+        updateSet.addAll(entity.getDataEntityFields());
+
+        for (EntityField field : updateSet) {
             if (field.getType() == FieldType.ENTITY_REF) {
                 // to be sure we have
                 Entity refEntity = field.getEntityRef();
                 assert refEntity != null;
                 checkOrCreatePKDomainForModel(refEntity.getName(), transaction);
             }
-            checkOrUpdateBasicTypeColumn(entity, field, transaction);
+            checkOrUpdateColumn(entity, field, transaction);
         }
         // TODO update logical key constraint -- use the following query to get columns for logical key constraint
         /* SELECT
@@ -244,12 +241,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         tc.constraint_name = 'fieldresolution_lk' */
     }
 
-    private boolean typeNotNeedColumns(FieldType type) {
-        /* if (type == FieldType.ENTITY_COLLECTION_REF) {
-            return true;
-        } */
-        return false;
-    }
 
     private void handleUniqueLogicalKeyConstraint(StringBuilder sqlBuilder, Entity entity) {
         List<EntityField> logicalKeyList = entity.getLogicalKey().getLogicalKeyList();
@@ -341,7 +332,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     }
 
 
-    private void checkOrUpdateBasicTypeColumn(Entity entity, Field field, TransactionImpl transaction) throws SQLException, GeminiException {
+    private void checkOrUpdateColumn(Entity entity, EntityField field, TransactionImpl transaction) throws SQLException, GeminiException {
         String sqlColumnsCheck = "" +
                 "   SELECT *" +
                 "   FROM information_schema.columns" +
@@ -351,7 +342,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         HashMap<String, Object> parameters = new HashMap<>();
         parameters.put("schema", "public");
         parameters.put("table_name", entity.getName().toLowerCase());
-        parameters.put("col_name", field.getName().toLowerCase());
+        parameters.put("col_name", fieldName(field, false));
 
         transaction.executeQuery(sqlColumnsCheck, parameters, resultSet -> {
             boolean exists = resultSet.next();
@@ -359,7 +350,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 String fieldSqlType = getSqlPrimitiveType(field);
                 logger.info("Table {}: adding column {} {}", entity.getName(), field.getName(), fieldSqlType);
                 String sqlAlterTable =
-                        "ALTER TABLE " + entity.getName().toLowerCase() +
+                        "ALTER TABLE " + wrapDoubleQuotes(entity.getName().toLowerCase()) +
                                 " ADD COLUMN " + field(field);
 
                 transaction.executeUpdate(sqlAlterTable);
@@ -369,7 +360,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 if (!checkSqlType(field, data_type, domain_name)) {
                     String sqlAlterTable =
                             "ALTER TABLE " + entity.getName().toLowerCase() +
-                                    " DROP COLUMN " + field.getName().toLowerCase();
+                                    " DROP COLUMN " + fieldName(field, true);
                     sqlAlterTable += "; " +
                             "ALTER TABLE " + entity.getName().toLowerCase() +
                             " ADD COLUMN " + field(field);
@@ -400,6 +391,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case TIME:
                 return data_type.contains("time");
             case DATE:
+                return data_type.contains("date");
             case DATETIME:
                 return data_type.contains("timestamp");
             case ENTITY_REF:
@@ -424,16 +416,25 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         return String.format(", %s uuid UNIQUE", wrapDoubleQuotes(Field.UUID_NAME));
     }
 
-    private String field(Field field) {
+
+    private String field(EntityField field) {
         return field(field, false);
     }
 
-    private String field(Field field, boolean isAlterColumn) {
+    private String field(EntityField field, boolean isAlterColumn) {
         FieldType type = field.getType();
         if (oneToOneType(type) || entityType(type)) {
-            return wrapDoubleQuotes(field.getName().toLowerCase()) + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
+            return fieldName(field, true) + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
         }
         throw new RuntimeException(String.format("%s - Field of type %s Not Implemented", field.getName(), field.getType())); // TODO
+    }
+
+    private String fieldName(EntityField field, boolean wrap) {
+        String prefix = field.getScope().equals(EntityField.Scope.META) ? META_PREFIX : "";
+        String name = prefix + field.getName().toLowerCase();
+        if (wrap)
+            return wrapDoubleQuotes(name);
+        return name;
     }
 
     private String fieldUnique(Field field) {

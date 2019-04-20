@@ -37,7 +37,7 @@ public class RecordConverters {
         Map<String, Object> insensitiveFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         insensitiveFields.putAll(rawFields);
         EntityRecord entityRecord = new EntityRecord(entity);
-        for (EntityField field : entity.getSchemaEntityFields()) {
+        for (EntityField field : entity.getDataEntityFields()) {
             String key = toFieldName(field).toLowerCase();
             Object objValue = insensitiveFields.get(key);
 

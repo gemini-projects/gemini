@@ -34,13 +34,12 @@ public class EntityBuilder {
         return rawEntity.getName().toUpperCase();
     }
 
-    public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry) {
-        return addField(fieldType, entry, null);
+    public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, EntityField.Scope scope) {
+        return addField(fieldType, entry, null, scope);
     }
 
-    public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, String refEntityName) {
-        // return addField(fieldType, entry, refEntityName, null);
-        fieldsBuilders.add(new EntityFieldBuilder(fieldType, entry.getName(), entry.isLogicalKey(), refEntityName));
+    public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, String refEntityName, EntityField.Scope scope) {
+        fieldsBuilders.add(new EntityFieldBuilder(fieldType, entry.getName(), entry.isLogicalKey(), refEntityName, scope));
         return this;
     }
 
@@ -58,4 +57,5 @@ public class EntityBuilder {
     public Entity build() {
         return new Entity(module, entityName, rawEntity.isEmbedable(), fieldsBuilders, defaultRecord);
     }
+
 }

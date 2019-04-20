@@ -16,18 +16,16 @@ import java.util.Objects;
 public class EntityField extends Field {
     private final Entity entity;
     private final boolean isLogicalKey;
+    private final Scope scope;
     private Object idValue;
 
-    public EntityField(Entity entity, FieldType fieldType, String fieldName, boolean isLogicalKey,
-                       String entityRefName) {
-        //super(fieldType, fieldName, entityRefName, entityCollectionRefField);
+    public EntityField(Entity entity, FieldType fieldType, String fieldName, boolean isLogicalKey, String entityRefName, Scope scope) {
         super(fieldType, fieldName, entityRefName);
         Assert.notNull(entity, "EntityField must have a not null entity");
-        /* if (fieldType == FieldType.ENTITY_COLLECTION_REF) {
-            Assert.isTrue(!isLogicalKey, String.format("Field FilterType %s not supported as Entity logiacl key", FieldType.ENTITY_COLLECTION_REF.name()));
-        } */
         this.isLogicalKey = isLogicalKey;
         this.entity = entity;
+        Assert.notNull(scope, "EntityField must have a not null scope");
+        this.scope = scope;
     }
 
     /**
@@ -51,6 +49,10 @@ public class EntityField extends Field {
      */
     public void setFieldIDValue(Object idValue) {
         this.idValue = idValue;
+    }
+
+    public Scope getScope() {
+        return scope;
     }
 
     @Nullable
@@ -83,11 +85,18 @@ public class EntityField extends Field {
         if (!(o instanceof EntityField)) return false;
         if (!super.equals(o)) return false;
         EntityField that = (EntityField) o;
-        return super.equals(o) && Objects.equals(entity, that.entity);
+        return super.equals(o)
+                && Objects.equals(entity, that.entity)
+                && Objects.equals(scope, that.scope);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), entity);
+        return Objects.hash(super.hashCode(), entity, scope);
+    }
+
+    public enum Scope {
+        META,
+        DATA
     }
 }

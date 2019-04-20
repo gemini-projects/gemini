@@ -225,29 +225,10 @@ public class EntityManagerImpl implements EntityManager {
         return persistedRecord;
     }
 
-    private EntityField getEntityFieldFromRecord(EntityRecord record) throws FieldException {
-        String name = record.getRequiredField("name");
-        EntityReferenceRecord entity = record.getRequiredField("entity");
-        String entityName = entity.getLogicalKeyRecord().get("name");
-        Entity entityObj = schemaManager.getEntity(entityName);
-        boolean isLogicalKey = record.getFieldOrDefault("isLogicalKey", false);
-        String type = record.getRequiredField("type");
-        FieldType fieldType = FieldType.valueOf(type);
-        String entityRef = null;
-        if (fieldType.equals(FieldType.ENTITY_REF)) {
-            EntityReferenceRecord entityRefPK = record.get("entityRef");
-            assert entityRefPK != null;
-            entityRef = entityRefPK.getLogicalKeyRecord().getRequiredField("name");
-        }
-        EntityFieldBuilder entityFieldBuilder = new EntityFieldBuilder(fieldType, name, isLogicalKey, entityRef);
-        entityFieldBuilder.setEntity(entityObj);
-        return entityFieldBuilder.build();
-    }
-
 
     private boolean checkFieldisNew(EntityField fieldFromRecord) {
         Entity entity = fieldFromRecord.getEntity();
-        Set<EntityField> schemaEntityFields = entity.getSchemaEntityFields();
+        Set<EntityField> schemaEntityFields = entity.getDataEntityFields();
         return schemaEntityFields.stream().noneMatch(f -> f.getName().toLowerCase().equals(fieldFromRecord.getName().toLowerCase()));
     }
 
@@ -274,46 +255,6 @@ public class EntityManagerImpl implements EntityManager {
         resolutionExecutor.run();
     }
 
-    /* // TODO dynamic entity record
-    private void handleInsertSchemaCoreEntities(EntityRecord record, Transaction transaction) throws GeminiException {
-        Entity entity = record.getEntity();
-        switch (entity.getName()) {
-            case ENTITY:
-                Entity entityFromRecord = getEntityFromRecord(record);
-                if (entityFromRecord != null) { // it must be inexistent entity
-                    throw EntityException.ENTITY_FOUND(entityFromRecord);
-                }
-                Entity newEntity = createNewEntity(record);
-                schemaManager.addNewRuntimeEntity(newEntity, transaction);
-                break;
-            case FIELD:
-                EntityField fieldFromRecord = getEntityFieldFromRecord(record);
-                if (!checkFieldisNew(fieldFromRecord)) {
-                    throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(fieldFromRecord);
-                }
-                schemaManager.addNewRuntimeEntityField(fieldFromRecord, transaction);
-        }
-    }
-
-    private void handleDeleteSchemaCoreEntities(EntityRecord record, Transaction transaction) throws GeminiException {
-        Entity entity = record.getEntity();
-        switch (entity.getName()) {
-            case ENTITY:
-                Entity entityFromRecord = getEntityFromRecord(record);
-                if (entityFromRecord == null) { // it must be inexistent entity
-                    throw EntityException.ENTITY_NOT_FOUND(entityFromRecord.getName());
-                }
-                schemaManager.deleteRuntimeEntity(entityFromRecord, transaction);
-                break;
-            case FIELD:
-                EntityField fieldFromRecord = getEntityFieldFromRecord(record);
-                if (!checkFieldisNew(fieldFromRecord)) {
-                    throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(fieldFromRecord);
-                }
-                schemaManager.deleteRuntimeEntityField(fieldFromRecord, transaction);
-        }
-    }
-    */
 
     private EntityRecord get(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
         Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
@@ -355,4 +296,64 @@ public class EntityManagerImpl implements EntityManager {
                 }
         }
     }
+
+     /* // TODO dynamic entity record
+    private void handleInsertSchemaCoreEntities(EntityRecord record, Transaction transaction) throws GeminiException {
+        Entity entity = record.getEntity();
+        switch (entity.getName()) {
+            case ENTITY:
+                Entity entityFromRecord = getEntityFromRecord(record);
+                if (entityFromRecord != null) { // it must be inexistent entity
+                    throw EntityException.ENTITY_FOUND(entityFromRecord);
+                }
+                Entity newEntity = createNewEntity(record);
+                schemaManager.addNewRuntimeEntity(newEntity, transaction);
+                break;
+            case FIELD:
+                EntityField fieldFromRecord = getEntityFieldFromRecord(record);
+                if (!checkFieldisNew(fieldFromRecord)) {
+                    throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(fieldFromRecord);
+                }
+                schemaManager.addNewRuntimeEntityField(fieldFromRecord, transaction);
+        }
+    }
+
+    private void handleDeleteSchemaCoreEntities(EntityRecord record, Transaction transaction) throws GeminiException {
+        Entity entity = record.getEntity();
+        switch (entity.getName()) {
+            case ENTITY:
+                Entity entityFromRecord = getEntityFromRecord(record);
+                if (entityFromRecord == null) { // it must be inexistent entity
+                    throw EntityException.ENTITY_NOT_FOUND(entityFromRecord.getName());
+                }
+                schemaManager.deleteRuntimeEntity(entityFromRecord, transaction);
+                break;
+            case FIELD:
+                EntityField fieldFromRecord = getEntityFieldFromRecord(record);
+                if (!checkFieldisNew(fieldFromRecord)) {
+                    throw EntityFieldException.ENTITYFIELD_ALREADY_FOUND(fieldFromRecord);
+                }
+                schemaManager.deleteRuntimeEntityField(fieldFromRecord, transaction);
+        }
+    }
+
+    private EntityField getEntityFieldFromRecord(EntityRecord record) throws FieldException {
+        String name = record.getRequiredField("name");
+        EntityReferenceRecord entity = record.getRequiredField("entity");
+        String entityName = entity.getLogicalKeyRecord().get("name");
+        Entity entityObj = schemaManager.getEntity(entityName);
+        boolean isLogicalKey = record.getFieldOrDefault("isLogicalKey", false);
+        String type = record.getRequiredField("type");
+        FieldType fieldType = FieldType.valueOf(type);
+        String entityRef = null;
+        if (fieldType.equals(FieldType.ENTITY_REF)) {
+            EntityReferenceRecord entityRefPK = record.get("entityRef");
+            assert entityRefPK != null;
+            entityRef = entityRefPK.getLogicalKeyRecord().getRequiredField("name");
+        }
+        EntityFieldBuilder entityFieldBuilder = new EntityFieldBuilder(fieldType, name, isLogicalKey, entityRef, scope);
+        entityFieldBuilder.setEntity(entityObj);
+        return entityFieldBuilder.build();
+    }
+    */
 }

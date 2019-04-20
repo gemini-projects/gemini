@@ -1,8 +1,12 @@
 #  Gemini Core Module
 
-INTERFACE Domain {
-    TEXT            code  *
-    TEXT		    description
+
+# Meta information about a entity record (this is a special entity)
+# All entities use CoreMeta as an interface for Meta Information
+INTERFACE CoreMeta {
+    DATETIME    created
+    DATETIME    modified
+   # BOOL        disabled
 }
 
 ENTITY Entity {
@@ -21,6 +25,11 @@ ENTITY Field {
     TEXT		        displayName
     FieldCommonSettings commonSettings
     FieldGuiSettings    guiSettings
+}
+
+INTERFACE Domain {
+    TEXT            code  *
+    TEXT		    description
 }
 
 ENTITY ValueStrategy IMPLEMENTS Domain
