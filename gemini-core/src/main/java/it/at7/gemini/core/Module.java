@@ -23,6 +23,14 @@ public interface Module extends StateListener {
         return false;
     }
 
+    default int order() {
+        Class<? extends Module> classModule = this.getClass();
+        if (classModule.isAnnotationPresent(ModuleDescription.class)) {
+            return classModule.getAnnotation(ModuleDescription.class).order();
+        }
+        return 0;
+    }
+
     default String getSchemaResourceLocation() {
         String pattern = "classpath:/schemas/%s.at";
         return String.format(pattern, getName());

@@ -10,4 +10,6 @@ public @interface ModuleDescription {
     String[] dependencies() default {};
 
     boolean editable() default false;
+
+    int order() default 0;
 }
