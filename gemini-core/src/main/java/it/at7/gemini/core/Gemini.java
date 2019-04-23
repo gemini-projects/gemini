@@ -27,7 +27,7 @@ public class Gemini {
     @Autowired
     public Gemini(StateManagerImpl stateManager, SchemaManager schemaManager, ApplicationContext applicationContext) {
         this.stateManager = stateManager;
-        this.schemaManager = schemaManager;
+        this.schemaManagerInit = schemaManagerInit;
         this.context = applicationContext;
     }
 

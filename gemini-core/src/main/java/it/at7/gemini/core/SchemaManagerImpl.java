@@ -32,7 +32,7 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
 @Service
-public class SchemaManagerImpl implements SchemaManager {
+public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private static final Logger logger = LoggerFactory.getLogger(SchemaManagerImpl.class);
 
     private final ApplicationContext applicationContext;
