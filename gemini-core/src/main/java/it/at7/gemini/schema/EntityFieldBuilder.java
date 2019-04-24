@@ -6,19 +6,25 @@ public class EntityFieldBuilder {
     private String name;
     private boolean logicalKey;
     private String refEntityName;
+    private final String interfaceName;
     private final EntityField.Scope scope;
 
-    public EntityFieldBuilder(FieldType fieldType, String name, boolean logicalKey, String refEntityName, EntityField.Scope scope) {
+    public EntityFieldBuilder(FieldType fieldType, String name, boolean logicalKey, String refEntityName, String interfaceName, EntityField.Scope scope) {
         this.fieldType = fieldType;
         this.name = name;
         this.logicalKey = logicalKey;
         this.refEntityName = refEntityName;
         this.scope = scope;
+        this.interfaceName = interfaceName; // field is defined in this interface -- if null no interface its an entityfield
     }
 
     public EntityFieldBuilder setEntity(Entity entity) {
         this.entity = entity;
         return this;
+    }
+
+    public String getInterfaceName() {
+        return interfaceName;
     }
 
     public EntityField.Scope getScope() {

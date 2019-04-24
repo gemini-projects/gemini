@@ -34,20 +34,14 @@ public class EntityBuilder {
         return rawEntity.getName().toUpperCase();
     }
 
-    public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, EntityField.Scope scope) {
-        return addField(fieldType, entry, null, scope);
+    public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, String interfaceName, EntityField.Scope scope) {
+        return addField(fieldType, entry, null, interfaceName, scope);
     }
 
-    public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, String refEntityName, EntityField.Scope scope) {
-        fieldsBuilders.add(new EntityFieldBuilder(fieldType, entry.getName(), entry.isLogicalKey(), refEntityName, scope));
+    public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, String refEntityName, String interfaceName, EntityField.Scope scope) {
+        fieldsBuilders.add(new EntityFieldBuilder(fieldType, entry.getName(), entry.isLogicalKey(), refEntityName, interfaceName, scope));
         return this;
     }
-
-    /*
-    public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, String collectionEntityName, String collectionEntityField) {
-        fieldsBuilders.add(new EntityFieldBuilder(fieldType, entry.getName(), entry.isLogicalKey(), collectionEntityName, collectionEntityField));
-        return this;
-    } */
 
     public EntityBuilder setDefaultRecord(Object defRecord) {
         this.defaultRecord = defRecord;
@@ -57,5 +51,4 @@ public class EntityBuilder {
     public Entity build() {
         return new Entity(module, entityName, rawEntity.isEmbedable(), fieldsBuilders, defaultRecord);
     }
-
 }
