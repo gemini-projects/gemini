@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private final TransactionManager transactionManager;
     private final PersistenceSchemaManager persistenceSchemaManager;
     private final PersistenceEntityManager persistenceEntityManager;
+    private final EntityManager entityManager;
 
     private Map<String, Module> modules;
     private Map<Module, RawSchema> schemas = new LinkedHashMap<>();
@@ -47,11 +49,12 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private Map<String, Entity> entities = new LinkedHashMap<>();
 
     @Autowired
-    public SchemaManagerImpl(ApplicationContext applicationContext, TransactionManager transactionManager, PersistenceSchemaManager persistenceSchemaManager, PersistenceEntityManager persistenceEntityManager) {
+    public SchemaManagerImpl(ApplicationContext applicationContext, TransactionManager transactionManager, PersistenceSchemaManager persistenceSchemaManager, PersistenceEntityManager persistenceEntityManager, @Lazy EntityManager entityManager) {
         this.applicationContext = applicationContext;
         this.transactionManager = transactionManager;
         this.persistenceSchemaManager = persistenceSchemaManager;
         this.persistenceEntityManager = persistenceEntityManager;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -114,7 +117,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
     private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, Entity entity) throws GeminiException {
         List<EntityRecord> fieldRecords = new ArrayList<>();
-        Set<EntityField> fields = entity.getDataEntityFields(); // don't want fields records for meta fields
+        Set<EntityField> fields = entity.getALLEntityFields(); // don't want fields records for meta fields
         for (EntityField field : fields) {
             logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
             EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();

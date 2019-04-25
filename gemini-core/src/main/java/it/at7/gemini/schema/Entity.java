@@ -8,6 +8,7 @@ import org.springframework.util.Assert;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -87,6 +88,11 @@ public class Entity {
     public EntityRecord getDefaultEntityRecord() {
         return RecordConverters.entityRecordFromMap(this, copyDefaultRecord());
     }
+
+    public Set<EntityField> getALLEntityFields() {
+        return Stream.concat(dataFields.stream(), metaFields.stream()).collect(collectingAndThen(Collectors.toSet(), Collections::unmodifiableSet));
+    }
+
 
     public Set<EntityField> getDataEntityFields() {
         return Collections.unmodifiableSet(dataFields);
