@@ -508,19 +508,19 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return new QueryWithParams(sql.toString(), params);
     }
 
-    private Map<EntityField, EntityRecord> checkAndModifyEmbededEntyRecords(EntityRecord record, Transaction
-            transaction) throws GeminiException {
+    private Map<EntityField, EntityRecord> checkAndModifyEmbededEntyRecords(EntityRecord record, Transaction transaction) throws GeminiException {
         Map<EntityField, EntityRecord> results = new HashMap<>();
         for (EntityField entityField : record.getEntityFields()) {
             if (entityField.getType().equals(FieldType.ENTITY_EMBEDED)) {
                 EntityRecord embededRec = record.get(entityField);
-                assert embededRec != null;
-                if (embededRec.getID() != null) {
-                    embededRec = updateEntityRecordByID(embededRec, transaction);
-                } else {
-                    embededRec = createNewEntityRecord(embededRec, transaction);
+                if (embededRec != null) {
+                    if (embededRec.getID() != null) {
+                        embededRec = updateEntityRecordByID(embededRec, transaction);
+                    } else {
+                        embededRec = createNewEntityRecord(embededRec, transaction);
+                    }
+                    results.put(entityField, embededRec);
                 }
-                results.put(entityField, embededRec);
             }
         }
         return results;
