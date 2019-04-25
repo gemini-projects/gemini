@@ -1,5 +1,6 @@
 package it.at7.gemini.core;
 
+import it.at7.gemini.conf.State;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.core.persistence.PersistenceSchemaManager;
 import it.at7.gemini.dsl.RecordParser;
@@ -37,7 +38,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private static final Logger logger = LoggerFactory.getLogger(SchemaManagerImpl.class);
 
     private final ApplicationContext applicationContext;
-    private final TransactionManager transactionManager;
+    private final StateManager stateManager;
     private final PersistenceSchemaManager persistenceSchemaManager;
     private final PersistenceEntityManager persistenceEntityManager;
     private final EntityManager entityManager;
@@ -49,36 +50,40 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private Map<String, Entity> entities = new LinkedHashMap<>();
 
     @Autowired
-    public SchemaManagerImpl(ApplicationContext applicationContext, TransactionManager transactionManager, PersistenceSchemaManager persistenceSchemaManager, PersistenceEntityManager persistenceEntityManager, @Lazy EntityManager entityManager) {
+    public SchemaManagerImpl(ApplicationContext applicationContext, StateManager stateManager, PersistenceSchemaManager persistenceSchemaManager, PersistenceEntityManager persistenceEntityManager, @Lazy EntityManager entityManager) {
         this.applicationContext = applicationContext;
-        this.transactionManager = transactionManager;
+        this.stateManager = stateManager;
         this.persistenceSchemaManager = persistenceSchemaManager;
         this.persistenceEntityManager = persistenceEntityManager;
         this.entityManager = entityManager;
+
     }
 
     @Override
-    public void initializeSchemas(List<Module> modulesInOrder) throws Exception {
+    public void initializeSchemasStorage(List<Module> modulesInOrder, Transaction transaction) throws Exception {
         this.modules = modulesInOrder.stream().collect(Collectors.toMap(m -> m.getName().toUpperCase(), m -> m));
-        try (Transaction transaction = transactionManager.openTransaction()) {
-            persistenceSchemaManager.beforeLoadSchema(modulesInOrder, transaction);
-            loadModuleSchemas(modulesInOrder);
-            Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap = loadModuleRecords(modulesInOrder);
-            checkSchemaAndCreateEntitiesCoreObj(schemaRawRecordsMap);
-            Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
-                    .flatMap(m -> m.entrySet().stream())
-                    .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
+        persistenceSchemaManager.beforeLoadSchema(modulesInOrder, transaction);
+        loadModuleSchemas(modulesInOrder);
+        Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap = loadModuleRecords(modulesInOrder);
+        checkSchemaAndCreateEntitiesCoreObj(schemaRawRecordsMap);
+        Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
+                .flatMap(m -> m.entrySet().stream())
+                .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
 
-            persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
-
-            // entity records for entity, field / core entities
-            Map<String, List<EntityRecord>> fieldRecordsByEntityName = handleSchemasEntityRecords(entities.values(), transaction);
-
-            createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
-            // setDefaultsForFields(fieldRecordsByEntityName, transaction);
-            transaction.commit();
-        }
+        persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
+        this.stateManager.changeState(State.SCHEMA_STORAGE_INITIALIZED);
     }
+
+    @Override
+    public void initializeSchemaEntityRecords(List<Module> modulesInOrder, Transaction transaction) throws Exception {
+        // entity records for entity, field / core entities
+        Map<String, List<EntityRecord>> fieldRecordsByEntityName = handleSchemasEntityRecords(entities.values(), transaction);
+
+        // createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
+        // setDefaultsForFields(fieldRecordsByEntityName, transaction);
+        stateManager.changeState(State.SCHEMA_RECORDS_INITIALIZED);
+    }
+
 
     @Override
     @Nullable
@@ -121,7 +126,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         for (EntityField field : fields) {
             logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
             EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();
-            fieldEntityRecord = persistenceEntityManager.createOrUpdateEntityRecord(fieldEntityRecord, transaction);
+            fieldEntityRecord = this.entityManager.putOrUpdate(fieldEntityRecord, transaction);
             field.setFieldIDValue(fieldEntityRecord.get(fieldEntityRecord.getEntity().getIdEntityField()));
             fieldRecords.add(fieldEntityRecord);
         }
@@ -132,7 +137,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private void updateENTITYRecord(Transaction transaction, Entity entity) throws GeminiException {
         logger.info("{}: creating/updating EntityRecord for {}", entity.getModule().getName(), entity.getName());
         EntityRecord entityRecord = entity.toInitializationEntityRecord();
-        entityRecord = persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction);
+        entityRecord = entityManager.putOrUpdate(entityRecord, transaction);
         entity.setFieldIDValue(entityRecord.get(entity.getIdEntityField()));
     }
 

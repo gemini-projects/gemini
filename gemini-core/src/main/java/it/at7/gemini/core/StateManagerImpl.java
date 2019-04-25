@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class  StateManagerImpl implements StateManager {
+public class StateManagerImpl implements StateManager {
     Logger logger = LoggerFactory.getLogger(StateManager.class);
 
     List<StateListener> listeners = new ArrayList<>();
@@ -17,7 +17,7 @@ public class  StateManagerImpl implements StateManager {
     private State state = State.STARTING;
 
     @Override
-    public synchronized void changeState(State newState){
+    public synchronized void changeState(State newState) {
         for (StateListener listener : listeners) {
             logger.info("Changing state for {} : {} -> {}", getListenerName(listener), state.name(), newState.name());
             listener.onChange(this.state, newState);

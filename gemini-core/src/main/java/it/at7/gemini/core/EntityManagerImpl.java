@@ -74,7 +74,6 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public EntityRecord putOrUpdate(EntityRecord record) throws GeminiException {
-        checkEnabledState();
         return transactionManager.executeInSingleTrasaction(transaction -> {
             return putOrUpdate(record, transaction);
         });
@@ -151,7 +150,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     private EntityRecord putIfAbsent(EntityRecord record, Transaction transaction) throws GeminiException {
-        assertDynamicSchema(record);
+        checkDynamicSchema(record);
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
             // can insert the entity record
@@ -160,8 +159,9 @@ public class EntityManagerImpl implements EntityManager {
         throw EntityRecordException.MULTIPLE_LK_FOUND(record);
     }
 
-    private EntityRecord putOrUpdate(EntityRecord record, Transaction transaction) throws GeminiException {
-        assertDynamicSchema(record);
+    public EntityRecord putOrUpdate(EntityRecord record, Transaction transaction) throws GeminiException {
+        checkEnabledState();
+        checkDynamicSchema(record);
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
             // can insert the entity record
@@ -179,7 +179,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private EntityRecord update(EntityRecord record, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
-        assertDynamicSchema(record);
+        checkDynamicSchema(record);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(record.getEntity(), logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             // can update
@@ -191,7 +191,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private EntityRecord update(EntityRecord record, UUID uuid, Transaction transaction) throws GeminiException {
-        assertDynamicSchema(record);
+        checkDynamicSchema(record);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(record.getEntity(), uuid, transaction);
         if (persistedRecordOpt.isPresent()) {
             EntityRecord persistedRecord = persistedRecordOpt.get();
@@ -212,7 +212,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private EntityRecord delete(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
-        assertDynamicSchema(entity);
+        checkDynamicSchema(entity);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             return deleteInner(transaction, persistedRecordOpt.get());
@@ -221,7 +221,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private EntityRecord delete(Entity entity, UUID uuid, Transaction transaction) throws GeminiException {
-        assertDynamicSchema(entity);
+        checkDynamicSchema(entity);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(entity, uuid, transaction);
         if (persistedRecordOpt.isPresent()) {
             return deleteInner(transaction, persistedRecordOpt.get());
@@ -286,16 +286,16 @@ public class EntityManagerImpl implements EntityManager {
 
     private void checkEnabledState() throws InvalidStateException {
         State actualState = stateManager.getActualState();
-        if (actualState.compareTo(State.SCHEMA_INITIALIZED) < 0) {
-            throw InvalidStateException.STATE_LESS_THAN(actualState, State.SCHEMA_INITIALIZED);
+        if (actualState.compareTo(State.SCHEMA_STORAGE_INITIALIZED) < 0) {
+            throw InvalidStateException.STATE_LESS_THAN(actualState, State.SCHEMA_STORAGE_INITIALIZED);
         }
     }
 
-    private void assertDynamicSchema(EntityRecord record) throws SchemaException {
-        assertDynamicSchema(record.getEntity());
+    private void checkDynamicSchema(EntityRecord record) throws SchemaException {
+        checkDynamicSchema(record.getEntity());
     }
 
-    private void assertDynamicSchema(Entity entity) throws SchemaException {
+    private void checkDynamicSchema(Entity entity) throws SchemaException {
         DynamicSchema dynamicSchema = configurationService.getDynamicSchema();
         switch (dynamicSchema) {
             case ALL:
@@ -303,7 +303,7 @@ public class EntityManagerImpl implements EntityManager {
             case DISABLED:
                 String name = entity.getName();
                 Set<String> core_entities = Set.of(EntityRef.NAME, FieldRef.NAME);
-                if (core_entities.contains(name)) {
+                if (stateManager.getActualState().compareTo(State.INITIALIZED) >= 0 && core_entities.contains(name)) {
                     throw SchemaException.DYNAMIC_SCHEMA_NOT_ENABLED(name);
                 }
         }

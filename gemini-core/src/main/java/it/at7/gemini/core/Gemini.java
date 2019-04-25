@@ -23,15 +23,17 @@ public class Gemini {
     private final StateManagerImpl stateManager;
     private final SchemaManagerInit schemaManagerInit;
     private final EventManagerInit eventManagerInit;
+    private final TransactionManager transactionManager;
 
     private List<Module> modules;
 
     @Autowired
-    public Gemini(StateManagerImpl stateManager, SchemaManagerInit schemaManagerInit, ApplicationContext applicationContext, EventManagerInit eventManagerInit) {
+    public Gemini(StateManagerImpl stateManager, SchemaManagerInit schemaManagerInit, ApplicationContext applicationContext, EventManagerInit eventManagerInit, TransactionManager transactionManager) {
         this.stateManager = stateManager;
         this.schemaManagerInit = schemaManagerInit;
         this.context = applicationContext;
         this.eventManagerInit = eventManagerInit;
+        this.transactionManager = transactionManager;
     }
 
     public void init() {
@@ -39,8 +41,11 @@ public class Gemini {
             loadPredefinedBeans();
             loadModules();
             start();
-            loadSchemas();
-            loadEvents();
+            try (Transaction transaction = transactionManager.openTransaction()) {
+                // schemas are initialized in a single transaction
+                initializeSchemaAndEvents(transaction);
+                transaction.commit();
+            }
             initialize();
         } catch (Exception e) {
             logger.error("Error During start of Gemini", e);
@@ -69,17 +74,12 @@ public class Gemini {
     }
 
 
-    private void loadSchemas() throws Exception {
-        logger.info("SCHEMA INITIALIZATION");
-        schemaManagerInit.initializeSchemas(modules);
-        stateManager.changeState(State.SCHEMA_INITIALIZED);
-    }
-
-    private void loadEvents() {
-        logger.info("EVENTS LOADING");
-        this.eventManagerInit.loadEvents(modules);
-        stateManager.changeState(State.EVENTS_LOADED);
-
+    private void initializeSchemaAndEvents(Transaction transaction) throws Exception {
+        logger.info("SCHEMAS/EVENTS INITIALIZATION");
+        schemaManagerInit.initializeSchemasStorage(modules, transaction);
+        eventManagerInit.loadEvents(modules);
+        stateManager.changeState(State.SCHEMA_EVENTS_LOADED);
+        schemaManagerInit.initializeSchemaEntityRecords(modules, transaction);
     }
 
     private void initialize() {

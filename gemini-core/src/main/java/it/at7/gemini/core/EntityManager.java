@@ -20,6 +20,8 @@ public interface EntityManager {
 
     EntityRecord putOrUpdate(EntityRecord rec) throws GeminiException;
 
+    EntityRecord putOrUpdate(EntityRecord rec, Transaction transaction) throws GeminiException;
+
     default EntityRecord update(EntityRecord rec) throws GeminiException {
         return update(rec, rec.getLogicalKeyValue());
     }

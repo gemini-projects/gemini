@@ -8,6 +8,6 @@ public class InvalidStateException extends GeminiException {
     }
 
     public static  InvalidStateException STATE_LESS_THAN(State actual, State required){
-        return new InvalidStateException(String.format("State %s isn't greather than  %s", actual, required));
+        return new InvalidStateException(String.format("State %s isn't after than  %s", actual, required));
     }
 }
