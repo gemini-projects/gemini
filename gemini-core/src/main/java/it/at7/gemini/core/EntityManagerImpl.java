@@ -2,9 +2,15 @@ package it.at7.gemini.core;
 
 import it.at7.gemini.conf.DynamicSchema;
 import it.at7.gemini.conf.State;
+import it.at7.gemini.core.events.EventManager;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
-import it.at7.gemini.exceptions.*;
-import it.at7.gemini.schema.*;
+import it.at7.gemini.exceptions.EntityRecordException;
+import it.at7.gemini.exceptions.GeminiException;
+import it.at7.gemini.exceptions.InvalidStateException;
+import it.at7.gemini.exceptions.SchemaException;
+import it.at7.gemini.schema.Entity;
+import it.at7.gemini.schema.EntityRef;
+import it.at7.gemini.schema.FieldRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +30,16 @@ public class EntityManagerImpl implements EntityManager {
     private PersistenceEntityManager persistenceEntityManager;
     private StateManager stateManager;
     private ConfigurationService configurationService;
+    private EventManager eventManager;
 
     @Autowired
-    public EntityManagerImpl(SchemaManager schemaManager, TransactionManager transactionManager, PersistenceEntityManager persistenceEntityManager, StateManager stateManager, ConfigurationService configurationService) {
+    public EntityManagerImpl(SchemaManager schemaManager, TransactionManager transactionManager, PersistenceEntityManager persistenceEntityManager, StateManager stateManager, ConfigurationService configurationService, EventManager eventManager) {
         this.schemaManager = schemaManager;
         this.transactionManager = transactionManager;
         this.persistenceEntityManager = persistenceEntityManager;
         this.stateManager = stateManager;
         this.configurationService = configurationService;
+        this.eventManager = eventManager;
     }
 
     @Override
@@ -146,9 +154,8 @@ public class EntityManagerImpl implements EntityManager {
         assertDynamicSchema(record);
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
-            // TODO enable when dynamic schema --  handleInsertSchemaCoreEntities(record, transaction);
             // can insert the entity record
-            return persistenceEntityManager.createNewEntityRecord(record, transaction);
+            return createNewEntityRecord(record, transaction);
         }
         throw EntityRecordException.MULTIPLE_LK_FOUND(record);
     }
@@ -157,14 +164,18 @@ public class EntityManagerImpl implements EntityManager {
         assertDynamicSchema(record);
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
-            // TODO enable when dynamic schema -- handleInsertSchemaCoreEntities(record, transaction);
             // can insert the entity record
-            return persistenceEntityManager.createNewEntityRecord(record, transaction);
+            return createNewEntityRecord(record, transaction);
         } else {
             EntityRecord persistedRecord = rec.get();
             persistedRecord.update(record);
             return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
         }
+    }
+
+    private EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
+        this.eventManager.beforeInsertFields(record, transaction);
+        return persistenceEntityManager.createNewEntityRecord(record, transaction);
     }
 
     private EntityRecord update(EntityRecord record, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
@@ -225,7 +236,7 @@ public class EntityManagerImpl implements EntityManager {
         return persistedRecord;
     }
 
-
+    /* TODO on dynamic schema
     private boolean checkFieldisNew(EntityField fieldFromRecord) {
         Entity entity = fieldFromRecord.getEntity();
         Set<EntityField> schemaEntityFields = entity.getDataEntityFields();
@@ -249,6 +260,7 @@ public class EntityManagerImpl implements EntityManager {
         }
         return new EntityBuilder(name, runtimeModule).build();
     }
+    */
 
     private void handleDeleteResolution(EntityRecord entityRecord, Transaction transaction) throws GeminiException {
         ResolutionExecutor resolutionExecutor = ResolutionExecutor.forDelete(entityRecord, persistenceEntityManager, schemaManager, transaction);

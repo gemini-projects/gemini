@@ -55,12 +55,12 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
     @Override
-    public void initializeSchemas(Map<String, Module> modules) throws Exception {
-        this.modules = modules;
+    public void initializeSchemas(List<Module> modulesInOrder) throws Exception {
+        this.modules = modulesInOrder.stream().collect(Collectors.toMap(m -> m.getName().toUpperCase(), m -> m));
         try (Transaction transaction = transactionManager.openTransaction()) {
-            persistenceSchemaManager.beforeLoadSchema(modules, transaction);
-            loadModuleSchemas(modules.values());
-            Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap = loadModuleRecords(modules.values());
+            persistenceSchemaManager.beforeLoadSchema(modulesInOrder, transaction);
+            loadModuleSchemas(modulesInOrder);
+            Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap = loadModuleRecords(modulesInOrder);
             checkSchemaAndCreateEntitiesCoreObj(schemaRawRecordsMap);
             Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
                     .flatMap(m -> m.entrySet().stream())
@@ -316,26 +316,27 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
         // now we can resolve entity fields
         for (Map.Entry<String, EntityBuilder> entityEntry : entityBuilders.entrySet()) {
-            EntityBuilder entityB = entityEntry.getValue();
+            EntityBuilder currentEntityBuilder = entityEntry.getValue();
 
             // add the meta information to the current entity
             // NB: (CORE_META must be found... otherwise its ok to have a null runtime excp)
-            for (RawEntity.Entry entry : interfaceBuilders.get(Entity.CORE_META).getRawEntity().getEntries()) {
-                checkAndSetType(entityBuilders, entityB, entry, EntityField.Scope.META);
+            for (RawEntity.Entry currentEntry : interfaceBuilders.get(Entity.CORE_META).getRawEntity().getEntries()) {
+                checkAndCreateField(entityBuilders, currentEntityBuilder, currentEntry, Entity.CORE_META, EntityField.Scope.META);
             }
 
             // merging Gemini interface if found
-            for (String implementsInteface : entityB.getRawEntity().getImplementsIntefaces()) {
+            for (String implementsInteface : currentEntityBuilder.getRawEntity().getImplementsIntefaces()) {
                 // entity implements a common specification
-                EntityBuilder enitityImplementsInterface = interfaceBuilders.get(implementsInteface.toUpperCase());
+                String interfaceName = implementsInteface.toUpperCase();
+                EntityBuilder enitityImplementsInterface = interfaceBuilders.get(interfaceName);
                 for (RawEntity.Entry entry : enitityImplementsInterface.getRawEntity().getEntries()) {
-                    checkAndSetType(entityBuilders, entityB, entry, EntityField.Scope.DATA);
+                    checkAndCreateField(entityBuilders, currentEntityBuilder, entry, interfaceName, EntityField.Scope.DATA);
                 }
             }
 
             // continue with Gemini entity entries
-            for (RawEntity.Entry entry : entityB.getRawEntity().getEntries()) {
-                checkAndSetType(entityBuilders, entityB, entry, EntityField.Scope.DATA);
+            for (RawEntity.Entry entry : currentEntityBuilder.getRawEntity().getEntries()) {
+                checkAndCreateField(entityBuilders, currentEntityBuilder, entry, null, EntityField.Scope.DATA);
             }
         }
 
@@ -350,7 +351,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         this.entities = entities;
     }
 
-    private void checkAndSetType(Map<String, EntityBuilder> entityBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry, EntityField.Scope scope) throws TypeNotFoundException {
+    private void checkAndCreateField(Map<String, EntityBuilder> entityBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry, String interfaceName, EntityField.Scope scope) throws TypeNotFoundException {
         String type = entry.getType().toUpperCase();
 
         Optional<FieldType> fieldType = FieldType.of(type);
@@ -360,7 +361,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
             // try to get an alias
             Optional<FieldType> aliasOfType = FieldType.getAliasOfType(type);
             if (aliasOfType.isPresent()) {
-                entityBuilder.addField(aliasOfType.get(), entry, scope);
+                entityBuilder.addField(aliasOfType.get(), entry, interfaceName, scope);
                 return;
             }
 
@@ -368,7 +369,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
             EntityBuilder entityForType = entityBuilders.get(type);
             if (entityForType != null) {
                 boolean embedable = entityForType.getRawEntity().isEmbedable();
-                entityBuilder.addField(embedable ? ENTITY_EMBEDED : ENTITY_REF, entry, entityForType.getName(), scope);
+                entityBuilder.addField(embedable ? ENTITY_EMBEDED : ENTITY_REF, entry, entityForType.getName(), interfaceName, scope);
                 return;
             }
 
@@ -380,7 +381,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                     // TODO handle embedable entity ref
                     boolean embedable = entityForRefType.getRawEntity().isEmbedable();
                     if (!embedable) {
-                        entityBuilder.addField(ENTITY_REF_ARRAY, entry, entityForRefType.getName(), scope);
+                        entityBuilder.addField(ENTITY_REF_ARRAY, entry, entityForRefType.getName(), interfaceName, scope);
                         return;
                     }
                 }
@@ -388,7 +389,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
             throw new FieldTypeNotKnown(entityBuilder.getName(), type, entry);
         } else {
-            entityBuilder.addField(fieldType.get(), entry, scope);
+            entityBuilder.addField(fieldType.get(), entry, interfaceName, scope);
         }
     }
 

@@ -69,7 +69,16 @@ public class Entity {
         }
         EntityField entityField = dataFieldsByName.get(fieldName);
         if (entityField == null) {
-            throw EntityFieldException.ENTITYFIELD_NOT_FOUND(entityField);
+            throw EntityFieldException.ENTITYFIELD_NOT_FOUND(this, fieldName);
+        }
+        return entityField;
+    }
+
+    public EntityField getMetaField(String fieldName) throws EntityFieldException {
+        fieldName = fieldName.toLowerCase();
+        EntityField entityField = metaFieldsByName.get(fieldName);
+        if (entityField == null) {
+            throw EntityFieldException.ENTITYMETAFIELD_NOT_FOUND(entityField);
         }
         return entityField;
     }

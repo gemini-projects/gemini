@@ -7,6 +7,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class EntityRecord implements RecordBase {
     private Map<String, Object> store;
@@ -30,6 +32,10 @@ public class EntityRecord implements RecordBase {
         return store;
     }
 
+    public boolean set(EntityField field, Object value) throws EntityFieldException {
+        return put(field, value);
+    }
+
     public boolean put(String fieldName, Object value) {
         try {
             EntityField field = getEntityFieldFrom(fieldName);
@@ -39,10 +45,34 @@ public class EntityRecord implements RecordBase {
         }
     }
 
-    public boolean put(EntityField field, Object value) throws EntityFieldException {
-        if (!(this.entity.getDataEntityFields().contains(field) || this.entity.getIdEntityField().equals(field))) {
-            throw EntityFieldException.ENTITYFIELD_NOT_FOUND(field);
+    public boolean setMeta(String fieldName, Object value) {
+        return putMeta(fieldName, value);
+    }
+
+    public boolean putMeta(String fieldName, Object value) {
+        try {
+            EntityField field = getMetaFieldFrom(fieldName);
+            return put(field, value);
+        } catch (EntityFieldException e) {
+            return false;
         }
+    }
+
+    public boolean put(EntityField field, Object value) throws EntityFieldException {
+        EntityField.Scope scope = field.getScope();
+        switch (scope) {
+            case META:
+                if (!this.entity.getMetaEntityFields().contains(field)) {
+                    throw EntityFieldException.ENTITYMETAFIELD_NOT_FOUND(field);
+                }
+                break;
+            case DATA:
+                if (!(this.entity.getDataEntityFields().contains(field) || this.entity.getIdEntityField().equals(field))) {
+                    throw EntityFieldException.ENTITYFIELD_NOT_FOUND(field);
+                }
+                break;
+        }
+
         Object convertedValue = FieldConverters.getConvertedFieldValue(field, value);
         fields.add(field);
         store.put(field.getName().toLowerCase(), convertedValue);
@@ -60,15 +90,27 @@ public class EntityRecord implements RecordBase {
 
     /**
      * Get values and fields for all the fields available in the Entity Schema. This means
-     * that if a new Entity DynamicRecord is created withGeminiSearchString only a subset of fields the remaining fields
-     * are extracted withGeminiSearchString a default value.
-     *
-     * @return
+     * that if a new EntityRecord is created with only a subset of fields the remaining fields
+     * are extracted with a default value. Returns only DATA fields.
      */
-    public Set<EntityFieldValue> getAllSchemaEntityFieldValues() {
+    public Set<EntityFieldValue> getDataEntityFieldValues() {
         return getEntityFieldValue(entity.getDataEntityFields());
     }
 
+    /**
+     * Get DATA and META Entity Fields
+     *
+     * @return
+     */
+    public Set<EntityFieldValue> getALLEntityFieldValues() {
+        Set<EntityField> fields = Stream.concat(entity.getDataEntityFields().stream(), entity.getMetaEntityFields().stream())
+                .collect(Collectors.toSet());
+        return getEntityFieldValue(fields);
+    }
+
+    /**
+     * Get modified fields.. both for DATA and META
+     */
     public Set<EntityFieldValue> getOnlyModifiedEntityFieldValue() {
         return getEntityFieldValue(fields);
     }
@@ -95,6 +137,10 @@ public class EntityRecord implements RecordBase {
 
     private EntityField getEntityFieldFrom(String fieldName) throws EntityFieldException {
         return this.entity.getField(fieldName);
+    }
+
+    private EntityField getMetaFieldFrom(String fieldName) throws EntityFieldException {
+        return this.entity.getMetaField(fieldName);
     }
 
     public void update(EntityRecord rec) {
@@ -126,7 +172,7 @@ public class EntityRecord implements RecordBase {
     }
 
     @Nullable
-    public UUID getUUID(){
+    public UUID getUUID() {
         return this.uuid;
     }
 

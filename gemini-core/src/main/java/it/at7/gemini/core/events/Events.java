@@ -1,0 +1,19 @@
+package it.at7.gemini.core.events;
+
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Component
+public @interface Events {
+    @Nullable
+    String entityName();
+
+    int order() default 0;
+}

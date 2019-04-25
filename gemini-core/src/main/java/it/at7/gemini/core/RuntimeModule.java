@@ -6,7 +6,8 @@ import org.springframework.stereotype.Service;
 @ModuleDescription(
         name = "RUNTIME",
         dependencies = "CORE",
-        editable = true)
+        editable = true,
+        order = 700)
 public class RuntimeModule implements Module {
 
     @Override

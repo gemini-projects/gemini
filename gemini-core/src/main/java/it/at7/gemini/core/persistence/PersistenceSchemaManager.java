@@ -7,15 +7,13 @@ import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public interface PersistenceSchemaManager {
 
-    void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, IOException;
+    void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException, IOException;
 
     default void handleSchemaStorage(Transaction transaction, Entity entity) throws GeminiException {
         handleSchemaStorage(transaction, List.of(entity));
@@ -29,6 +27,6 @@ public interface PersistenceSchemaManager {
 
     void invokeCreateEntityStorageBefore(Entity entity, Transaction transaction) throws GeminiException;
 
-    boolean entityStorageExists(Entity entity, Transaction transaction) throws  GeminiException;
+    boolean entityStorageExists(Entity entity, Transaction transaction) throws GeminiException;
 
 }

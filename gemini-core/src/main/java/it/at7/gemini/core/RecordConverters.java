@@ -81,7 +81,7 @@ public class RecordConverters {
 
     public static Map<String, Object> fieldsToJSONMap(EntityRecord record) {
         Map<String, Object> convertedMap = new HashMap<>();
-        for (EntityRecord.EntityFieldValue fieldValue : record.getAllSchemaEntityFieldValues()) {
+        for (EntityRecord.EntityFieldValue fieldValue : record.getDataEntityFieldValues()) {
             convertSingleFieldTOJSONValue(convertedMap, fieldValue);
         }
         return convertedMap;
@@ -97,7 +97,7 @@ public class RecordConverters {
 
 
     public static Map<String, Object> toMap(EntityRecord record) {
-        return toMap(record.getAllSchemaEntityFieldValues());
+        return toMap(record.getDataEntityFieldValues());
     }
 
     public static Map<String, Object> toMap(DynamicRecord record) {

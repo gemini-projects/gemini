@@ -1,6 +1,7 @@
 package it.at7.gemini.core;
 
 import it.at7.gemini.conf.State;
+import it.at7.gemini.core.events.EventManagerInit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -17,18 +19,19 @@ import java.util.stream.Collectors;
 public class Gemini {
     private final static Logger logger = LoggerFactory.getLogger(Gemini.class);
 
-    private final StateManagerImpl stateManager;
-    private final SchemaManager schemaManager;
     private final ApplicationContext context;
+    private final StateManagerImpl stateManager;
+    private final SchemaManagerInit schemaManagerInit;
+    private final EventManagerInit eventManagerInit;
 
-    private Collection<Module> modules;
-    private Map<String, Module> modulesInOrder;
+    private List<Module> modules;
 
     @Autowired
-    public Gemini(StateManagerImpl stateManager, SchemaManager schemaManager, ApplicationContext applicationContext) {
+    public Gemini(StateManagerImpl stateManager, SchemaManagerInit schemaManagerInit, ApplicationContext applicationContext, EventManagerInit eventManagerInit) {
         this.stateManager = stateManager;
         this.schemaManagerInit = schemaManagerInit;
         this.context = applicationContext;
+        this.eventManagerInit = eventManagerInit;
     }
 
     public void init() {
@@ -37,6 +40,7 @@ public class Gemini {
             loadModules();
             start();
             loadSchemas();
+            loadEvents();
             initialize();
         } catch (Exception e) {
             logger.error("Error During start of Gemini", e);
@@ -49,15 +53,15 @@ public class Gemini {
     }
 
     private void loadModules() {
-        logger.info("Loading Modules");
+        logger.info("MODULES LOADING");
         Map<String, Module> modulesMap = context.getBeansOfType(Module.class);
         for (Module module : modulesMap.values()) {
             logger.info("Found module {} withGeminiSearchString dependecies {}", module.getName(), module.getDependencies());
             stateManager.register(module);
         }
-        this.modulesInOrder = modulesMap.entrySet().stream()
-                .collect(Collectors.toMap(entry -> entry.getValue().getName().toUpperCase(), Map.Entry::getValue));
-        // TODO topologically order modules
+        this.modules = modulesMap.values().stream()
+                .sorted(Comparator.comparingInt(Module::order))
+                .collect(Collectors.toList());
     }
 
     private void start() {
@@ -66,9 +70,16 @@ public class Gemini {
 
 
     private void loadSchemas() throws Exception {
-        logger.info("Initializing Schemas");
-        schemaManager.initializeSchemas(modulesInOrder);
+        logger.info("SCHEMA INITIALIZATION");
+        schemaManagerInit.initializeSchemas(modules);
         stateManager.changeState(State.SCHEMA_INITIALIZED);
+    }
+
+    private void loadEvents() {
+        logger.info("EVENTS LOADING");
+        this.eventManagerInit.loadEvents(modules);
+        stateManager.changeState(State.EVENTS_LOADED);
+
     }
 
     private void initialize() {

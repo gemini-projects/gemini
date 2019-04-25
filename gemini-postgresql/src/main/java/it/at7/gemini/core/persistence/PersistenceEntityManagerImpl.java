@@ -17,7 +17,9 @@ import java.sql.Array;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -433,18 +435,18 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
         StringBuilder sql = new StringBuilder(String.format("INSERT INTO %s", wrapDoubleQuotes(entity.getName().toLowerCase())));
         Map<String, Object> params = new HashMap<>();
-        List<? extends DynamicRecord.FieldValue> sortedFields = sortFields(record.getAllSchemaEntityFieldValues());
+        List<EntityRecord.EntityFieldValue> sortedFields = sortFields(record.getALLEntityFieldValues());
         boolean first = true;
         if (!entity.isEmbedable()) {
             sql.append("(").append(Field.UUID_NAME);
             first = false;
         }
-        for (DynamicRecord.FieldValue field : sortedFields) {
+        for (EntityRecord.EntityFieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || entityType(type)) {
                 sql.append(first ? "(" : ",");
                 first = false;
-                sql.append(wrapDoubleQuotes(field.getField().getName().toLowerCase()));
+                sql.append(PostgresPublicPersistenceSchemaManager.fieldName(field.getEntityField(), true));
             }
         }
         sql.append(") VALUES ");
@@ -491,15 +493,15 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             sql.append(String.format(" %s = :%s , ", Field.UUID_NAME, Field.UUID_NAME));
             params.put(Field.UUID_NAME, record.getUUID());
         }
-        List<? extends DynamicRecord.FieldValue> sortedFields = sortFields(record.getOnlyModifiedEntityFieldValue());
+        List<EntityRecord.EntityFieldValue> sortedFields = sortFields(record.getOnlyModifiedEntityFieldValue());
         for (int i = 0; i < sortedFields.size(); i++) {
-            DynamicRecord.FieldValue field = sortedFields.get(i);
-            String columnName = field.getField().getName().toLowerCase();
+            EntityRecord.EntityFieldValue field = sortedFields.get(i);
+            String columnName = PostgresPublicPersistenceSchemaManager.fieldName(field.getEntityField(), true);
             FieldType type = field.getField().getType();
             if (oneToOneType(type) || entityType(type)) {
-                sql.append(String.format(" %s = :%s", columnName, columnName));
+                sql.append(String.format(" %s = :%s", columnName, field.getEntityField().getName().toLowerCase()));
                 sql.append(i == sortedFields.size() - 1 ? " " : " , ");
-                params.put(columnName, fromFieldToPrimitiveValue(field, embededEntityRecords, transaction));
+                params.put(field.getEntityField().getName().toLowerCase(), fromFieldToPrimitiveValue(field, embededEntityRecords, transaction));
             }
         }
         sql.append(String.format(" WHERE %s = %s", Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class)));
@@ -529,8 +531,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         String sql = String.format("SELECT %1$s.* FROM %1$s WHERE ", wrapDoubleQuotes(entityName));
         Map<String, Object> params = new HashMap<>();
         boolean needAnd = false;
-        for (DynamicRecord.FieldValue filterValue : filterValues) {
-            Field field = filterValue.getField();
+        for (EntityRecord.EntityFieldValue filterValue : filterValues) {
+            EntityField field = filterValue.getEntityField();
             FieldType type = field.getType();
             sql += needAnd ? "AND" : "";
             if (oneToOneType(type) || type.equals(FieldType.ENTITY_REF)) {
@@ -541,10 +543,10 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return new QueryWithParams(sql, params);
     }
 
-    private String handleSingleColumnSelectBasicType(String entityName, Map<String, Object> params, DynamicRecord.FieldValue fieldValue, Transaction transaction) throws SQLException, GeminiException {
+    private String handleSingleColumnSelectBasicType(String entityName, Map<String, Object> params, EntityRecord.EntityFieldValue fieldValue, Transaction transaction) throws GeminiException {
         String colName = fieldValue.getField().getName();
         Object value = fromFieldToPrimitiveValue(fieldValue, /* TODO  */ Map.of(), transaction);
-        String res = String.format(" \"%s\".\"%s\" = :%s ", entityName.toLowerCase(), colName.toLowerCase(), colName.toLowerCase());
+        String res = String.format(" \"%s\".\"%s\" = :%s ", entityName.toLowerCase(), PostgresPublicPersistenceSchemaManager.fieldName(fieldValue.getEntityField(), false), colName.toLowerCase());
         params.put(colName.toLowerCase(), value);
         return res;
     }

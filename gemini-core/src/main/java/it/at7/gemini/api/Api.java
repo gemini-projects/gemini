@@ -23,7 +23,7 @@ public class Api implements ApplicationListener<ApplicationReadyEvent> {
     }
 
     /**
-     * This event is executed as late as conceivably possible to indicate that
+     * This events is executed as late as conceivably possible to indicate that
      * the application is ready to service requests.
      */
     @Override

@@ -7,7 +7,8 @@ import org.springframework.stereotype.Service;
 @Service
 @ModuleDescription(
         name = "CORE",
-        dependencies = {})
+        dependencies = {},
+        order = -700)
 public class CoreModule implements Module {
     @Override
     public void onChange(State previous, State actual) {

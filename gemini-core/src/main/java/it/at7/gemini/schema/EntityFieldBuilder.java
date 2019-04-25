@@ -23,20 +23,16 @@ public class EntityFieldBuilder {
         return this;
     }
 
-    public String getInterfaceName() {
-        return interfaceName;
-    }
-
     public EntityField.Scope getScope() {
         return scope;
     }
 
     public EntityField build() {
-        return new EntityField(entity, fieldType, name, logicalKey, refEntityName, scope);
+        return new EntityField(entity, fieldType, name, logicalKey, refEntityName, interfaceName, scope);
     }
 
     public static EntityField ID(Entity entity) {
-        return new EntityField(entity, FieldType.PK, Field.ID_NAME, false, null, EntityField.Scope.DATA);
+        return new EntityField(entity, FieldType.PK, Field.ID_NAME, false, null, null,  EntityField.Scope.DATA);
     }
 
 }

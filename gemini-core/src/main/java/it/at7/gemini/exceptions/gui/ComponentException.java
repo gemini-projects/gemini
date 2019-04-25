@@ -22,10 +22,10 @@ public class ComponentException extends GeminiException {
     }
 
     public static ComponentException EVENT_NOT_FOUND(String component, String event) {
-        return new ComponentException(EVENT_NOT_FOUND, String.format("Event %s not found for component %s", event, component), component, event);
+        return new ComponentException(EVENT_NOT_FOUND, String.format("Events %s not found for component %s", event, component), component, event);
     }
 
     public static ComponentException COMPONENT_NOT_FOUND(String component, String event) {
-        return new ComponentException(COMPONENT_NOT_FOUND, String.format("Component %s not found - trying to handle event", component, event), component, event);
+        return new ComponentException(COMPONENT_NOT_FOUND, String.format("Component %s not found - trying to handle events", component, event), component, event);
     }
 }

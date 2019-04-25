@@ -5,6 +5,7 @@ public enum State implements Comparable<State> {
     STARTED,
     SCHEMA_CHEKING,
     SCHEMA_INITIALIZED,
+    EVENTS_LOADED,
     INITIALIZED,
     API_INITIALIZATION,
     API_INITIALIZED,

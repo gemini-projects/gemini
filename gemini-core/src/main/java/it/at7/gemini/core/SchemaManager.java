@@ -5,12 +5,9 @@ import it.at7.gemini.schema.EntityField;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 public interface SchemaManager {
-
-    void initializeSchemas(Map<String, Module> modulesInOrder) throws Exception;
-
+    
     Collection<Entity> getAllEntities();
 
     Entity getEntity(String entity);

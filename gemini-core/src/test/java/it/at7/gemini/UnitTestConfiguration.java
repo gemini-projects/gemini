@@ -51,7 +51,7 @@ public class UnitTestConfiguration {
     public PersistenceSchemaManager persistenceSchemaManager() {
         return new PersistenceSchemaManager() {
             @Override
-            public void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, IOException {
+            public void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException, IOException {
 
             }
 
@@ -166,7 +166,7 @@ public class UnitTestConfiguration {
                 Key key = new Key(logicalKey);
                 EntityRecord entityRecord = entityStorage.get(key);
                 if (entityRecord == null) return Optional.empty();
-                for (EntityRecord.EntityFieldValue entityFieldValue : entityRecord.getAllSchemaEntityFieldValues()) {
+                for (EntityRecord.EntityFieldValue entityFieldValue : entityRecord.getDataEntityFieldValues()) {
                     EntityField entityField = entityFieldValue.getEntityField();
                     if (entityField.getType().equals(FieldType.ENTITY_REF)) {
                         Object value = entityFieldValue.getValue();

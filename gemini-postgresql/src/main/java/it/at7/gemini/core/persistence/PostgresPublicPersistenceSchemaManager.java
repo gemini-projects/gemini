@@ -9,7 +9,6 @@ import it.at7.gemini.dsl.entities.RawSchema;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
 import it.at7.gemini.schema.*;
-import jdk.nashorn.api.tree.ReturnTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     private static final Logger logger = LoggerFactory.getLogger(PostgresPublicPersistenceSchemaManager.class);
 
     @Override
-    public void beforeLoadSchema(Map<String, Module> modules, Transaction transaction) throws GeminiException, IOException {
+    public void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException, IOException {
         /* // TODO on dynamic schema (runtime)
         try {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
@@ -433,13 +432,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         throw new RuntimeException(String.format("%s - Field of type %s Not Implemented", field.getName(), field.getType())); // TODO
     }
 
-    private String fieldName(EntityField field, boolean wrap) {
-        String prefix = field.getScope().equals(EntityField.Scope.META) ? META_PREFIX : "";
-        String name = prefix + field.getName().toLowerCase();
-        if (wrap)
-            return wrapDoubleQuotes(name);
-        return name;
-    }
 
     private String fieldUnique(Field field) {
         FieldType type = field.getType();
@@ -489,6 +481,14 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
 
     private enum OPE {
         UPDATE,
-        DELETE;
+        DELETE
+    }
+
+    public static String fieldName(EntityField field, boolean wrap) {
+        String prefix = field.getScope().equals(EntityField.Scope.META) ? META_PREFIX : "";
+        String name = prefix + field.getName().toLowerCase();
+        if (wrap)
+            return wrapDoubleQuotes(name);
+        return name;
     }
 }

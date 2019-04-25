@@ -17,15 +17,17 @@ public class EntityField extends Field {
     private final Entity entity;
     private final boolean isLogicalKey;
     private final Scope scope;
+    private final String interfaceName;
     private Object idValue;
 
-    public EntityField(Entity entity, FieldType fieldType, String fieldName, boolean isLogicalKey, String entityRefName, Scope scope) {
+    public EntityField(Entity entity, FieldType fieldType, String fieldName, boolean isLogicalKey, String entityRefName, String interfaceName, Scope scope) {
         super(fieldType, fieldName, entityRefName);
         Assert.notNull(entity, "EntityField must have a not null entity");
         this.isLogicalKey = isLogicalKey;
         this.entity = entity;
         Assert.notNull(scope, "EntityField must have a not null scope");
         this.scope = scope;
+        this.interfaceName = interfaceName;
     }
 
     /**
@@ -58,6 +60,11 @@ public class EntityField extends Field {
     @Nullable
     public Object getIDValue() {
         return idValue;
+    }
+
+    @Nullable
+    public String getInterfaceName() {
+        return interfaceName;
     }
 
     public EntityRecord toInitializationEntityRecord() throws InvalidLogicalKeyValue, InvalidTypeForObject, EntityFieldException {
