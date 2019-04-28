@@ -79,7 +79,7 @@ public class FieldConverters {
                     // no need to convert
                     return objValue;
                 }
-                EntityReferenceRecord pkValue = null;
+                EntityReferenceRecord pkValue;
                 if (EntityRecord.class.isAssignableFrom(objValue.getClass())) {
                     EntityRecord entityRecord = (EntityRecord) objValue;
                     Entity fieldEntity = field.getEntityRef();
@@ -93,7 +93,6 @@ public class FieldConverters {
                 assert pkValue != null;
                 return pkValue;
             case ENTITY_EMBEDED:
-                assert objValue != null; // handled before
                 if (EntityRecord.class.isAssignableFrom(objValue.getClass())) {
                     // no need to convert
                     return objValue;
