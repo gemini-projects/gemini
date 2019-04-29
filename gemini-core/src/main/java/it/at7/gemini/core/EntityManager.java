@@ -26,7 +26,7 @@ public interface EntityManager {
         return update(rec, rec.getLogicalKeyValue());
     }
 
-    EntityRecord update(EntityRecord rec, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
+    EntityRecord update(EntityRecord rec, Collection<? extends FieldValue> logicalKey) throws GeminiException;
 
     EntityRecord update(EntityRecord rec, UUID uuid) throws GeminiException;
 
@@ -34,7 +34,7 @@ public interface EntityManager {
         return delete(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
     }
 
-    EntityRecord delete(Entity e, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
+    EntityRecord delete(Entity e, Collection<? extends FieldValue> logicalKey) throws GeminiException;
 
     EntityRecord delete(Entity e, UUID uuid) throws GeminiException;
 
@@ -42,7 +42,7 @@ public interface EntityManager {
         return get(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
     }
 
-    EntityRecord get(Entity e, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException;
+    EntityRecord get(Entity e, Collection<? extends FieldValue> logicalKey) throws GeminiException;
 
     EntityRecord get(Entity e, UUID uuid) throws GeminiException;
 
@@ -51,9 +51,9 @@ public interface EntityManager {
         return getRecordsMatching(entity, searchRecord.getFieldValues());
     }
 
-    List<EntityRecord> getRecordsMatching(Entity entity, Set<DynamicRecord.FieldValue> filterFielValueType) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType) throws GeminiException;
 
-    List<EntityRecord> getRecordsMatching(Entity entity, Set<DynamicRecord.FieldValue> filterFielValueType, Transaction transaction) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType, Transaction transaction) throws GeminiException;
 
     List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext) throws GeminiException;
 }

@@ -176,32 +176,4 @@ public class EntityRecord implements RecordBase {
         return this.uuid;
     }
 
-    public static class EntityFieldValue extends DynamicRecord.FieldValue {
-        public EntityFieldValue(EntityField field, Object value) {
-            super(field, value);
-        }
-
-        public EntityField getEntityField() {
-            return (EntityField) getField();
-        }
-
-        public static EntityFieldValue create(EntityField field, Object value) {
-            return new EntityFieldValue(field, value);
-        }
-
-        public static EntityFieldValue create(Entity entity, DynamicRecord.FieldValue value) throws EntityFieldException {
-            EntityField field = entity.getField(value.getField().getName().toLowerCase());
-            return new EntityFieldValue(field, value.getValue());
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return super.equals(o);
-        }
-
-        @Override
-        public int hashCode() {
-            return super.hashCode();
-        }
-    }
 }

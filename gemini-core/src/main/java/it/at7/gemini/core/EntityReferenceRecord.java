@@ -52,8 +52,8 @@ public class EntityReferenceRecord {
         logicalKeyValue.put(field, value);
     }
 
-    public void addLogicalKeyValues(Set<EntityRecord.EntityFieldValue> logicalKeyValue) {
-        for (EntityRecord.EntityFieldValue entityFieldValue : logicalKeyValue) {
+    public void addLogicalKeyValues(Set<EntityFieldValue> logicalKeyValue) {
+        for (EntityFieldValue entityFieldValue : logicalKeyValue) {
             addLogicalKeyValue(entityFieldValue.getEntityField(), entityFieldValue.getValue());
         }
     }

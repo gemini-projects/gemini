@@ -81,7 +81,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
-    public EntityRecord update(EntityRecord rec, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException {
+    public EntityRecord update(EntityRecord rec, Collection<? extends FieldValue> logicalKey) throws GeminiException {
         checkEnabledState();
         return transactionManager.executeInSingleTrasaction(transaction -> {
             return update(rec, logicalKey, transaction);
@@ -97,7 +97,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
-    public EntityRecord delete(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException {
+    public EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey) throws GeminiException {
         checkEnabledState();
         return transactionManager.executeInSingleTrasaction(transaction -> {
             return delete(entity, logicalKey, transaction);
@@ -114,7 +114,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
-    public EntityRecord get(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey) throws GeminiException {
+    public EntityRecord get(Entity entity, Collection<? extends FieldValue> logicalKey) throws GeminiException {
         checkEnabledState();
         return transactionManager.executeInSingleTrasaction(transaction -> {
             return get(entity, logicalKey, transaction);
@@ -130,14 +130,14 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
-    public List<EntityRecord> getRecordsMatching(Entity entity, Set<DynamicRecord.FieldValue> filterFielValueType) throws GeminiException {
+    public List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType) throws GeminiException {
         return transactionManager.executeInSingleTrasaction(transaction -> {
             return getRecordsMatching(entity, filterFielValueType, transaction);
         });
     }
 
     @Override
-    public List<EntityRecord> getRecordsMatching(Entity entity, Set<DynamicRecord.FieldValue> filterFielValueType, Transaction transaction) throws GeminiException {
+    public List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType, Transaction transaction) throws GeminiException {
         return persistenceEntityManager.getEntityRecordsMatching(entity, filterFielValueType, transaction);
 
     }
@@ -193,7 +193,7 @@ public class EntityManagerImpl implements EntityManager {
         return persistenceEntityManager.createNewEntityRecord(record, transaction);
     }
 
-    private EntityRecord update(EntityRecord record, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
+    private EntityRecord update(EntityRecord record, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException {
         checkDynamicSchema(record);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(record.getEntity(), logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
@@ -226,7 +226,7 @@ public class EntityManagerImpl implements EntityManager {
         throw EntityRecordException.UUID_NOTFOUND(record.getEntity(), uuid);
     }
 
-    private EntityRecord delete(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
+    private EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException {
         checkDynamicSchema(entity);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
@@ -283,7 +283,7 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    private EntityRecord get(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
+    private EntityRecord get(Entity entity, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException {
         Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (recordByLogicalKey.isPresent()) {
             return recordByLogicalKey.get();

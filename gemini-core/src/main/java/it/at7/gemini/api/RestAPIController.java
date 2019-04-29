@@ -194,7 +194,7 @@ public class RestAPIController {
             return entityManager.update(rec, uuid);
         } catch (IllegalArgumentException e1) {
             // it is not a UUID
-            List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
+            List<EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
             return entityManager.update(rec, logicalKeyValues);
         }
     }
@@ -204,7 +204,7 @@ public class RestAPIController {
             UUID uuid = UUID.fromString(logicalKey[0]);
             return entityManager.delete(entity, uuid);
         } catch (IllegalArgumentException e1) {
-            List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(entity, logicalKey);
+            List<EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(entity, logicalKey);
             return entityManager.delete(entity, logicalKeyValues);
         }
     }
@@ -214,7 +214,7 @@ public class RestAPIController {
             UUID uuid = UUID.fromString(logicalKey[0]);
             return entityManager.get(e, uuid);
         } catch (IllegalArgumentException e1) {
-            List<EntityRecord.EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
+            List<EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
             return entityManager.get(e, logicalKeyValues);
         }
     }

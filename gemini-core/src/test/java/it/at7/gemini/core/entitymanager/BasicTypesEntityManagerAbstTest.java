@@ -1,6 +1,7 @@
 package it.at7.gemini.core.entitymanager;
 
 import it.at7.gemini.core.DynamicRecord;
+import it.at7.gemini.core.EntityFieldValue;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Services;
 import it.at7.gemini.exceptions.EntityRecordException;
@@ -86,7 +87,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
         entityRecord.put("numberLong", 10);
         entityRecord.put("long", 10);
-        Set<EntityRecord.EntityFieldValue> logicalKey = entityRecord.getLogicalKeyValue();
+        Set<EntityFieldValue> logicalKey = entityRecord.getLogicalKeyValue();
         EntityRecord updated = Services.getEntityManager().update(entityRecord, logicalKey);
         Assert.assertEquals(10L, (long) updated.get("numberLong"));
         Assert.assertEquals(10L, (long) updated.get("long"));
@@ -98,7 +99,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
     @Test(expected = EntityRecordException.class)
     public void n4_updateAlsoLogicalKey() throws GeminiException {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
-        Set<EntityRecord.EntityFieldValue> logicalKey = entityRecord.getLogicalKeyValue();
+        Set<EntityFieldValue> logicalKey = entityRecord.getLogicalKeyValue();
         entityRecord.put("text", "anotherLogicalKey");
         EntityRecord updated = Services.getEntityManager().update(entityRecord, logicalKey);
         Assert.assertEquals(10L, (long) updated.get("numberLong")); // previous update
@@ -109,7 +110,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
     @Test(expected = EntityRecordException.class)
     public void n5_delete() throws GeminiException {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("anotherLogicalKey");
-        Set<EntityRecord.EntityFieldValue> logicalKey = entityRecord.getLogicalKeyValue();
+        Set<EntityFieldValue> logicalKey = entityRecord.getLogicalKeyValue();
         EntityRecord deleted = Services.getEntityManager().delete(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
         assertEquals("anotherLogicalKey", deleted.get("text")); // delete the new logical key record
         Services.getEntityManager().get(entityRecord.getEntity(), logicalKey); // deleted record should not be found

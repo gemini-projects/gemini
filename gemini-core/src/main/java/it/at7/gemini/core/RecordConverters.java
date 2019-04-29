@@ -81,7 +81,7 @@ public class RecordConverters {
 
     public static Map<String, Object> fieldsToJSONMap(EntityRecord record) {
         Map<String, Object> convertedMap = new HashMap<>();
-        for (EntityRecord.EntityFieldValue fieldValue : record.getDataEntityFieldValues()) {
+        for (EntityFieldValue fieldValue : record.getDataEntityFieldValues()) {
             convertSingleFieldTOJSONValue(convertedMap, fieldValue);
         }
         return convertedMap;
@@ -104,9 +104,9 @@ public class RecordConverters {
         return toMap(record.getFieldValues());
     }
 
-    public static Map<String, Object> toMap(Collection<? extends DynamicRecord.FieldValue> fieldValues) {
+    public static Map<String, Object> toMap(Collection<? extends FieldValue> fieldValues) {
         Map<String, Object> convertedMap = new HashMap<>();
-        for (DynamicRecord.FieldValue fieldValue : fieldValues) {
+        for (FieldValue fieldValue : fieldValues) {
             convertSingleFieldTOJSONValue(convertedMap, fieldValue);
         }
         return convertedMap;
@@ -120,7 +120,7 @@ public class RecordConverters {
         r.put(field, objValue);
     }
 
-    static protected void convertSingleFieldTOJSONValue(Map<String, Object> convertedMap, DynamicRecord.FieldValue fieldValue) {
+    static protected void convertSingleFieldTOJSONValue(Map<String, Object> convertedMap, FieldValue fieldValue) {
         Field field = fieldValue.getField();
         FieldType fieldType = field.getType();
         String fieldNameLC = toFieldName(field);
@@ -261,22 +261,22 @@ public class RecordConverters {
         Entity entity = pkRefRec.getEntity();
         DynamicRecord logicalKeyValue = pkRefRec.getLogicalKeyRecord();
         for (EntityField entityField : entity.getLogicalKey().getLogicalKeyList()) {
-            DynamicRecord.FieldValue fieldValue = logicalKeyValue.getFieldValue(entityField);
+            FieldValue fieldValue = logicalKeyValue.getFieldValue(entityField);
             convertSingleFieldTOJSONValue(convertedMap, fieldValue);
         }
         return convertedMap;
     }
 
-    public static List<EntityRecord.EntityFieldValue> logicalKeyFromStrings(Entity entity, String... keys) {
+    public static List<EntityFieldValue> logicalKeyFromStrings(Entity entity, String... keys) {
         Entity.LogicalKey logicalKey = entity.getLogicalKey();
         List<EntityField> logicalKeyList = logicalKey.getLogicalKeyList();
         assert keys.length == logicalKeyList.size();
-        List<EntityRecord.EntityFieldValue> lkFieldValues = new ArrayList<>();
+        List<EntityFieldValue> lkFieldValues = new ArrayList<>();
         for (int i = 0; i < logicalKeyList.size(); i++) {
             EntityField field = logicalKeyList.get(i);
             String lkElem = keys[i];
             Object convertedLkElem = FieldConverters.getConvertedFieldValue(field, lkElem);
-            lkFieldValues.add(EntityRecord.EntityFieldValue.create(field, convertedLkElem));
+            lkFieldValues.add(EntityFieldValue.create(field, convertedLkElem));
         }
         return lkFieldValues;
     }

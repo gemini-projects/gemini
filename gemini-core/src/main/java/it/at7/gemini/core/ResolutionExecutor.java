@@ -38,12 +38,12 @@ public class ResolutionExecutor {
 
     private void handleDelete(List<EntityField> targetEntityFields) throws GeminiException {
         Object id = entityRecord.getID();
-        Set<EntityRecord.EntityFieldValue> logicalKeyValue = entityRecord.getLogicalKeyValue();
+        Set<EntityFieldValue> logicalKeyValue = entityRecord.getLogicalKeyValue();
         for (EntityField field : targetEntityFields) {
             FieldResolutionDef.VALUE resolutionType = getResolutionType(field);
             EntityReferenceRecord entityReferenceRecord = EntityReferenceRecord.fromPKValue(entityRecord.getEntity(), id);
             entityReferenceRecord.addLogicalKeyValues(logicalKeyValue);
-            EntityRecord.EntityFieldValue targetFieldValue = new EntityRecord.EntityFieldValue(field, entityReferenceRecord);
+            EntityFieldValue targetFieldValue = new EntityFieldValue(field, entityReferenceRecord);
             List<EntityRecord> recordsToResolve = persistenceEntityManager.getEntityRecordsMatching(field.getEntity(), Set.of(targetFieldValue), transaction);
             switch (resolutionType) {
                 case EMPTY:

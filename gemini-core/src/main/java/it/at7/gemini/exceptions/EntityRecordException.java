@@ -1,8 +1,6 @@
 package it.at7.gemini.exceptions;
 
-import it.at7.gemini.core.DynamicRecord;
-import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.EntityReferenceRecord;
+import it.at7.gemini.core.*;
 import it.at7.gemini.schema.Entity;
 
 import java.util.Collection;
@@ -20,11 +18,11 @@ public class EntityRecordException extends GeminiException {
     }
 
     private final Entity entity;
-    private final Collection<? extends DynamicRecord.FieldValue> lk;
+    private final Collection<? extends FieldValue> lk;
     private final Code errorCode;
     private final UUID uuid;
 
-    public EntityRecordException(Code errorCode, Entity entity, Collection<? extends DynamicRecord.FieldValue> lk, String message) {
+    public EntityRecordException(Code errorCode, Entity entity, Collection<? extends FieldValue> lk, String message) {
         super(errorCode.name(), message);
         this.errorCode = errorCode;
         this.entity = entity;
@@ -48,7 +46,7 @@ public class EntityRecordException extends GeminiException {
         return entity;
     }
 
-    public Collection<? extends DynamicRecord.FieldValue> getLk() {
+    public Collection<? extends FieldValue> getLk() {
         return lk;
     }
 
@@ -62,15 +60,15 @@ public class EntityRecordException extends GeminiException {
         return MULTIPLE_LK_FOUND(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
     }
 
-    public static EntityRecordException MULTIPLE_LK_FOUND(Entity entity, Collection<? extends DynamicRecord.FieldValue> lk) {
+    public static EntityRecordException MULTIPLE_LK_FOUND(Entity entity, Collection<? extends FieldValue> lk) {
         return new EntityRecordException(MULTIPLE_LK_FOUND, entity, lk, String.format("Found multiple Records for Logical Key of %s : %s", entity.getName(), lk.toString()));
     }
 
-    public static EntityRecordException LK_NOTFOUND(Entity entity, Collection<? extends DynamicRecord.FieldValue> lk) {
+    public static EntityRecordException LK_NOTFOUND(Entity entity, Collection<? extends FieldValue> lk) {
         return new EntityRecordException(LK_NOTFOUND, entity, lk, String.format("Logical Key for entity %s not found: %s ", entity.getName(), lk.toString()));
     }
 
-    public static EntityRecordException INSERTED_RECORD_NOT_FOUND(Entity entity, Set<EntityRecord.EntityFieldValue> lk) {
+    public static EntityRecordException INSERTED_RECORD_NOT_FOUND(Entity entity, Set<EntityFieldValue> lk) {
         return new EntityRecordException(INSERTED_RECORD_NOT_FOUND, entity, lk, String.format("Inserted record for entity %s not found: %s ", entity.getName(), lk.toString()));
     }
 

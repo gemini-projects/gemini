@@ -92,7 +92,7 @@ public class UnitTestConfiguration {
             class Key {
                 Map<String, Object> primitiveKey;
 
-                public Key(Collection<? extends DynamicRecord.FieldValue> keyFieldValues) {
+                public Key(Collection<? extends FieldValue> keyFieldValues) {
                     primitiveKey = RecordConverters.toMap(keyFieldValues);
                 }
 
@@ -111,7 +111,7 @@ public class UnitTestConfiguration {
             }
 
             @Override
-            public List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends DynamicRecord.FieldValue> filterFieldValueType, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
+            public List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFieldValueType, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException {
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.get(entityName);
                 if (entityStorage == null) {
@@ -120,7 +120,7 @@ public class UnitTestConfiguration {
                 List<EntityRecord> result = new ArrayList<>();
                 for (EntityRecord value : entityStorage.values()) {
                     boolean equals = true;
-                    for (DynamicRecord.FieldValue fieldValue : filterFieldValueType) {
+                    for (FieldValue fieldValue : filterFieldValueType) {
                         Object storedValue = value.get(fieldValue.getField());
                         Object filterValue = fieldValue.getValue();
 
@@ -138,7 +138,7 @@ public class UnitTestConfiguration {
             }
 
             @Override
-            public Optional<EntityRecord> getEntityRecordByLogicalKey(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey, Transaction transaction) throws GeminiException {
+            public Optional<EntityRecord> getEntityRecordByLogicalKey(Entity entity, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException {
                 return getRecordByLogicalKeyInner(entity, logicalKey);
             }
 
@@ -157,7 +157,7 @@ public class UnitTestConfiguration {
                 return Optional.empty();
             }
 
-            private Optional<EntityRecord> getRecordByLogicalKeyInner(Entity entity, Collection<? extends DynamicRecord.FieldValue> logicalKey) {
+            private Optional<EntityRecord> getRecordByLogicalKeyInner(Entity entity, Collection<? extends FieldValue> logicalKey) {
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.get(entityName);
                 if (entityStorage == null) {
@@ -166,7 +166,7 @@ public class UnitTestConfiguration {
                 Key key = new Key(logicalKey);
                 EntityRecord entityRecord = entityStorage.get(key);
                 if (entityRecord == null) return Optional.empty();
-                for (EntityRecord.EntityFieldValue entityFieldValue : entityRecord.getDataEntityFieldValues()) {
+                for (EntityFieldValue entityFieldValue : entityRecord.getDataEntityFieldValues()) {
                     EntityField entityField = entityFieldValue.getEntityField();
                     if (entityField.getType().equals(FieldType.ENTITY_REF)) {
                         Object value = entityFieldValue.getValue();
@@ -194,7 +194,7 @@ public class UnitTestConfiguration {
                 Entity entity = record.getEntity();
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.computeIfAbsent(entityName, k -> new HashMap<>());
-                Set<EntityRecord.EntityFieldValue> logicalKeyValue = record.getLogicalKeyValue();
+                Set<EntityFieldValue> logicalKeyValue = record.getLogicalKeyValue();
                 Key key = new Key(logicalKeyValue);
                 EntityRecord existentRecord = entityStorage.get(key);
                 if (existentRecord != null) {
@@ -232,7 +232,7 @@ public class UnitTestConfiguration {
                 Map.Entry<Key, EntityRecord> entityRecord = first.get();
                 Key key = entityRecord.getKey();
                 EntityRecord value = entityRecord.getValue();
-                Set<EntityRecord.EntityFieldValue> logicalKeyValue = value.getLogicalKeyValue();
+                Set<EntityFieldValue> logicalKeyValue = value.getLogicalKeyValue();
                 Key newKey = new Key(logicalKeyValue);
                 entityStorage.remove(key);
                 entityStorage.put(newKey, record);
@@ -262,7 +262,7 @@ public class UnitTestConfiguration {
                 Entity entity = record.getEntity();
                 String entityName = entity.getName().toUpperCase();
                 Map<Key, EntityRecord> entityStorage = store.get(entityName);
-                Set<EntityRecord.EntityFieldValue> logicalKeyValue = record.getLogicalKeyValue();
+                Set<EntityFieldValue> logicalKeyValue = record.getLogicalKeyValue();
                 Key key = new Key(logicalKeyValue);
                 assert entityStorage.containsKey(key);
                 entityStorage.remove(key);
