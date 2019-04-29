@@ -473,7 +473,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     private Map<EntityField, EntityRecord> checkAndCreateEmbededEntity(EntityRecord record, Transaction transaction) throws
             GeminiException {
         Map<EntityField, EntityRecord> results = new HashMap<>();
-        for (EntityField entityField : record.getEntityFields()) {
+        for (EntityField entityField : record.getModifiedFields()) {
             if (entityField.getType().equals(FieldType.ENTITY_EMBEDED)) {
                 EntityRecord embededRec = record.get(entityField);
                 embededRec = createNewEntityRecord(embededRec, transaction);
@@ -510,7 +510,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
     private Map<EntityField, EntityRecord> checkAndModifyEmbededEntyRecords(EntityRecord record, Transaction transaction) throws GeminiException {
         Map<EntityField, EntityRecord> results = new HashMap<>();
-        for (EntityField entityField : record.getEntityFields()) {
+        for (EntityField entityField : record.getModifiedFields()) {
             if (entityField.getType().equals(FieldType.ENTITY_EMBEDED)) {
                 EntityRecord embededRec = record.get(entityField);
                 if (embededRec != null) {
@@ -559,7 +559,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     private void checkAndDeleteEmbededEntity(EntityRecord record, Transaction transaction) throws GeminiException {
-        for (EntityField entityField : record.getEntityFields()) {
+        for (EntityField entityField : record.getModifiedFields()) {
             if (entityField.getType().equals(FieldType.ENTITY_EMBEDED)) {
                 EntityRecord embededRec = record.get(entityField);
                 deleteEntityRecordByID(embededRec, transaction);

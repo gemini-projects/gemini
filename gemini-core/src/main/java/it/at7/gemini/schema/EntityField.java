@@ -94,12 +94,13 @@ public class EntityField extends Field {
         EntityField that = (EntityField) o;
         return super.equals(o)
                 && Objects.equals(entity, that.entity)
-                && Objects.equals(scope, that.scope);
+                && Objects.equals(scope, that.scope)
+                && Objects.equals(interfaceName, that.interfaceName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), entity, scope);
+        return Objects.hash(super.hashCode(), entity, scope, interfaceName);
     }
 
     public enum Scope {

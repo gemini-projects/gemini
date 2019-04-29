@@ -23,7 +23,7 @@ public class EntityRecord implements RecordBase {
         this.entity = entity;
     }
 
-    public Set<EntityField> getEntityFields() {
+    public Set<EntityField> getModifiedFields() {
         return Collections.unmodifiableSet(fields);
     }
 

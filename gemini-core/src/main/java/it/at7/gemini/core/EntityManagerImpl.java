@@ -9,6 +9,7 @@ import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.InvalidStateException;
 import it.at7.gemini.exceptions.SchemaException;
 import it.at7.gemini.schema.Entity;
+import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.EntityRef;
 import it.at7.gemini.schema.FieldRef;
 import org.slf4j.Logger;
@@ -168,9 +169,23 @@ public class EntityManagerImpl implements EntityManager {
             return createNewEntityRecord(record, transaction);
         } else {
             EntityRecord persistedRecord = rec.get();
-            persistedRecord.update(record);
-            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
+            if (someRealUpdatedNeeded(record, persistedRecord)) {
+                persistedRecord.update(record);
+                return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
+            }
+            return persistedRecord;
         }
+    }
+
+    private boolean someRealUpdatedNeeded(EntityRecord record, EntityRecord persistedRecord) {
+        for (EntityFieldValue ev : record.getOnlyModifiedEntityFieldValue()) {
+            EntityField entityField = ev.getEntityField();
+            Object persistedValue = persistedRecord.get(entityField);
+            if (!ev.fieldValueEquals(persistedValue)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
