@@ -11,3 +11,11 @@ dependencies {
 jar {
     enabled true
 }
+
+springBoot {
+    mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiGUIMain'
+}
+bootJar {
+    classifier = 'boot'
+    launchScript()
+}
