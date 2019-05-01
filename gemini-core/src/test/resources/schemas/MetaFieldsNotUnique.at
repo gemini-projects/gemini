@@ -1,0 +1,4 @@
+ENTITY NotUniqueEntity {
+    # created exists in Meta Fields
+    DATE created
+}

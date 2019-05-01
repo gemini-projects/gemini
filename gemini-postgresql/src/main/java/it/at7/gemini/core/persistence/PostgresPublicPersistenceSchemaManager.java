@@ -28,7 +28,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     private static final Logger logger = LoggerFactory.getLogger(PostgresPublicPersistenceSchemaManager.class);
 
     @Override
-    public void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException, IOException {
+    public void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException {
         /* // TODO on dynamic schema (runtime)
         try {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;

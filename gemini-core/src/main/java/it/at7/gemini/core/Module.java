@@ -45,4 +45,12 @@ public interface Module extends StateListener {
         String pattern = "/records/%s.atr";
         return String.format(pattern, entityName);
     }
+
+    default boolean createSchemaIfNotFound() {
+        return false;
+    }
+
+    default String getSchemaLocation(){
+        return getSchemaResourceLocation().replace("classpath: ", "");
+    }
 }

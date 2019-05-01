@@ -11,6 +11,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
@@ -73,10 +75,21 @@ public class IntegrationTestMain {
         return loadRealAppApplicationContext(classes);
     }
 
+    /**
+     * Fully initialize Gemini as a normal start
+     */
     public static ConfigurableApplicationContext initializeGemini(Class... classes) {
         ConfigurableApplicationContext context = startSpring(classes);
         Gemini gemini = context.getBean(Gemini.class);
         gemini.init();
+        return context;
+    }
+
+    /**
+     * Initialize Services for Integration Test Withou Gemini Init
+     */
+    public static ConfigurableApplicationContext initializeOnlyServices(Class... classes) {
+        ConfigurableApplicationContext context = startSpring(classes);
         return context;
     }
 
@@ -93,5 +106,11 @@ public class IntegrationTestMain {
 
     @EnableAutoConfiguration
     public static class Autoconfiguration {
+    }
+
+    @EnableAutoConfiguration
+    @ComponentScan(value = {"it.at7.gemini.core"}, excludeFilters = {
+            @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Gemini.class)})
+    public static class AutoconfigurationNoGemini {
     }
 }
