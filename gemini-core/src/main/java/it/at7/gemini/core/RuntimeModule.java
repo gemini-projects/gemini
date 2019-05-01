@@ -16,6 +16,12 @@ public class RuntimeModule implements Module {
         return String.format(pattern, getName());
     }
 
+    @Override
+    public boolean createSchemaIfNotFound() {
+        return true;
+    }
+
+    @Override
     public String getSchemaLocation() {
         String pattern = "./schema/%s.at";
         return String.format(pattern, getName());

@@ -45,9 +45,16 @@ public class Entity {
         this.dataFieldsByName = dataFields.stream().collect(Collectors.toMap(e -> e.getName().toLowerCase(), e -> e));
         this.metaFields = fieldsBuilders.stream().filter(e -> e.getScope().equals(EntityField.Scope.META)).map(EntityFieldBuilder::build).collect(toSet());
         this.metaFieldsByName = metaFields.stream().collect(Collectors.toMap(e -> e.getName().toLowerCase(), e -> e));
+        Assert.isTrue(uniqueMetaAndDataField(dataFieldsByName.keySet(), metaFieldsByName.keySet()), "Data/Meta Fields names are not unique");
         this.logicalKey = extractLogicalKeyFrom(dataFields);
         this.idField = EntityFieldBuilder.ID(this);
         idValue = null;
+    }
+
+    private boolean uniqueMetaAndDataField(Set<String> data, Set<String> meta) {
+        Set<String> intersection = new HashSet<>(data);
+        intersection.retainAll(meta);
+        return intersection.isEmpty();
     }
 
     public String getName() {

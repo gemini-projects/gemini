@@ -13,7 +13,7 @@ import java.util.Set;
 
 public interface PersistenceSchemaManager {
 
-    void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException, IOException;
+    void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException;
 
     default void handleSchemaStorage(Transaction transaction, Entity entity) throws GeminiException {
         handleSchemaStorage(transaction, List.of(entity));

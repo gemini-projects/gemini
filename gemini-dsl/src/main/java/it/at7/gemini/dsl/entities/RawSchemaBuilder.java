@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class RawSchemaBuilder {
+    public static final RawSchema EMPTY_SCHEMA = new RawSchemaBuilder().build();
     private Set<RawEntity> rawEntities = new HashSet<>();
     private Set<RawEntity> rawInterface = new HashSet<>();
 

@@ -51,7 +51,7 @@ public class UnitTestConfiguration {
     public PersistenceSchemaManager persistenceSchemaManager() {
         return new PersistenceSchemaManager() {
             @Override
-            public void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException, IOException {
+            public void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException {
 
             }
 
