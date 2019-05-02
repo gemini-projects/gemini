@@ -1,6 +1,6 @@
 # Gemini
 
-> An opinionated framework for auto-magiccaly create CRUD REST APIs (from a dynamic Schema)
+> An opinionated framework for auto-magically create CRUD REST APIs (from a dynamic Schema)
 
 Gemini is a REST framework fully developed in Java (Spring) for creating CRUD REST APIs defining Entities (Resource) and Relations using a simple DSL.
 
@@ -29,3 +29,5 @@ ENTITY Author {
 # /api/author/{isbn}      GET / PUT / DELETE (single resource)
 ``` 
 
+## License
+GNU GENERAL PUBLIC LICENSE Version 3
