@@ -160,6 +160,11 @@ public class EntityManagerImpl implements EntityManager {
         throw EntityRecordException.MULTIPLE_LK_FOUND(record);
     }
 
+    private EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
+        this.eventManager.beforeInsertFields(record, transaction);
+        return persistenceEntityManager.createNewEntityRecord(record, transaction);
+    }
+
     public EntityRecord putOrUpdate(EntityRecord record, Transaction transaction) throws GeminiException {
         checkEnabledState();
         checkDynamicSchema(record);
@@ -169,11 +174,7 @@ public class EntityManagerImpl implements EntityManager {
             return createNewEntityRecord(record, transaction);
         } else {
             EntityRecord persistedRecord = rec.get();
-            if (someRealUpdatedNeeded(record, persistedRecord)) {
-                persistedRecord.update(record);
-                return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
-            }
-            return persistedRecord;
+            return updateRecordIfNeededHandlingEvents(record, transaction, persistedRecord);
         }
     }
 
@@ -188,19 +189,13 @@ public class EntityManagerImpl implements EntityManager {
         return false;
     }
 
-    private EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
-        this.eventManager.beforeInsertFields(record, transaction);
-        return persistenceEntityManager.createNewEntityRecord(record, transaction);
-    }
-
     private EntityRecord update(EntityRecord record, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException {
         checkDynamicSchema(record);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(record.getEntity(), logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             // can update
             EntityRecord persistedRecord = persistedRecordOpt.get();
-            persistedRecord.update(record);
-            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
+            return updateRecordIfNeededHandlingEvents(record, transaction, persistedRecord);
         }
         throw EntityRecordException.LK_NOTFOUND(record.getEntity(), logicalKey);
     }
@@ -220,10 +215,18 @@ public class EntityManagerImpl implements EntityManager {
                 }
             }
             // can update
+            return updateRecordIfNeededHandlingEvents(record, transaction, persistedRecord);
+        }
+        throw EntityRecordException.UUID_NOTFOUND(record.getEntity(), uuid);
+    }
+
+    private EntityRecord updateRecordIfNeededHandlingEvents(EntityRecord record, Transaction transaction, EntityRecord persistedRecord) throws GeminiException {
+        eventManager.onUpdateFields(record, transaction);
+        if (someRealUpdatedNeeded(record, persistedRecord)) {
             persistedRecord.update(record);
             return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
         }
-        throw EntityRecordException.UUID_NOTFOUND(record.getEntity(), uuid);
+        return persistedRecord;
     }
 
     private EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException {

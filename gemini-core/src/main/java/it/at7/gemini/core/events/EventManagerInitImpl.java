@@ -25,6 +25,7 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
 
     private final Map<String, Map<String, List<BeanWithMethod>>> beforeInsertField = new HashMap<>();
 
+
     Map<String, List<Object>> entityEventsBeans;
 
     @Autowired
@@ -65,19 +66,6 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         });
     }
 
-    private void resolveAnnotation(String entityName, Annotation annotation, Object bean, Method targetMethod) {
-        if (annotation instanceof BeforeInsertField) {
-            resolveBeforeInsertField(entityName, (BeforeInsertField) annotation, bean, targetMethod);
-        }
-    }
-
-    private void resolveBeforeInsertField(String entityName, BeforeInsertField annotation, Object bean, Method targetMethod) {
-        String fieldName = annotation.field().toLowerCase();
-        Map<String, List<BeanWithMethod>> beforeFieldByFieldName = this.beforeInsertField.computeIfAbsent(entityName, e -> new HashMap<>());
-        List<BeanWithMethod> methodList = beforeFieldByFieldName.computeIfAbsent(fieldName, f -> new ArrayList<>());
-        methodList.add(BeanWithMethod.of(bean, targetMethod));
-    }
-
     private void checkEntityEvents(Map<String, List<Object>> entityEvents) {
         Collection<Entity> allEntities = schemaManager.getAllEntities();
         entityEvents.keySet().forEach(e -> {
@@ -85,29 +73,22 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         });
     }
 
+    private void resolveAnnotation(String entityName, Annotation annotation, Object bean, Method targetMethod) {
+        if (annotation instanceof BeforeInsertField) {
+            String fieldName = ((BeforeInsertField) annotation).field().toLowerCase();
+            resolveAnnotationField(entityName, fieldName, beforeInsertField, bean, targetMethod);
+        }
+    }
+
+    private void resolveAnnotationField(String entityName, String fieldName, Map<String, Map<String, List<BeanWithMethod>>> mapByEntNameAndField, Object bean, Method targetMethod) {
+        Map<String, List<BeanWithMethod>> beforeFieldByFieldName = mapByEntNameAndField.computeIfAbsent(entityName, e -> new HashMap<>());
+        List<BeanWithMethod> methodList = beforeFieldByFieldName.computeIfAbsent(fieldName, f -> new ArrayList<>());
+        methodList.add(BeanWithMethod.of(bean, targetMethod));
+    }
+
     @Override
     public void beforeInsertFields(EntityRecord record, Transaction transaction) throws GeminiException {
-        Entity entity = record.getEntity();
-        String entityName = entity.getName();
-        Map<String, List<BeanWithMethod>> entityMethods = this.beforeInsertField.get(entityName);
-
-        Set<EntityField> metaEntityFields = entity.getMetaEntityFields();
-        for (EntityField field : metaEntityFields) {
-            if (entityMethods != null) {
-                invokeBeforeInsertFieldMehod(record, entityMethods, field);
-                continue;
-            }
-
-            // interface methods have low priority that entity events
-            String interfaceName = field.getInterfaceName();
-            if (interfaceName != null) {
-                Map<String, List<BeanWithMethod>> interfaceMethods = this.beforeInsertField.get(interfaceName.toUpperCase());
-                if (interfaceMethods != null) {
-                    invokeBeforeInsertFieldMehod(record, interfaceMethods, field);
-                }
-            }
-        }
-
+        handleEventForFields(record, transaction, this.beforeInsertField);
     }
 
     private void invokeBeforeInsertFieldMehod(EntityRecord record, Map<String, List<BeanWithMethod>> entityMethods, EntityField field) throws GeminiException {
