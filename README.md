@@ -29,5 +29,11 @@ ENTITY Author {
 # /api/author/{isbn}      GET / PUT / DELETE (single resource)
 ``` 
 
+**ATTENTION:** Gemini is not ready for production. It is in a heavily development phase.
+
+## Setup in 5 minutes
+
+
+
 ## License
 GNU GENERAL PUBLIC LICENSE Version 3
