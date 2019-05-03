@@ -21,6 +21,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +32,7 @@ public class TransactionImpl implements Transaction {
     private final Logger logger = LoggerFactory.getLogger(TransactionImpl.class);
     private Connection connection;
     private boolean committed;
+    private LocalDateTime openTime;
 
     private final DataSource dataSource;
 
@@ -42,6 +45,7 @@ public class TransactionImpl implements Transaction {
     public void open() throws GeminiGenericException {
         try {
             this.connection = dataSource.getConnection();
+            this.openTime = LocalDateTime.now(ZoneOffset.UTC);
             connection.setAutoCommit(false);
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
@@ -79,6 +83,16 @@ public class TransactionImpl implements Transaction {
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
         }
+    }
+
+    /**
+     *  Get the Transaction open time
+     * @return null if Transaction is not open
+     */
+    @Override
+    @Nullable
+    public LocalDateTime getOpenTime() {
+        return this.openTime;
     }
 
     public int executeUpdate(String sql) throws GeminiException {
