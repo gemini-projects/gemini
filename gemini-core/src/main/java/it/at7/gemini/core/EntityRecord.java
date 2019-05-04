@@ -97,6 +97,10 @@ public class EntityRecord implements RecordBase {
         return getEntityFieldValue(entity.getDataEntityFields());
     }
 
+    public Set<EntityFieldValue> getMetaEntityFieldValues() {
+        return getEntityFieldValue(entity.getMetaEntityFields());
+    }
+
     /**
      * Get DATA and META Entity Fields
      *

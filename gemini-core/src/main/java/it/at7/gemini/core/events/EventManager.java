@@ -6,4 +6,6 @@ import it.at7.gemini.exceptions.GeminiException;
 
 public interface EventManager {
     void beforeInsertFields(EntityRecord record, Transaction transaction) throws GeminiException;
+
+    void onUpdateFields(EntityRecord record, Transaction transaction) throws GeminiException;
 }

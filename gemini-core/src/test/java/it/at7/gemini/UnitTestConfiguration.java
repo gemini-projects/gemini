@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Configuration
@@ -43,6 +44,11 @@ public class UnitTestConfiguration {
             @Override
             public void rollback() throws GeminiException {
 
+            }
+
+            @Override
+            public LocalDateTime getOpenTime() {
+                return null;
             }
         };
     }

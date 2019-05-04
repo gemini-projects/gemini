@@ -24,6 +24,7 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
 
 
     private final Map<String, Map<String, List<BeanWithMethod>>> beforeInsertField = new HashMap<>();
+    private final Map<String, Map<String, List<BeanWithMethod>>> onUpdateField = new HashMap<>();
 
 
     Map<String, List<Object>> entityEventsBeans;
@@ -78,6 +79,22 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
             String fieldName = ((BeforeInsertField) annotation).field().toLowerCase();
             resolveAnnotationField(entityName, fieldName, beforeInsertField, bean, targetMethod);
         }
+        if (annotation instanceof BeforeInsertField.List) {
+            BeforeInsertField[] bif = ((BeforeInsertField.List) annotation).value();
+            for (BeforeInsertField insertField : bif) {
+                resolveAnnotationField(entityName, insertField.field(), beforeInsertField, bean, targetMethod);
+            }
+        }
+        if (annotation instanceof OnUpdateField) {
+            String fieldName = ((OnUpdateField) annotation).field().toLowerCase();
+            resolveAnnotationField(entityName, fieldName, onUpdateField, bean, targetMethod);
+        }
+        if (annotation instanceof OnUpdateField.List) {
+            OnUpdateField[] onF = ((OnUpdateField.List) annotation).value();
+            for (OnUpdateField insertField : onF) {
+                resolveAnnotationField(entityName, insertField.field(), onUpdateField, bean, targetMethod);
+            }
+        }
     }
 
     private void resolveAnnotationField(String entityName, String fieldName, Map<String, Map<String, List<BeanWithMethod>>> mapByEntNameAndField, Object bean, Method targetMethod) {
@@ -91,20 +108,55 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         handleEventForFields(record, transaction, this.beforeInsertField);
     }
 
-    private void invokeBeforeInsertFieldMehod(EntityRecord record, Map<String, List<BeanWithMethod>> entityMethods, EntityField field) throws GeminiException {
+    @Override
+    public void onUpdateFields(EntityRecord record, Transaction transaction) throws GeminiException {
+        handleEventForFields(record, transaction, this.onUpdateField);
+    }
+
+    private void handleEventForFields(EntityRecord record, Transaction transaction, Map<String, Map<String, List<BeanWithMethod>>> methods) throws GeminiException {
+        Entity entity = record.getEntity();
+        String entityName = entity.getName();
+        Map<String, List<BeanWithMethod>> entityMethods = methods.get(entityName);
+
+        Set<EntityField> metaEntityFields = entity.getMetaEntityFields();
+        for (EntityField field : metaEntityFields) {
+            if (entityMethods != null) {
+                invokeEventMethodForField(record, entityMethods, field, transaction);
+                continue;
+            }
+
+            // interface methods have low priority that entity events
+            String interfaceName = field.getInterfaceName();
+            if (interfaceName != null) {
+                Map<String, List<BeanWithMethod>> interfaceMethods = methods.get(interfaceName.toUpperCase());
+                if (interfaceMethods != null) {
+                    invokeEventMethodForField(record, interfaceMethods, field, transaction);
+                }
+            }
+        }
+    }
+
+    private void invokeEventMethodForField(EntityRecord record, Map<String, List<BeanWithMethod>> entityMethods, EntityField field, Transaction transaction) throws GeminiException {
         String fieldName = field.getName();
         List<BeanWithMethod> beanWithMethods = entityMethods.get(fieldName.toLowerCase());
         if (beanWithMethods != null && !beanWithMethods.isEmpty()) {
             // events precedence
             for (BeanWithMethod bm : beanWithMethods) {
                 try {
-                    Object res = bm.method.invoke(bm.bean);
-                    record.put(field, res);
+                    EventContext eventContext = getEventContext(transaction);
+                    Object res = bm.method.invoke(bm.bean, eventContext);
+                    if (res != null) {
+                        record.put(field, res);
+                    }
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw GeminiGenericException.wrap(e);
                 }
             }
         }
+    }
+
+    private EventContext getEventContext(Transaction transaction) {
+        return new EventContextBuilder(transaction).build();
     }
 
     static class BeanWithMethod {

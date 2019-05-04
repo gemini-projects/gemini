@@ -336,9 +336,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             if (!entity.isEmbedable()) {
                 er.setUUID(rs.getObject(Field.UUID_NAME, UUID.class));
             }
-            for (EntityField field : entity.getDataEntityFields()) {
+            for (EntityField field : entity.getALLEntityFields()) {
                 FieldType type = field.getType();
-                String fieldName = field.getName().toLowerCase();
+                String fieldName = PostgresPublicPersistenceSchemaManager.fieldName(field, false);
                 boolean handled = false;
                 if (oneToOneType(type)) {
                     Class specificType = typeClass(type);

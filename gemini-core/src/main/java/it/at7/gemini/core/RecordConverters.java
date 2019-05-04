@@ -87,10 +87,13 @@ public class RecordConverters {
         return convertedMap;
     }
 
-    public static Map<String, Object> metaToJSONMap(EntityRecord entityRecord) {
+    public static Map<String, Object> metaToJSONMap(EntityRecord record) {
         Map<String, Object> convertedMap = new HashMap<>();
-        if (!entityRecord.getEntity().isEmbedable()) {
-            convertedMap.put(GEMINI_UUID_FIELD, entityRecord.getUUID());
+        if (!record.getEntity().isEmbedable()) {
+            convertedMap.put(GEMINI_UUID_FIELD, record.getUUID());
+        }
+        for (EntityFieldValue fieldValue : record.getMetaEntityFieldValues()) {
+            convertSingleFieldTOJSONValue(convertedMap, fieldValue);
         }
         return convertedMap;
     }

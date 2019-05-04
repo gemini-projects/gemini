@@ -29,6 +29,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         testDefaulValues(testEntity, "logKey");
+        testDefaultMetaValues(testEntity);
     }
 
     public static void testDefaulValues(EntityRecord testEntity, String lk){
@@ -42,6 +43,11 @@ public abstract class BasicTypesEntityManagerAbstTest {
         assertNull(testEntity.get("date")); // default
         assertNull(testEntity.get("time")); // default
         assertNull(testEntity.get("datetime")); // default
+    }
+
+    private void testDefaultMetaValues(EntityRecord testEntity) {
+        LocalDateTime created = testEntity.get("created");
+        assertNotNull(created);
     }
 
     @Test(expected = EntityRecordException.class)
