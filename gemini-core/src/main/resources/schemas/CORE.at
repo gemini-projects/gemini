@@ -1,4 +1,4 @@
-#  Gemini Core Module
+#  ====  Gemini Core Module =====
 
 
 # Meta information about a entity record (this is a special entity)
@@ -6,7 +6,6 @@
 INTERFACE CoreMeta {
     DATETIME    created
     DATETIME    modified
-    BOOL        disabled
 }
 
 ENTITY Entity {
