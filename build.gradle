@@ -13,18 +13,18 @@ buildscript {
 }
 
 
-allprojects {
+subprojects {
     repositories {
         jcenter()
     }
 
     group 'it.at7.gemini'
-    version '1.0-SNAPSHOT'
+    version '0.1-SNAPSHOT'
 
     apply plugin: 'java'
     apply plugin: 'idea'
-    apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'org.springframework.boot'
 
     sourceCompatibility = 1.9
     targetCompatibility = 1.9

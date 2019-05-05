@@ -10,23 +10,20 @@ dependencies {
 
 jar {
     enabled true
-    // destinationDir = file('./dist')
-}
-
-springBoot {
-    mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiGUIMain'
-}
-
-
-bootJar {
-    classifier = 'boot'
-    launchScript()
     doLast {
         copy {
             from outputs
             into 'dist'
         }
     }
+}
+
+
+bootJar {
+    mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiGUIMain'
+    archiveClassifier = 'boot'
+    destinationDirectory = file('dist')
+    launchScript()
 }
 
 clean {

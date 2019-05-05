@@ -5,5 +5,5 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.6'
 
 }
-
+bootJar.enabled = false
 jar.enabled = true
