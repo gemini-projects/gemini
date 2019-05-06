@@ -2,13 +2,20 @@
 
 > An opinionated framework for auto-magically create CRUD REST APIs (from a dynamic Schema)
 
-Gemini is a REST framework fully developed in Java (Spring) for auto-generating CRUD REST APIs by defining Entities (Resources) and Relations using a simple DSL.
+## Overview
 
-For example:
+Gemini is a REST framework fully developed in Java (Spring) for automatically generate CRUD REST APIs starting from a simple DSL.
+
+#### Features:
+* Focuses on Entity and Relations (YES REST API with ER model)
+* Define POST/PUT/GET/DELETE starting from a flat Entity Definition (no nesting)
+* Automatically handle Data Storage/Foreign Keys/Relations by using persistence drivers (support postgresql)
+* Relations are strictly checked and managed via Entity Logical keys
+
+For example lets use the Gemini DSL to define....
 
 ```text
-# Two Entities Book/Author
-
+# ..two simple Entities: Book and Author. Where * is used to specify the logical key
 
 ENTITY Book {
       TEXT        isbn    *
@@ -29,13 +36,13 @@ ENTITY Author {
 # /api/author             GET (list) / POST (single resouce)
 # /api/author/{isbn}      GET / PUT / DELETE (single resource)
 
-# Where * is used to specify the logical key
+# Where Book has a reference to Author by using its name logical key
 
 ``` 
 
 **ATTENTION:** Gemini is not ready for production. It's in a heavy development phase.
 
-## Setup in 5 minutes
+## Quick start
 Gemini was developed to be used with different storage types. Currently it supports postgresql database storage. 
 
 ##### Requirements
