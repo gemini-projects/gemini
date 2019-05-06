@@ -24,10 +24,3 @@ ENTITY-RECORD FieldResolution V 1
    "code" :  "DELETE",
    "value" : "CASCADE"
 }]
-
-ENTITY-RECORD Entity V 2
-[{
-    "name": "ENTITY",
-    "displayName": "Entità"
-}]
-

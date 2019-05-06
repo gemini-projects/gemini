@@ -46,6 +46,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
     // entities are stored UPPERCASE
     private Map<String, Entity> entities = new LinkedHashMap<>();
+    private Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap;
 
     @Autowired
     public SchemaManagerImpl(ApplicationContext applicationContext, StateManager stateManager, PersistenceSchemaManager persistenceSchemaManager, PersistenceEntityManager persistenceEntityManager, @Lazy EntityManager entityManager) {
@@ -62,11 +63,9 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         this.modules = modulesInOrder.stream().collect(Collectors.toMap(m -> m.getName().toUpperCase(), m -> m));
         persistenceSchemaManager.beforeLoadSchema(modulesInOrder, transaction);
         loadModuleSchemas(modulesInOrder);
-        Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap = loadModuleRecords(modulesInOrder);
+        this.schemaRawRecordsMap = loadModuleRecords(modulesInOrder);
         checkSchemaAndCreateEntitiesCoreObj(schemaRawRecordsMap);
-        Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
-                .flatMap(m -> m.entrySet().stream())
-                .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
+
 
         persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
         this.stateManager.changeState(State.SCHEMA_STORAGE_INITIALIZED);
@@ -75,12 +74,30 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     @Override
     public void initializeSchemaEntityRecords(List<Module> modulesInOrder, Transaction transaction) throws GeminiException {
         // entity records for entity, field / core entities
-        Map<String, List<EntityRecord>> fieldRecordsByEntityName = handleSchemasEntityRecords(entities.values(), transaction);
 
-        // createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
-        // setDefaultsForFields(fieldRecordsByEntityName, transaction);
+        Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
+                .flatMap(m -> m.entrySet().stream())
+                .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
+
+        /* NB: dediced to use basic data types (no references) for common Entity/Field column types... so no need to initialize anything
+        //
+        // lets first of all create records (domains) required by Entity/Fields... (special entities)
+        // entityRecordForHardCodedEntity(transaction, recordsByEntity, EntityRef.NAME);
+        // entityRecordForHardCodedEntity(transaction, recordsByEntity, FieldRef.NAME);
+        */
+
+        handleSchemasEntityRecords(entities.values(), transaction); // add core entityRecord for ENTITY and FIELD
+        createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
         stateManager.changeState(State.SCHEMA_RECORDS_INITIALIZED);
     }
+
+    /* NB: dediced to use basic data types (no references) for common Entity/Field column types... so no need to initialize anything
+    private void entityRecordForHardCodedEntity(Transaction transaction, Map<String, List<EntityRawRecords>> recordsByEntity, String entityName) throws GeminiException {
+        Set<EntityField> allEntityFields = entities.get(entityName).getALLEntityFields();
+        List<String> entitiesDep = allEntityFields.stream().filter(f -> f.getType().equals(ENTITY_REF)).map(Field::getEntityRef).map(Entity::getName).collect(toList());
+        Map<String, List<EntityRawRecords>> depRecordMap = recordsByEntity.entrySet().stream().filter(e -> entitiesDep.contains(e.getKey())).collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        createProvidedEntityRecords(depRecordMap, transaction); // add entity record provided
+    } */
 
 
     @Override
@@ -120,7 +137,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
     private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, Entity entity) throws GeminiException {
         List<EntityRecord> fieldRecords = new ArrayList<>();
-        Set<EntityField> fields = entity.getALLEntityFields(); // don't want fields records for meta fields
+        Set<EntityField> fields = entity.getALLEntityFields();
         for (EntityField field : fields) {
             logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
             EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();

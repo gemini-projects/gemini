@@ -81,6 +81,7 @@ public class EntityField extends Field {
             values.put("refentity", EntityReferenceRecord.fromPKValue(entityRef, entityRef.getIDValue()));
         }
         values.put("islogicalkey", isLogicalKey());
+        values.put("scope", scope.name());
         Entity FIELD_ENTITY = Services.getSchemaManager().getEntity("FIELD");
         assert FIELD_ENTITY != null;
         return RecordConverters.entityRecordFromMap(FIELD_ENTITY, values);

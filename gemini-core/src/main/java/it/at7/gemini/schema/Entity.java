@@ -3,6 +3,7 @@ package it.at7.gemini.schema;
 import it.at7.gemini.core.*;
 import it.at7.gemini.core.Module;
 import it.at7.gemini.exceptions.EntityFieldException;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -57,6 +58,7 @@ public class Entity {
         return intersection.isEmpty();
     }
 
+    @NotNull
     public String getName() {
         return name;
     }
