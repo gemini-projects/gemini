@@ -7,10 +7,10 @@
 Gemini is a REST framework fully developed in Java (Spring) for automatically generate CRUD REST APIs starting from a simple DSL.
 
 #### Features:
-* Focuses on Entity and Relations (YES REST API with ER model)
-* Define POST/PUT/GET/DELETE starting from a flat Entity Definition (no nesting)
-* Automatically handle Data Storage/Foreign Keys/Relations by using persistence drivers (support postgresql)
-* Relations are strictly checked and managed via Entity Logical keys
+* Focus on Entity and Relations (REST APIs with ER model)
+* Define POST/PUT/GET/DELETE starting from a flat Entity Definition (no nesting/complex schema)
+* Automatically handle Data Storage/Foreign Keys/Relations by using persistence managers/drivers (support postgresql)
+* Relations are strictly checked and managed by Entity Manager and Logical keys
 
 For example lets use the Gemini DSL to define....
 
@@ -33,8 +33,8 @@ ENTITY Author {
 # /api/book             GET (list) / POST (single resouce)
 # /api/book/{isbn}      GET / PUT / DELETE (single resource)
 
-# /api/author             GET (list) / POST (single resouce)
-# /api/author/{isbn}      GET / PUT / DELETE (single resource)
+# /api/author           GET (list) / POST (single resouce)
+# /api/author/{isbn}    GET / PUT / DELETE (single resource)
 
 # Where Book has a reference to Author by using its name logical key
 
@@ -57,12 +57,13 @@ Gemini uses SpringBoot. So let's build the standalone executable.
 gradle buildJar
 cd gemini-postgresql/dist
 ```
-Before executing the standalone jar remember that SpringBoot uses the application.properties and we want to use postgresql.
+Before executing the standalone jar remember that SpringBoot uses the application.properties and we build Gemini with
+Postgresql driver.
 
-application.properties
+This is the minimun configuration to fully statup Gemini (from Spring)
+
 ```
-# This is the minimun configuration to fully statup Gemini
-# Db url and password and server port (deafault is 8080)
+# application.properties
 spring.datasource.url= jdbc:postgresql://localhost:5432/gem
 spring.datasource.username=gem
 spring.datasource.password=gem
