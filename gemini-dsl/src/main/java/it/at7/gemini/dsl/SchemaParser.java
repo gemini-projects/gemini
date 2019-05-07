@@ -13,7 +13,6 @@ import static it.at7.gemini.dsl.Lexer.TokenType.*;
 public class SchemaParser {
     private Lexer lexer;
     private TokenType currentToken;
-    private TokenType previousToken;
 
     public SchemaParser(Reader r) {
         lexer = new Lexer(r);
@@ -95,13 +94,7 @@ public class SchemaParser {
     }
 
     private TokenType nextToken() {
-        previousToken = currentToken;
         currentToken = lexer.nextToken();
-        if (currentToken == INLINE_COMMENT) {
-            do {
-                currentToken = lexer.nextToken();
-            } while (currentToken != EOL);
-        }
         while (currentToken == EOL) {
             currentToken = lexer.nextToken();
         }

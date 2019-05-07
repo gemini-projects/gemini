@@ -1,5 +1,8 @@
 ENTITY TestDomain1 {
     TEXT code *
+    /* a comment TEXT inexistent
+    to test it works */
+    // inline comment
 }
 
 ENTITY TestDataType {

@@ -37,8 +37,7 @@ ENTITY Author {
 # /api/author/{isbn}    GET / PUT / DELETE (single resource)
 
 # Where Book has a reference to Author by using its name logical key
-
-``` 
+```
 
 **ATTENTION:** Gemini is not ready for production. It's in a heavy development phase.
 
