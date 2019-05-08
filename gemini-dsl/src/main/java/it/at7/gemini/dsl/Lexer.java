@@ -47,12 +47,12 @@ public class Lexer {
     public Lexer(Reader r) {
         input = new StreamTokenizer(r);
         input.resetSyntax();
-        input.slashSlashComments(true);
-        input.slashStarComments(true);
         input.wordChars('!', '~');
         input.ordinaryChar('/');
         input.whitespaceChars('\u0000', ' ');
-        input.eolIsSignificant(true);
+        input.slashSlashComments(true);
+        input.slashStarComments(true);
+        input.eolIsSignificant(false);
         input.commentChar('#');
     }
 
