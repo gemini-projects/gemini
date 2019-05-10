@@ -16,7 +16,6 @@ before_script:
   - psql -c 'CREATE DATABASE {{test-gem}};' -U postgres
   - psql -c 'CREATE ROLE gem SUPERUSER LOGIN CREATEDB;' -U postgres
   - cp config/database.yml.travis config/database.yml
-script: bundle exec rake spec
 services:
   - postgresql
 addons:
