@@ -1,4 +1,4 @@
-# Gemini
+# Gemini [![Build Status](https://travis-ci.org/h4t0n/gemini.svg?branch=master)](https://travis-ci.org/h4t0n/gemini)
 
 > An opinionated framework for auto-magically create CRUD REST APIs (from a dynamic Schema)
 
