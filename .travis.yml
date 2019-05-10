@@ -5,4 +5,19 @@ before_install:
   - unzip -qq gradle-5.3-bin.zip
   - export GRADLE_HOME=$PWD/gradle-5.3
   - export PATH=$GRADLE_HOME/bin:$PATH
-  - gradle -v
+  - gradle -v  
+  - sudo apt-get update
+  - sudo apt-get --yes remove postgresql\*
+  - sudo apt-get install -y postgresql-11 postgresql-client-11
+  - sudo cp /etc/postgresql/{9.6,11}/main/pg_hba.conf
+  - sudo service postgresql restart 11  
+before_script:
+  - psql --version
+  - psql -c 'CREATE DATABASE {{test-gem}};' -U postgres
+  - psql -c 'CREATE ROLE gem SUPERUSER LOGIN CREATEDB;' -U postgres
+  - cp config/database.yml.travis config/database.yml
+script: bundle exec rake spec
+services:
+  - postgresql
+addons:
+  postgresql: "11.2"
