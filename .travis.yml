@@ -13,7 +13,7 @@ before_install:
   - sudo service postgresql restart 11  
 before_script:
   - psql --version
-  - psql -c 'CREATE DATABASE {{test-gem}};' -U postgres
+  - psql -c 'CREATE DATABASE test-gem;' -U postgres
   - psql -c 'CREATE ROLE gem SUPERUSER LOGIN CREATEDB;' -U postgres
   - cp config/database.yml.travis config/database.yml
 services:
