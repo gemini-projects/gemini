@@ -11,6 +11,9 @@ buildscript {
     }
 }
 
+wrapper {
+    gradleVersion = '5.1'
+}
 
 subprojects {
     repositories {
