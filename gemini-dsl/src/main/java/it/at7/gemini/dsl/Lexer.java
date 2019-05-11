@@ -32,13 +32,8 @@ public class Lexer {
                     return tokenType;
                 }
             }
-            switch (type) {
-                case StreamTokenizer.TT_WORD:
-                    return WORD;
-                case StreamTokenizer.TT_EOF:
-                    return EOF;
-                case StreamTokenizer.TT_EOL:
-                    return EOL;
+            if (type == StreamTokenizer.TT_WORD) {
+                return WORD;
             }
             return EOF;
         }

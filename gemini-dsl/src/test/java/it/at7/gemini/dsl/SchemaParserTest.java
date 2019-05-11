@@ -83,4 +83,10 @@ public class SchemaParserTest {
         assertTrue(embedable.isEmbedable());
     }
 
+    @Test(expected = SyntaxError.class)
+    public void testSyntaxError() throws SyntaxError {
+        String dsl = "ENTITY Error AHHH";
+        SchemaParser.parse(new StringReader(dsl));
+    }
+
 }

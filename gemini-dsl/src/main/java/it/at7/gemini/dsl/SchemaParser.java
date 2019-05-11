@@ -14,7 +14,7 @@ public class SchemaParser {
     private Lexer lexer;
     private TokenType currentToken;
 
-    public SchemaParser(Reader r) {
+    private SchemaParser(Reader r) {
         lexer = new Lexer(r);
     }
 
@@ -28,9 +28,6 @@ public class SchemaParser {
                     break;
                 case ENTITY:
                     rawSchemaBuilder.addEntity(parseEntity());
-                    break;
-                default:
-                    nextToken(); // if we have comments or new lines
                     break;
             }
         }
@@ -95,9 +92,6 @@ public class SchemaParser {
 
     private TokenType nextToken() {
         currentToken = lexer.nextToken();
-        while (currentToken == EOL) {
-            currentToken = lexer.nextToken();
-        }
         return currentToken;
     }
 
