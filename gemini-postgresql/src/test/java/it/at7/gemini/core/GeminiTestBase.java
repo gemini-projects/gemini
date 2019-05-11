@@ -8,10 +8,12 @@ import org.junit.FixMethodOrder;
 import org.junit.runners.MethodSorters;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.io.Closeable;
+
 import static org.junit.Assert.assertNotNull;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class GeminiTestBase{
+public class GeminiTestBase {
     public static SchemaManager schemaManager;
     public static TransactionManager transactionManager;
     public static PersistenceEntityManager persistenceEntityManager;
@@ -30,7 +32,7 @@ public class GeminiTestBase{
 
     @AfterClass
     public static void after() {
-       contex.close();
+        if (contex != null) contex.close();
     }
 
 }

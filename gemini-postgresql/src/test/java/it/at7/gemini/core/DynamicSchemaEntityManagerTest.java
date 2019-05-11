@@ -21,7 +21,8 @@ public class DynamicSchemaEntityManagerTest {
 
     @AfterClass
     public static void after() {
-        contex.close();
+        if (contex != null)
+            contex.close();
     }
 
     @Test(expected = GeminiException.class)

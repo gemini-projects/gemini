@@ -16,6 +16,7 @@ public class SchemaManagerInitTest extends SchemaManagerInitAbstTest {
 
     @AfterClass
     public static void after() {
-        contex.close();
+        if (contex != null)
+            contex.close();
     }
 }

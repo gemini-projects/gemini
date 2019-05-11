@@ -17,6 +17,7 @@ public class FilterEntityManagerTest extends FilterEntityManagerAbsTest {
 
     @AfterClass
     public static void after() {
-        contex.close();
+        if (contex != null)
+            contex.close();
     }
 }

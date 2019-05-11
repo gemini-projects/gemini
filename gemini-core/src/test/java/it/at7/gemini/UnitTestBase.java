@@ -29,7 +29,7 @@ public abstract class UnitTestBase {
 
     @Before
     public void setup() throws SQLException, GeminiException {
-        if(contextInitialized)
+        if (contextInitialized)
             return;
         ConfigurableApplicationContext context = getApplicationContext();
         setupWebMockMvc(context);
@@ -40,10 +40,12 @@ public abstract class UnitTestBase {
 
     @AfterClass
     public static void clean() {
-        ConfigurableApplicationContext parent = (ConfigurableApplicationContext) webApp.getParent();
-        parent.close();
-        webApp.close();
-        contextInitialized = false;
+        if (webApp != null) {
+            ConfigurableApplicationContext parent = (ConfigurableApplicationContext) webApp.getParent();
+            parent.close();
+            webApp.close();
+            contextInitialized = false;
+        }
     }
 
     public void setupWebMockMvc(ConfigurableApplicationContext wApp) {
@@ -51,11 +53,6 @@ public abstract class UnitTestBase {
         mockMvc = webAppContextSetup((WebApplicationContext) wApp).build();
     }
     //=============================================================/
-
-
-
-
-
 
 
     public static String API_PATH = "/api";

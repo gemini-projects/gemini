@@ -16,7 +16,8 @@ public class BasicTypesEntityManagerImplTest extends BasicTypesEntityManagerAbst
 
     @AfterClass
     public static void after() {
-        contex.close();
+        if (contex != null)
+            contex.close();
     }
 
 }
