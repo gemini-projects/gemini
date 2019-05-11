@@ -19,3 +19,8 @@ services:
   - postgresql
 addons:
   postgresql: "11.2"
+script:
+  - gradle jacocoRootReport
+after_success:
+  - bash <(curl -s https://codecov.io/bash) 
+  
