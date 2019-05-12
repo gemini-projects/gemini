@@ -1,5 +1,6 @@
 package it.at7.gemini.core.entitymanager;
 
+import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.DynamicRecord;
 import it.at7.gemini.core.EntityFieldValue;
 import it.at7.gemini.core.EntityRecord;
@@ -18,7 +19,9 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static it.at7.gemini.core.entitymanager.EntityTestUtility.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class BasicTypesEntityManagerAbstTest {
@@ -30,24 +33,6 @@ public abstract class BasicTypesEntityManagerAbstTest {
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         testDefaulValues(testEntity, "logKey");
         testDefaultMetaValues(testEntity);
-    }
-
-    public static void testDefaulValues(EntityRecord testEntity, String lk){
-        assertEquals(lk, testEntity.get("text")); // real field
-        assertEquals(0, (long) testEntity.get("numberLong")); // default
-        assertEquals(0, (long) testEntity.get("numberDouble")); // default
-        assertEquals(0., testEntity.get("double"), 0.001); // default
-        assertEquals(0, (long) testEntity.get("long")); // default
-        assertEquals(false, testEntity.get("bool")); // default
-        assertArrayEquals(new String[]{}, testEntity.get("textarray")); // default
-        assertNull(testEntity.get("date")); // default
-        assertNull(testEntity.get("time")); // default
-        assertNull(testEntity.get("datetime")); // default
-    }
-
-    private void testDefaultMetaValues(EntityRecord testEntity) {
-        LocalDateTime created = testEntity.get("created");
-        assertNotNull(created);
     }
 
     @Test(expected = EntityRecordException.class)
@@ -79,6 +64,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
         assertEquals(LocalDateTime.of(1989, 6, 9, 7, 7, 7), testEntity.get("datetime"));
         assertEquals(true, testEntity.get("bool"));
         assertArrayEquals(new String[]{"abc", "def"}, testEntity.get("textarray"));
+        testDefaultMetaValues(testEntity);
 
         // textArray test support for List
         entityRecord = TestData.getTestDataTypeEntityRecord("logKey-listFields");
@@ -97,6 +83,8 @@ public abstract class BasicTypesEntityManagerAbstTest {
         EntityRecord updated = Services.getEntityManager().update(entityRecord, logicalKey);
         Assert.assertEquals(10L, (long) updated.get("numberLong"));
         Assert.assertEquals(10L, (long) updated.get("long"));
+        testDefaultMetaValues(updated);
+        checkMetaModifiedChanged(updated);
 
         EntityRecord updatedByGet = Services.getEntityManager().get(entityRecord.getEntity(), logicalKey);
         Assert.assertEquals(updated.getID(), updatedByGet.getID());
@@ -111,6 +99,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
         Assert.assertEquals(10L, (long) updated.get("numberLong")); // previous update
         assertEquals("anotherLogicalKey", updated.get("text")); // new logical Key
         Services.getEntityManager().get(entityRecord.getEntity(), logicalKey); // not found the previous logical key
+        checkMetaModifiedChanged(updated);
     }
 
     @Test(expected = EntityRecordException.class)
@@ -133,6 +122,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
         assertEquals(Long.valueOf(100), testEntity.get("long"));
         assertEquals(Long.valueOf(0), testEntity.get("numberDouble"));
         assertEquals(false, testEntity.get("bool"));
+        testDefaultMetaValues(testEntity);
         testEntity.put("numberDouble", 100.5);
         testEntity.put("double", 100.5);
         EntityRecord testEntityUpdate = Services.getEntityManager().putOrUpdate(testEntity);
@@ -142,6 +132,7 @@ public abstract class BasicTypesEntityManagerAbstTest {
         assertEquals(Double.valueOf(100.5), testEntityUpdate.get("numberDouble"));
         assertEquals(Double.valueOf(100.5), testEntityUpdate.get("double"));
         assertEquals(false, testEntityUpdate.get("bool"));
+        checkMetaModifiedChanged(testEntity);
     }
 
     @Test

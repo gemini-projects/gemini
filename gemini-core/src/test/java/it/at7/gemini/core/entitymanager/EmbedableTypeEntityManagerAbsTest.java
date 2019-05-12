@@ -1,5 +1,6 @@
 package it.at7.gemini.core.entitymanager;
 
+import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Services;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
 
-import static it.at7.gemini.core.entitymanager.BasicTypesEntityManagerAbstTest.testDefaulValues;
+import static it.at7.gemini.core.entitymanager.EntityTestUtility.*;
 import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -38,6 +39,7 @@ public abstract class EmbedableTypeEntityManagerAbsTest {
         EntityRecord embededRecord = testEntity.get("embeded");
         Assert.assertNotNull(embededRecord);
         testDefaulValues(embededRecord, "");
+        testDefaultMetaValues(testEntity);
     }
 
     @Test
@@ -62,6 +64,8 @@ public abstract class EmbedableTypeEntityManagerAbsTest {
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         EntityRecord embededRecord = testEntity.get("embeded");
         checkValuesForEmbeded(embededRecord);
+        testDefaultMetaValues(testEntity);
+
     }
 
     @Test
@@ -70,6 +74,7 @@ public abstract class EmbedableTypeEntityManagerAbsTest {
         EntityRecord fullRecord = Services.getEntityManager().get(recWithLK);
         EntityRecord embededRecord = fullRecord.get("embeded");
         checkValuesForEmbeded(embededRecord);
+        testDefaultMetaValues(fullRecord);
     }
 
     @Test
@@ -84,18 +89,19 @@ public abstract class EmbedableTypeEntityManagerAbsTest {
         Object idOrig = embededRecord.getID();
         Object idUpdated = embededRecord2.getID();
         idOrig.equals(idUpdated);
+        checkMetaModifiedChanged(updatedRecord);
     }
 
     @Test
-    public void n5_updateEmbededWithoutGettingFirst() throws GeminiException {
+    public void n5_updateEmbededWithoutGettingItFirst() throws GeminiException {
         EntityRecord recWithLK = TestData.getEmbedable_singlelk_EntityRecord("logKey-withSomeEbdValues");
         EntityRecord fullRecord = Services.getEntityManager().get(recWithLK);
         EntityRecord embededRecord = fullRecord.get("embeded");
         Object idOrig = embededRecord.getID();
 
 
-        // update directly an available record with embeded subrecors..
-        // if we don't get it we don't have the ID filled.. so the software shold not recreate the embeded field
+        // update directly an available record with embeded subrecords..
+        // if we don't get it we don't have the ID filled.. so the software should not recreate the embeded field
         // lets change only the numberLong for the already existent embeded entity
         Entity embedableEntity = Services.getSchemaManager().getEntity("EmbedableEntity");
         EntityRecord embedable = new EntityRecord(embedableEntity);
@@ -108,6 +114,7 @@ public abstract class EmbedableTypeEntityManagerAbsTest {
         assertEquals(20, (long) embededRecord2.get("numberLong"));
         Object idUpdated = embededRecord2.getID();
         idOrig.equals(idUpdated);
+        checkMetaModifiedChanged(updatedRecord);
     }
 
     @Test
