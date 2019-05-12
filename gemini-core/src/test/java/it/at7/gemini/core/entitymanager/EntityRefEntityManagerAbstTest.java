@@ -1,5 +1,6 @@
 package it.at7.gemini.core.entitymanager;
 
+import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.DynamicRecord;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.EntityReferenceRecord;
@@ -14,7 +15,7 @@ import org.junit.runners.MethodSorters;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class EntityRefEntityManagerAbstTest {
+public abstract class EntityRefEntityManagerAbstTest extends UnitTestNoMockWeb  {
     public static void insertDomainRecords() throws GeminiException {
         EntityRecord lk1 = TestData.getDomain_singlelk_EntityRecord("lk1");
         EntityRecord lk2 = TestData.getDomain_singlelk_EntityRecord("lk2");

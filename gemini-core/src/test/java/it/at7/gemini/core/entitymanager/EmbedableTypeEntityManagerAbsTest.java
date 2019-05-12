@@ -20,7 +20,7 @@ import static it.at7.gemini.core.entitymanager.EntityTestUtility.*;
 import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class EmbedableTypeEntityManagerAbsTest {
+public abstract class EmbedableTypeEntityManagerAbsTest extends UnitTestNoMockWeb {
 
     @Test
     public void n1_putIfAbsent() throws GeminiException {

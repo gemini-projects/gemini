@@ -24,7 +24,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class BasicTypesEntityManagerAbstTest {
+public abstract class BasicTypesEntityManagerAbstTest extends UnitTestNoMockWeb {
 
     @Test
     public void n1_putIfAbsent() throws GeminiException {

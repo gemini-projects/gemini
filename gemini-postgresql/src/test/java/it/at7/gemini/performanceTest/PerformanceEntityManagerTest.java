@@ -1,7 +1,7 @@
 package it.at7.gemini.performanceTest;
 
 import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.GeminiTestBase;
+import it.at7.gemini.core.GeminiPostgresqlTestBase;
 import it.at7.gemini.core.Transaction;
 import it.at7.gemini.core.VoidTransactionCallback;
 import it.at7.gemini.exceptions.GeminiException;
@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.*;
 
-public class PerformanceEntityManagerTest extends GeminiTestBase {
+public class PerformanceEntityManagerTest extends GeminiPostgresqlTestBase {
     static final Logger logger = LoggerFactory.getLogger(PerformanceEntityManagerTest.class);
 
     static class MainSingleTransaction {

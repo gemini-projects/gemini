@@ -15,7 +15,7 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class SchemaManagerTest extends GeminiTestBase {
+public class SchemaManagerTest extends GeminiPostgresqlTestBase {
 
     @Test
     public void n1_TestSchemaInitializationWithoutError() {

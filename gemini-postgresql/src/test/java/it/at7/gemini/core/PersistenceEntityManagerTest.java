@@ -13,7 +13,7 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class PersistenceEntityManagerTest extends GeminiTestBase {
+public class PersistenceEntityManagerTest extends GeminiPostgresqlTestBase {
 
     Entity dataTypeEntity = schemaManager.getEntity("TESTDATATYPE");
     Entity domainEntity = schemaManager.getEntity("TESTDOMAIN1");

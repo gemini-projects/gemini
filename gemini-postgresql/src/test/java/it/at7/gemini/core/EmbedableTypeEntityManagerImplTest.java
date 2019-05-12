@@ -11,16 +11,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.sql.SQLException;
 
 public class EmbedableTypeEntityManagerImplTest extends EmbedableTypeEntityManagerAbsTest {
-    static ConfigurableApplicationContext contex;
 
-    @BeforeClass
-    public static void initializeTest() {
-        contex = IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
+    @Override
+    protected ConfigurableApplicationContext getApplicationContext() {
+        return IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
     }
 
-    @AfterClass
-    public static void after() {
-        if (contex != null)
-            contex.close();
-    }
 }

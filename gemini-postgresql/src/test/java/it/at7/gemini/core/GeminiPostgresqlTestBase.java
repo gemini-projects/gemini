@@ -13,7 +13,7 @@ import java.io.Closeable;
 import static org.junit.Assert.assertNotNull;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class GeminiTestBase {
+public class GeminiPostgresqlTestBase {
     public static SchemaManager schemaManager;
     public static TransactionManager transactionManager;
     public static PersistenceEntityManager persistenceEntityManager;

@@ -1,5 +1,6 @@
 package it.at7.gemini.core;
 
+import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.boot.IntegrationTestMain;
 import it.at7.gemini.conf.DynamicSchema;
 import it.at7.gemini.exceptions.GeminiException;
@@ -11,18 +12,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class DynamicSchemaEntityManagerTest {
-    static ConfigurableApplicationContext contex;
+public class DynamicSchemaEntityManagerTest extends UnitTestNoMockWeb {
 
-    @BeforeClass
-    public static void initializeTest() {
-        contex = IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
-    }
-
-    @AfterClass
-    public static void after() {
-        if (contex != null)
-            contex.close();
+    @Override
+    protected ConfigurableApplicationContext getApplicationContext() {
+        return IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
     }
 
     @Test(expected = GeminiException.class)

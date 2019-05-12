@@ -1,5 +1,6 @@
 package it.at7.gemini.core.entitymanager;
 
+import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class FilterEntityManagerAbsTest {
+public abstract class FilterEntityManagerAbsTest extends UnitTestNoMockWeb {
 
     @Test
     public void n1_testStringSearchQuery() throws GeminiException {

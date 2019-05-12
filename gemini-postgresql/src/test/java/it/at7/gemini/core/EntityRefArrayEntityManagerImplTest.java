@@ -10,17 +10,12 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.sql.SQLException;
 
 public class EntityRefArrayEntityManagerImplTest extends EntityRefArrayEntityManagerAbsTest {
-    static ConfigurableApplicationContext contex;
 
-    @BeforeClass
-    public static void initializeTest() throws SQLException, GeminiException {
-        contex = IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
+    @Override
+    protected ConfigurableApplicationContext getApplicationContext() throws GeminiException {
+        ConfigurableApplicationContext context = IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
         insertDomainRecords();
+        return context;
     }
 
-    @AfterClass
-    public static void after() {
-        if (contex != null)
-            contex.close();
-    }
 }

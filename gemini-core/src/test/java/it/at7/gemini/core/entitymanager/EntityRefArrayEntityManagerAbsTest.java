@@ -1,5 +1,6 @@
 package it.at7.gemini.core.entitymanager;
 
+import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.EntityReferenceRecord;
 import it.at7.gemini.core.Services;
@@ -14,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class EntityRefArrayEntityManagerAbsTest {
+public abstract class EntityRefArrayEntityManagerAbsTest extends UnitTestNoMockWeb {
     static EntityRecord lk1;
     static EntityRecord lk2;
 

@@ -20,23 +20,28 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class UnitTestBase {
-    public static boolean contextInitialized = false;
+    private static boolean contextInitialized = false;
 
     //==== GEMINI TEST PREAMBOLE - WEBAPP APPLICANTION CONTEXT ====/
     public static MockMvc mockMvc;
-    public static ConfigurableApplicationContext webApp; // web app must me initialized in implementation tests
-
+    public static ConfigurableApplicationContext webApp; // web app may be not initialized
+    public static ConfigurableApplicationContext parentContext; // parent context is always initialized
 
     @Before
-    public void setup() throws SQLException, GeminiException {
+    public void setup() throws GeminiException {
         if (contextInitialized)
             return;
-        ConfigurableApplicationContext context = getApplicationContext();
-        setupWebMockMvc(context);
+        parentContext = getApplicationContext();
+        if (initializeWebApp())
+            setupWebMockMvc(parentContext);
         contextInitialized = true;
     }
 
-    protected abstract ConfigurableApplicationContext getApplicationContext();
+    protected abstract ConfigurableApplicationContext getApplicationContext() throws GeminiException;
+
+    public boolean initializeWebApp() {
+        return true;
+    }
 
     @AfterClass
     public static void clean() {
@@ -44,8 +49,10 @@ public abstract class UnitTestBase {
             ConfigurableApplicationContext parent = (ConfigurableApplicationContext) webApp.getParent();
             parent.close();
             webApp.close();
-            contextInitialized = false;
+        } else {
+            parentContext.close();
         }
+        contextInitialized = false;
     }
 
     public void setupWebMockMvc(ConfigurableApplicationContext wApp) {

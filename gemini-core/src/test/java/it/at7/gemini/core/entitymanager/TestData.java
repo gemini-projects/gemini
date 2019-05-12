@@ -1,8 +1,8 @@
 package it.at7.gemini.core.entitymanager;
 
 import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.Services;
 import it.at7.gemini.core.SchemaManager;
+import it.at7.gemini.core.Services;
 import it.at7.gemini.schema.Entity;
 
 public class TestData {
