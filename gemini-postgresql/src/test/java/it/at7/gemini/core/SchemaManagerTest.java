@@ -2,7 +2,10 @@ package it.at7.gemini.core;
 
 import it.at7.gemini.conf.State;
 import it.at7.gemini.exceptions.GeminiException;
-import it.at7.gemini.schema.*;
+import it.at7.gemini.schema.Entity;
+import it.at7.gemini.schema.EntityRef;
+import it.at7.gemini.schema.FieldRef;
+import it.at7.gemini.schema.FieldResolutionDef;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;

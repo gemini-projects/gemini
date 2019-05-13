@@ -8,8 +8,6 @@ import org.junit.FixMethodOrder;
 import org.junit.runners.MethodSorters;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.io.Closeable;
-
 import static org.junit.Assert.assertNotNull;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

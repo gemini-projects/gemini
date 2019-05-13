@@ -5,7 +5,6 @@ dependencies {
 
     compileTestJava.dependsOn tasks.getByPath(':gemini-core:testClasses')
     testCompile files(project(':gemini-core').sourceSets.test.output)
-
 }
 
 jar {

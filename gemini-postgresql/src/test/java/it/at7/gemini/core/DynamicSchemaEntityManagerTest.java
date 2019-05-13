@@ -2,13 +2,9 @@ package it.at7.gemini.core;
 
 import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.boot.IntegrationTestMain;
-import it.at7.gemini.conf.DynamicSchema;
 import it.at7.gemini.exceptions.GeminiException;
-import it.at7.gemini.exceptions.SchemaException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityRef;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.context.ConfigurableApplicationContext;
 
