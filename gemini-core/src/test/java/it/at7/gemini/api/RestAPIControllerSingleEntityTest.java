@@ -1,12 +1,17 @@
 package it.at7.gemini.api;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.at7.gemini.UnitTestBase;
+import it.at7.gemini.schema.CoreMetaRef;
+import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +19,8 @@ import java.util.Map;
 
 import static it.at7.gemini.api.ApiUtility.GEMINI_DATA_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
+import static it.at7.gemini.core.RecordConverters.GEMINI_META_FIELD;
+import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -151,24 +158,37 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
     @Test
     public void n2_testGetLk() throws Exception {
 
-        //==== basic object -- withGeminiSearchString default value
+        //==== basic object -- default value
         mockMvc.perform(get(API_PATH + "/TestDataType/lk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':10}"));
 
-        //==== basic object -- withGeminiSearchString default value -- gemini API data type
-        mockMvc.perform(get(API_PATH + "/TestDataType/lk")
+        //==== basic object -- default value -- gemini API data type (WITH META Fields)
+        MvcResult result = mockMvc.perform(get(API_PATH + "/TestDataType/lk")
                 .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
                 .accept(APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'data': {'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':10}}"))
-                .andExpect(jsonPath("$.meta").exists());
+                .andExpect(jsonPath("$.meta").exists())
+                .andReturn();
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> mapResp = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<Map<String, Object>>() {
+        });
+        Map<String, Object> meta = (Map<String, Object>) mapResp.get(GEMINI_META_FIELD);
+        String created = (String) meta.get(CoreMetaRef.FIELDS.CREATED);
+        String modified = (String) meta.get(CoreMetaRef.FIELDS.MODIFIED);
+        Assert.assertNotNull(created);
+        Assert.assertNotNull(modified);
+        Assert.assertEquals(created, modified);
+        Assert.assertEquals(OffsetDateTime.parse(created, ISO_DATE_TIME), OffsetDateTime.parse(modified, ISO_DATE_TIME));
+        String inexistent = (String) meta.get("inexistent");
+        Assert.assertNull(inexistent);
 
-        //==== basic object -- withGeminiSearchString all basic types value
+        //==== basic object -- all basic types value
         mockMvc.perform(get(API_PATH + "/TestDataType/lk-allBasicTypes")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -177,7 +197,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                         .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1,'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-09-06', 'time': '02:10:00Z', 'datetime':'1989-09-06T01:01:00Z', 'textArray': ['abc','def'], 'domain1Array':[]}", true));
 
 
-        //==== object withGeminiSearchString entity reference (FK) - single logical key
+        //==== object entity reference (FK) - single logical key
         mockMvc.perform(get(API_PATH + "/TestDataType/lkWithDomain")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -185,7 +205,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                         .json("{'bool':false,'text':'lkWithDomain','domain1':'dm1','numberDouble':0,'numberLong':11}"));
 
 
-        //==== test entity withGeminiSearchString FK of to a hierarchy domain (LK withGeminiSearchString FK)
+        //==== test entity  FK of to a hierarchy domain (LK withGeminiSearchString FK)
         mockMvc.perform(get(API_PATH + "/TestDataTypeWithHierachy/lkWithHKDomain")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -197,7 +217,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
     public void n3_testUpdate() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper(); // for json conversion
 
-        //==== basic object -- withGeminiSearchString default value
+        //==== basic object --  default value
         Map<String, Object> json = new HashMap<>();
         json.put("numberlong", 100);
         String jsonString = objectMapper.writeValueAsString(json);
@@ -207,11 +227,34 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .accept(APPLICATION_JSON))
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':100, 'date':''}", false)); // TODO need strict true
+                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':100, 'date':''}", false));
 
+        //==== basic object --  default value
+        json = new HashMap<>();
+        json.put("numberlong", 150);
+        jsonString = objectMapper.writeValueAsString(json);
+        MvcResult result = mockMvc.perform(put(API_PATH + "/TestDataType/lk")
+                .contentType(APPLICATION_JSON)
+                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .content(jsonString)
+                .accept(APPLICATION_JSON))
+                .andExpect(content()
+                        // stric because new data type must fail
+                        .json("{'data': {'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':150, 'date':''}}", false))
+                .andReturn();
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> mapResp = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<Map<String, Object>>() {
+        });
+        Map<String, Object> meta = (Map<String, Object>) mapResp.get(GEMINI_META_FIELD);
+        String created = (String) meta.get(CoreMetaRef.FIELDS.CREATED);
+        String modified = (String) meta.get(CoreMetaRef.FIELDS.MODIFIED);
+        Assert.assertNotNull(created);
+        Assert.assertNotNull(modified);
+        Assert.assertNotEquals(created, modified);
+        Assert.assertNotEquals(OffsetDateTime.parse(created, ISO_DATE_TIME), OffsetDateTime.parse(modified, ISO_DATE_TIME));
 
         //==== update a domain and query the object that refers it
-        //==== object withGeminiSearchString entity reference (FK) - single logical key
+        //==== object entity reference (FK) - single logical key
         Map<String, Object> domainJson = new HashMap<>();
         domainJson.put("code", "dm2");
         String domainJsonString = objectMapper.writeValueAsString(domainJson);
@@ -242,7 +285,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':100, 'date':''}", false)); // TODO need strict true
+                        .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':150, 'date':''}", false)); // TODO need strict true
         mockMvc.perform(get(API_PATH + "/TestDataType/lk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().is4xxClientError());
