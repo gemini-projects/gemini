@@ -91,15 +91,6 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         stateManager.changeState(State.SCHEMA_RECORDS_INITIALIZED);
     }
 
-    /* NB: dediced to use basic data types (no references) for common Entity/Field column types... so no need to initialize anything
-    private void entityRecordForHardCodedEntity(Transaction transaction, Map<String, List<EntityRawRecords>> recordsByEntity, String entityName) throws GeminiException {
-        Set<EntityField> allEntityFields = entities.get(entityName).getALLEntityFields();
-        List<String> entitiesDep = allEntityFields.stream().filter(f -> f.getType().equals(ENTITY_REF)).map(Field::getEntityRef).map(Entity::getName).collect(toList());
-        Map<String, List<EntityRawRecords>> depRecordMap = recordsByEntity.entrySet().stream().filter(e -> entitiesDep.contains(e.getKey())).collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
-        createProvidedEntityRecords(depRecordMap, transaction); // add entity record provided
-    } */
-
-
     @Override
     @Nullable
     public Entity getEntity(String entity) {

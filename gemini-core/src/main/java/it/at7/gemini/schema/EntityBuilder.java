@@ -20,12 +20,6 @@ public class EntityBuilder {
         this.module = module;
     }
 
-    public EntityBuilder(String entityName, Module module) {
-        this.rawEntity = null;
-        this.entityName = entityName;
-        this.module = module;
-    }
-
     public RawEntity getRawEntity() {
         return rawEntity;
     }

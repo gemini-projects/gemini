@@ -21,10 +21,6 @@ import java.util.*;
 
 @Service
 public class EntityManagerImpl implements EntityManager {
-    private static final Logger logger = LoggerFactory.getLogger(EntityManager.class);
-
-    private final String ENTITY = EntityRef.NAME;
-    private final String FIELD = FieldRef.NAME;
 
     private SchemaManager schemaManager;
     private TransactionManager transactionManager;

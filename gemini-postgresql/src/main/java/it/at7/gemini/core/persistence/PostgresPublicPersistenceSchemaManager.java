@@ -148,6 +148,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     }
 
 
+    /*
     private void synchronizeRuntimeModules(RuntimeModule module, TransactionImpl transaction) throws IOException, SQLException, GeminiException {
         String schemaLocation = module.getSchemaLocation();
         File file = new File(schemaLocation);
@@ -180,7 +181,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 rawSchema.persist(schemaLocation);
             }
         }
-    }
+    } */
 
     private boolean entityStorageExists(String name, TransactionImpl transaction) throws GeminiException, SQLException {
         // we use raw jdbc connection
@@ -278,6 +279,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         });
     }
 
+    /*
     private void checkOrCreteLogicalKeyUniqueIndex(String name, Entity.LogicalKey logicalKey, TransactionImpl transaction) throws SQLException, GeminiException {
         String indexName = "LK_Unique_" + name.toLowerCase();
         String sdlIndexExist = "select" +
@@ -321,7 +323,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             }
         });
 
-    }
+    } */
 
     private boolean exists(ResultSet resultSet) throws SQLException {
         resultSet.next();
