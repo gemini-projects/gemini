@@ -1,20 +1,18 @@
 package it.at7.gemini.core.persistence;
 
 import it.at7.gemini.core.Module;
-import it.at7.gemini.core.RuntimeModule;
 import it.at7.gemini.core.Transaction;
 import it.at7.gemini.core.TransactionImpl;
-import it.at7.gemini.dsl.entities.RawEntity;
-import it.at7.gemini.dsl.entities.RawSchema;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
-import it.at7.gemini.schema.*;
+import it.at7.gemini.schema.Entity;
+import it.at7.gemini.schema.EntityField;
+import it.at7.gemini.schema.Field;
+import it.at7.gemini.schema.FieldType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;

@@ -2,4 +2,5 @@ rootProject.name = 'gemini'
 
 include 'gemini-dsl'
 include 'gemini-core'
+include 'gemini-auth'
 include 'gemini-postgresql'

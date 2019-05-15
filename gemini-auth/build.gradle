@@ -1,0 +1,5 @@
+dependencies {
+    compile project(':gemini-core')
+}
+bootJar.enabled = false
+jar.enabled = true

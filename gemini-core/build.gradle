@@ -6,6 +6,5 @@ dependencies {
     compile project(':gemini-dsl')
 }
 
-jar {
-    enabled true
-}
+jar.enabled = true
+bootJar.enabled = false

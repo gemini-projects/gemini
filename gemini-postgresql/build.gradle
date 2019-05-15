@@ -2,13 +2,14 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-jdbc")
     compile 'org.postgresql:postgresql:42.2.5'
     compile project(':gemini-core')
+    compile project(':gemini-auth')
 
     compileTestJava.dependsOn tasks.getByPath(':gemini-core:testClasses')
     testCompile files(project(':gemini-core').sourceSets.test.output)
 }
 
 jar {
-    enabled true
+    enabled false
     doLast {
         copy {
             from outputs
@@ -19,7 +20,11 @@ jar {
 
 
 bootJar {
-    mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiGUIMain'
+    if (project.hasProperty("noAuth")) {
+        mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiGUIMain'
+        archiveAppendix = 'noAuth'
+    } else
+        mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiAuthGUIMain'
     archiveClassifier = 'boot'
     destinationDirectory = file('dist')
     launchScript()
