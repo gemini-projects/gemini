@@ -11,7 +11,7 @@ public class TransactionManagerPGTest extends TransactionManagerImplTest {
 
     @BeforeClass
     public static void initializeTest() {
-        contex = IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
+        contex = IntegrationTestMain.initializeGemini();
     }
 
     @AfterClass

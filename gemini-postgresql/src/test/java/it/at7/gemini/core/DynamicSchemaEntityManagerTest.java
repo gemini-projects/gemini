@@ -12,7 +12,7 @@ public class DynamicSchemaEntityManagerTest extends UnitTestNoMockWeb {
 
     @Override
     protected ConfigurableApplicationContext getApplicationContext() {
-        return IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
+        return IntegrationTestMain.initializeGemini();
     }
 
     @Test(expected = GeminiException.class)

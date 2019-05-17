@@ -9,7 +9,7 @@ public class EntityRefArrayEntityManagerImplTest extends EntityRefArrayEntityMan
 
     @Override
     protected ConfigurableApplicationContext getApplicationContext() throws GeminiException {
-        ConfigurableApplicationContext context = IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
+        ConfigurableApplicationContext context = IntegrationTestMain.initializeGemini();
         insertDomainRecords();
         return context;
     }

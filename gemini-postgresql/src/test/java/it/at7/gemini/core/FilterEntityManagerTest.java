@@ -9,6 +9,6 @@ public class FilterEntityManagerTest extends FilterEntityManagerAbsTest {
 
     @Override
     protected ConfigurableApplicationContext getApplicationContext() throws GeminiException {
-        return IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
+        return IntegrationTestMain.initializeGemini();
     }
 }

@@ -8,7 +8,7 @@ public class EmbedableTypeEntityManagerImplTest extends EmbedableTypeEntityManag
 
     @Override
     protected ConfigurableApplicationContext getApplicationContext() {
-        return IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
+        return IntegrationTestMain.initializeGemini();
     }
 
 }

@@ -8,7 +8,7 @@ public class BasicTypesEntityManagerImplTest extends BasicTypesEntityManagerAbst
 
     @Override
     protected ConfigurableApplicationContext getApplicationContext() {
-        return IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
+        return IntegrationTestMain.initializeGemini();
     }
 
 }

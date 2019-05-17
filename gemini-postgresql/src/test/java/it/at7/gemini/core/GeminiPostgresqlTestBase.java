@@ -19,7 +19,7 @@ public class GeminiPostgresqlTestBase {
 
     @BeforeClass
     public static void initializeTest() {
-        contex = IntegrationTestMain.initializeGemini(IntegrationTestModule.class);
+        contex = IntegrationTestMain.initializeGemini();
         schemaManager = Services.getSchemaManager();
         assertNotNull(schemaManager);
         transactionManager = Services.getTransactionManager();
