@@ -3,23 +3,25 @@
 [![Build Status](https://travis-ci.org/h4t0n/gemini.svg?branch=master)](https://travis-ci.org/h4t0n/gemini)
 [![Twitter](https://img.shields.io/badge/Twitter-@h4t0n-blue.svg?style=flat)](http://twitter.com/h4t0n)
 
-> An opinionated framework for auto-magically create CRUD REST APIs from a simple Abstract Type Schema
+Gemini is an opinionated REST framework fully developed in Java (Spring) for automatically generate CRUD REST APIs starting from a 
+simple Abstract Type Schema definition (called Gemini DSL).
 
 * [Overview](#overview)
 * [Quick Start](#quick-start)
 * [Gemini DSL](#gemini---dsl)
 
-## Overview
+## Features
+* **REST Resources** (Entities) are defined with the simple **Gemini DSL**
+    * Support for simple data types (TEXT, NUMBERS, DATES, TIME ...)
+    * Support for custom and complex types (FILE, IMAGE, ...) // WIP
+* **Automagical generation** of REST CRUD APIs for each Resource
+    * POST - PUT - GET - DELETE are available out of the box
+    * Support for custom routes (Gemini Services available)  
+* No need to handle Entities and Relations persistence
+    * Gemini Entity Manager check records and relations (by using Entity Logical Keys)
+    * Gemini Persistence Manager automatically handle storage and data
+        * Postgresql Driver available
 
-Gemini is a REST framework fully developed in Java (Spring) for automatically generate CRUD REST APIs starting from a 
-simple Abstract Type Schema definition (called Gemini DSL).
-
-#### Features:
-* REST Resources (Entities) are defined with the simple Gemini DSL
-* REST CRUD APIs: POST/PUT/GET/DELETE are generated automatically 
-* No need to handel Entity/Relations persincetence, Gemini Persistence Manager automatically handle data for you
-  (postgresql driver available)
-* Relations are strictly checked and managed by the Gemini Entity Manager (by Entities Logical keys)
 
 For example lets use the Gemini DSL to define....
 
@@ -38,14 +40,14 @@ ENTITY Author {
       DATE    birthdate
 }
 
-# Defines 
+# The followinf routes are automatically available  
 # /api/book             GET (list) / POST (single resouce)
 # /api/book/{isbn}      GET / PUT / DELETE (single resource)
 
 # /api/author           GET (list) / POST (single resouce)
 # /api/author/{isbn}    GET / PUT / DELETE (single resource)
 
-# Where Book has a reference to Author by using its name logical key
+# Where Book has a reference to Author by using its name (logical key)
 ```
 
 **ATTENTION:** Gemini is a WIP and it is not ready for production environments.
@@ -69,9 +71,9 @@ gradle executableJar
 cd gemini-postgresql/dist
 ```
 Before executing the standalone/executable jar remember that SpringBoot need some properties to run. Let's use the
-`application.properties` to defini the Gemini Postgresql datasource with and for example the server port.
+`application.properties` to define the Gemini Postgresql datasource with and for example the server port.
 
-This is the minimun configuration to fully statup Gemini (from Spring)
+This is a simple config to fully startup Gemini (from Spring)
 
 ```
 # application.properties
