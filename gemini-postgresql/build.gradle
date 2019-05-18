@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-jdbc")
     compile 'org.postgresql:postgresql:42.2.5'
@@ -18,16 +20,22 @@ jar {
     }
 }
 
-
 bootJar {
     if (project.hasProperty("noAuth")) {
         mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiGUIMain'
         archiveAppendix = 'noAuth'
     } else
         mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiAuthGUIMain'
-    archiveClassifier = 'boot'
+    archiveClassifier = 'standalone'
+    destinationDirectory = file('dist')
+}
+
+task executableJar(type: BootJar) {
+    mainClassName = "it.at7.gemini.boot.PostgresqlGeminiAuthGUIMain"
+    archiveClassifier = 'executable'
     destinationDirectory = file('dist')
     launchScript()
+    with bootJar
 }
 
 clean {
