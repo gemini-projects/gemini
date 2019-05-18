@@ -6,7 +6,7 @@
 Gemini is an opinionated REST framework fully developed in Java (Spring) for automatically generate CRUD REST APIs starting from a 
 simple Abstract Type Schema definition (called Gemini DSL).
 
-* [Overview](#overview)
+* [Features](#features)
 * [Quick Start](#quick-start)
 * [Gemini DSL](#gemini---dsl)
 
