@@ -53,7 +53,7 @@ Gemini was developed to be used with different storage types. Currently it suppo
 Gemini uses SpringBoot. So let's build the standalone executable.
 ```bash
 # from gemini root
-gradle buildJar
+gradle bootJar
 cd gemini-postgresql/dist
 ```
 Before executing the standalone jar remember that SpringBoot uses the application.properties and we build Gemini with
