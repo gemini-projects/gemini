@@ -42,7 +42,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private final EntityManager entityManager;
 
     private Map<String, Module> modules;
-    private Map<Module, RawSchema> schemas = new LinkedHashMap<>();
+    private Map<Module, RawSchema> schemas = new LinkedHashMap<>(); // maintain insertion order
 
     // entities are stored UPPERCASE
     private Map<String, Entity> entities = new LinkedHashMap<>();
@@ -64,8 +64,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         persistenceSchemaManager.beforeLoadSchema(modulesInOrder, transaction);
         loadModuleSchemas(modulesInOrder);
         this.schemaRawRecordsMap = loadModuleRecords(modulesInOrder);
-        checkSchemaAndCreateEntitiesCoreObj(schemaRawRecordsMap);
-
+        checkSchemaAndCreateEntities(schemaRawRecordsMap);
 
         persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
         this.stateManager.changeState(State.SCHEMA_STORAGE_INITIALIZED);
@@ -310,7 +309,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         }
     }
 
-    private void checkSchemaAndCreateEntitiesCoreObj(Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap) {
+    private void checkSchemaAndCreateEntities(Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap) {
         /* TODO entità estendibii per modulo
             caricare ogni modulo a se stante.. con le entità.. poi fare il merge delle
             entries (ognuna contenente il modulo da dove viene)
@@ -322,28 +321,32 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         Map<String, EntityBuilder> entityBuilders = new HashMap<>();
         iterateThroughtRawInterfaces(
                 (Module module, RawEntity rawEntityInterface) -> {
-                    EntityBuilder entityB = new EntityBuilder(rawEntityInterface, module);
-                    String entityName = entityB.getName();
-                    if (interfaceBuilders.keySet().contains(entityName)) {
-                        throw new DuplicateInterfaceException(entityName);
+                    String interfaceName = rawEntityInterface.getName().toUpperCase();
+                    if (interfaceBuilders.keySet().contains(interfaceName)) {
+                        EntityBuilder alreadyExistentEB = interfaceBuilders.get(interfaceName);
+                        alreadyExistentEB.addExtraEntity(rawEntityInterface, module);
+                    } else {
+                        interfaceBuilders.put(interfaceName, new EntityBuilder(rawEntityInterface, module));
                     }
-                    interfaceBuilders.put(entityName, entityB);
                 });
         iterateThroughtRawEntitySchemas((Module module, RawEntity rawEntity) -> {
-            EntityBuilder entityB = new EntityBuilder(rawEntity, module);
-            String entityName = entityB.getName();
+            String entityName = rawEntity.getName().toUpperCase();
+            EntityBuilder entityB;
             if (entityBuilders.keySet().contains(entityName)) {
-                throw new DuplicateEntityException(entityName);
+                entityB = entityBuilders.get(entityName);
+                entityB.addExtraEntity(rawEntity, module);
+            } else {
+                entityB = new EntityBuilder(rawEntity, module);
+                entityBuilders.put(entityName, entityB);
             }
 
-            // for entities we have also records
+            // for entities we have also records // TODO check FOR Extended entities??
             Map<String, EntityRawRecords> rawRecordsByEntity = schemaRawRecordsMap.getOrDefault(module.getName(), Map.of());
             EntityRawRecords entityRawRecords = rawRecordsByEntity.get(entityName.toUpperCase());
             if (entityRawRecords != null) {
                 Object defRecord = entityRawRecords.getDef();
                 entityB.setDefaultRecord(defRecord);
             }
-            entityBuilders.put(entityName, entityB);
         });
 
         // now we can resolve entity fields
@@ -352,23 +355,22 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
             // add the meta information to the current entity
             // NB: (CORE_META must be found... otherwise its ok to have a null runtime excp)
-            for (RawEntity.Entry currentEntry : interfaceBuilders.get(Entity.CORE_META).getRawEntity().getEntries()) {
-                checkAndCreateField(entityBuilders, currentEntityBuilder, currentEntry, Entity.CORE_META, EntityField.Scope.META);
+            EntityBuilder metaIntBuilder = interfaceBuilders.get(Entity.CORE_META);
+            addAllEntriesToEntityBuilder(entityBuilders, metaIntBuilder.getRawEntity(), currentEntityBuilder, Entity.CORE_META, EntityField.Scope.META);
+            for (EntityBuilder.ExtraEntity externalEntity : metaIntBuilder.getExternalEntities()) {
+                RawEntity extRawEntity = externalEntity.getRawEntity();
+                Module extModule = externalEntity.getModule(); // TODO add MODULE to FIELD
+                addAllEntriesToEntityBuilder(entityBuilders, extRawEntity, currentEntityBuilder, Entity.CORE_META, EntityField.Scope.META);
             }
 
             // merging Gemini interface if found
-            for (String implementsInteface : currentEntityBuilder.getRawEntity().getImplementsIntefaces()) {
-                // entity implements a common specification
-                String interfaceName = implementsInteface.toUpperCase();
-                EntityBuilder enitityImplementsInterface = interfaceBuilders.get(interfaceName);
-                for (RawEntity.Entry entry : enitityImplementsInterface.getRawEntity().getEntries()) {
-                    checkAndCreateField(entityBuilders, currentEntityBuilder, entry, interfaceName, EntityField.Scope.DATA);
-                }
-            }
+            addALLImplementingInterfaceToEntityBuilder(entityBuilders, currentEntityBuilder, currentEntityBuilder.getRawEntity(), interfaceBuilders);
 
-            // continue with Gemini entity entries
-            for (RawEntity.Entry entry : currentEntityBuilder.getRawEntity().getEntries()) {
-                checkAndCreateField(entityBuilders, currentEntityBuilder, entry, null, EntityField.Scope.DATA);
+            // root module fields
+            addAllEntriesToEntityBuilder(entityBuilders, currentEntityBuilder.getRawEntity(), currentEntityBuilder, null, EntityField.Scope.DATA);
+            for (EntityBuilder.ExtraEntity externalEntity : currentEntityBuilder.getExternalEntities()) {
+                addALLImplementingInterfaceToEntityBuilder(entityBuilders, currentEntityBuilder, externalEntity.getRawEntity(), interfaceBuilders);
+                addAllEntriesToEntityBuilder(entityBuilders, externalEntity.getRawEntity(), currentEntityBuilder, null, EntityField.Scope.DATA);
             }
         }
 
@@ -381,6 +383,26 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
         // TODO CHECK embeded fields should not be logicalKey
         this.entities = entities;
+    }
+
+    private void addALLImplementingInterfaceToEntityBuilder(Map<String, EntityBuilder> allEntityBuilders, EntityBuilder currentEntityBuilder, RawEntity rawEntityWIthInterfaces, Map<String, EntityBuilder> interfaceBuilders) {
+        // merging Gemini interface if found
+        for (String implementsInteface : rawEntityWIthInterfaces.getImplementsIntefaces()) {
+            // entity implements a common specification
+            String interfaceName = implementsInteface.toUpperCase();
+            EntityBuilder enitityImplementsInterface = interfaceBuilders.get(interfaceName);
+            RawEntity rawEntityInterface = enitityImplementsInterface.getRawEntity();
+            addAllEntriesToEntityBuilder(allEntityBuilders, rawEntityInterface, currentEntityBuilder, interfaceName, EntityField.Scope.DATA);
+            for (EntityBuilder.ExtraEntity externalInterfaceEntity : enitityImplementsInterface.getExternalEntities()) {
+                addAllEntriesToEntityBuilder(allEntityBuilders, externalInterfaceEntity.getRawEntity(), currentEntityBuilder, interfaceName, EntityField.Scope.DATA);
+            }
+        }
+    }
+
+    private void addAllEntriesToEntityBuilder(Map<String, EntityBuilder> allEntityBuilders, RawEntity entity, EntityBuilder currentEntityBuilder, String interfaceName, EntityField.Scope entityFieldScopes) {
+        for (RawEntity.Entry currentEntry : entity.getEntries()) {
+            checkAndCreateField(allEntityBuilders, currentEntityBuilder, currentEntry, interfaceName, entityFieldScopes);
+        }
     }
 
     private void checkAndCreateField(Map<String, EntityBuilder> entityBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry, String interfaceName, EntityField.Scope scope) throws TypeNotFoundException {

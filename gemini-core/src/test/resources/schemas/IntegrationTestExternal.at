@@ -1,0 +1,16 @@
+
+INTERFACE CoreMeta {
+    TEXT externalMetaField
+}
+
+ENTITY TestDataTypeForExternal {
+    TEXT    externalText
+}
+
+INTERFACE ExtInterface {
+    TEXT    externalIntText
+}
+
+ENTITY EntityWithInterfaceToExtend IMPLEMENTS ExtInterface {
+    TEXT externalEntityText
+}

@@ -13,11 +13,22 @@ public class TestData {
     }
 
     /**
-     * DynamicRecord withGeminiSearchString primitive dataType
+     * TestDataType Entity with Primitive dataTypes
      */
     public static EntityRecord getTestDataTypeEntityRecord(String logicalKey) {
         SchemaManager schemaManager = Services.getSchemaManager();
         Entity testDataType = schemaManager.getEntity("TestDataType");
+        EntityRecord entityRecord = new EntityRecord(testDataType);
+        entityRecord.put("text", logicalKey);
+        return entityRecord;
+    }
+
+    /**
+     * TestDataType Entity to test External Module Fields (added to the core one)
+     */
+    public static EntityRecord getTestDataTypeExternalEntityRecord(String logicalKey) {
+        SchemaManager schemaManager = Services.getSchemaManager();
+        Entity testDataType = schemaManager.getEntity("TestDataTypeForExternal");
         EntityRecord entityRecord = new EntityRecord(testDataType);
         entityRecord.put("text", logicalKey);
         return entityRecord;

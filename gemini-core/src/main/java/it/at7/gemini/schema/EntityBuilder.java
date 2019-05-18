@@ -7,17 +7,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EntityBuilder {
-    private final Module module;
+    private final Module mainModule;
     private final RawEntity rawEntity;
     private final String entityName;
     private final List<EntityFieldBuilder> fieldsBuilders = new ArrayList<>();
     private Object defaultRecord;
+    private List<ExtraEntity> extraEntities = new ArrayList<>();
 
 
     public EntityBuilder(RawEntity rawEntity, Module module) {
         this.rawEntity = rawEntity;
         this.entityName = rawEntity.getName();
-        this.module = module;
+        this.mainModule = module;
+
     }
 
     public RawEntity getRawEntity() {
@@ -42,7 +44,34 @@ public class EntityBuilder {
         return this;
     }
 
-    public Entity build() {
-        return new Entity(module, entityName, rawEntity.isEmbedable(), fieldsBuilders, defaultRecord);
+    public void addExtraEntity(RawEntity rawEntity, Module module) {
+        extraEntities.add(new ExtraEntity(rawEntity, module));
     }
+
+    public Entity build() {
+        return new Entity(mainModule, entityName, rawEntity.isEmbedable(), fieldsBuilders, defaultRecord);
+    }
+
+    public List<ExtraEntity> getExternalEntities() {
+        return extraEntities;
+    }
+
+    public static class ExtraEntity {
+        RawEntity rawEntity;
+        Module module;
+
+        ExtraEntity(RawEntity rawEntity, Module module) {
+            this.rawEntity = rawEntity;
+            this.module = module;
+        }
+
+        public RawEntity getRawEntity() {
+            return rawEntity;
+        }
+
+        public Module getModule() {
+            return module;
+        }
+    }
+
 }

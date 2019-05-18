@@ -38,7 +38,7 @@ public class Gemini {
 
     public void init() {
         try {
-            loadPredefinedBeans();
+            loadCoreServices();
             loadModules();
             start();
             try (Transaction transaction = transactionManager.openTransaction()) {
@@ -53,20 +53,20 @@ public class Gemini {
         }
     }
 
-    private void loadPredefinedBeans() {
+    private void loadCoreServices() {
         context.getBean(Services.class);
     }
 
     private void loadModules() {
         logger.info("MODULES LOADING");
         Map<String, Module> modulesMap = context.getBeansOfType(Module.class);
-        for (Module module : modulesMap.values()) {
-            logger.info("Found module {} withGeminiSearchString dependecies {}", module.getName(), module.getDependencies());
-            stateManager.register(module);
-        }
         this.modules = modulesMap.values().stream()
                 .sorted(Comparator.comparingInt(Module::order))
                 .collect(Collectors.toList());
+        for (Module module : modules) {
+            logger.info("Found module {} withGeminiSearchString dependecies {}", module.getName(), module.getDependencies());
+            stateManager.register(module);
+        }
     }
 
     private void start() {

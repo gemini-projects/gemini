@@ -51,3 +51,25 @@ ENTITY TestDataTypeEmbeded {
     EmbedableEntity embeded
 }
 
+ENTITY TestDataTypeForExternal {
+    TEXT            text *
+    NUMBER          numberLong
+    NUMBER          numberDouble
+    DOUBLE          double
+    LONG            long
+    BOOL            bool
+    DATE            date
+    TIME            time
+    DATETIME        datetime
+    TestDomain1     domain1
+    [TEXT]          textArray
+    [TestDomain1]   domain1Array
+}
+
+INTERFACE InterfaceToExtend {
+    TEXT   interfaceText
+}
+
+ENTITY EntityWithInterfaceToExtend IMPLEMENTS InterfaceToExtend {
+    TEXT   entityText *
+}
