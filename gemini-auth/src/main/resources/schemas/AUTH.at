@@ -1,0 +1,14 @@
+#  ====  Gemini Authentication Module =====
+
+
+# Meta information about a entity record (this is a special entity)
+# All entities use CoreMeta as an interface for Meta Information
+# -- Auth add Users
+INTERFACE CoreMeta {
+    USER    created_user
+    USER    modified_user
+}
+
+ENTITY User {
+    TEXT    nickName    *
+}
