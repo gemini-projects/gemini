@@ -1,7 +1,13 @@
-# Gemini
+<p align="center">
+   <img src="./gemini_logo.png" height="150">
+</p>
+
+___
 
 [![Build Status](https://travis-ci.org/h4t0n/gemini.svg?branch=master)](https://travis-ci.org/h4t0n/gemini)
 [![Twitter](https://img.shields.io/badge/Twitter-@h4t0n-blue.svg?style=flat)](http://twitter.com/h4t0n)
+
+
 
 Gemini is an opinionated REST framework fully developed in Java (Spring) for automatically generate CRUD REST APIs starting from a 
 simple Abstract Type Schema definition (called Gemini DSL).
