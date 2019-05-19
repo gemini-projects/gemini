@@ -100,7 +100,7 @@ Now you can run the jar.
 
 # while for executable (executableJar) you can run it
 # works on linux based machines - only some platform supported - take a look at Spring documentation
-./gemini-postgresql-0.1-SNAPSHOT-boot.jar
+./gemini-postgresql-0.1-SNAPSHOT-executable.jar
 ```
 
 Gemini automatically setup its internal structures and creates the ```schema/Runtime.at``` abstract type file in the
