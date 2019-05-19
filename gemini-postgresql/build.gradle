@@ -31,7 +31,7 @@ bootJar {
 }
 
 task executableJar(type: BootJar) {
-    mainClassName = "it.at7.gemini.boot.PostgresqlGeminiAuthGUIMain"
+    mainClassName = "it.at7.gemini.boot.PostgresqlGeminiGUIMain"
     archiveClassifier = 'executable'
     destinationDirectory = file('dist')
     launchScript()
