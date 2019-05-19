@@ -6,12 +6,19 @@
 Gemini is an opinionated REST framework fully developed in Java (Spring) for automatically generate CRUD REST APIs starting from a 
 simple Abstract Type Schema definition (called Gemini DSL).
 
+You can find an article about the goal of this project [here](https://medium.com/@h4t0n/gemini-dsl-f85e205f1419)
+
+
 * [Features](#features)
 * [Quick Start](#quick-start)
 * [DSL and APIs](#dsl-and-apis)
     * [Entity and Logical Keys](#entity-and-logical-keys)
     * [Primitive Types](#primitive-types)
     * [Date And Time](#date-and-time)
+* [Core Module](#gemini-core)
+    * [Entity and Field](#entity-and-field)
+    * [Gemini Meta Data](#gemini-meta-data)
+        * [UUID-V3](#uuid-v3)
 
 ## Features
 * **REST Resources** (Entities) are defined with the simple **Gemini DSL**
@@ -223,7 +230,146 @@ $ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8090/api/dat
 
 ### Entity Reference Types
 
-// TODO - WIP
+Each defined Entity (with a logical key) is itself a Gemini Type. 
+
+```
+ENTITY Tag {
+    TEXT    name    *
+    TEXT    description
+}
+
+# Tag is a type that we can use in the Post Entity
+
+ENTITY Post {
+    LONG postId *
+    TEXT message
+    Tag  tag
+}
+```
+
+#### API Example - Insert Tag and Post
+
+First of all we need at least one tag.
+```
+$ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8090/api/tag -i -d '{"name":"italy","description":"We ❤️ Italy"}'
+
+    HTTP/1.1 200
+    Content-Type: application/json;charset=UTF-8
+
+    {"name":"italy","description":"We ❤️ Italy"}
+```
+
+To insert the POST only the logical key of Tag is required. 
+
+```
+$ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8090/api/post -i -d '{"postid":1,"message":"Rome", "tag": "italy"}'
+
+    HTTP/1.1 200
+    Content-Type: application/json;charset=UTF-8
+
+    {"tag":"italy","postId":1,"message":"Rome"}
+```
+
+#### API Example - Post with unknown Tag
+
+What if we try to insert a Post with an unknown tag?. Not found error!!!
+
+```
+$ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8090/api/post -i -d '{"postid":2,"message":"Rome", "tag": "unknown"}'
+
+    HTTP/1.1 404
+```
+
+### Arrays
+
+Arrays are a Work in Progress. Gemini will supports array out of the box either from primitive types or complex types. 
+Actually is supported only the TEXT array.
+
+```
+ENTITY Messages {
+    LONG messageId *
+    [TEXT] message
+}
+```
+
+## Gemini CORE Module
+Core is the main module of Gemini and it defines some features, and predefined entities (and fields) available also
+for developers. Take a look at the `Core.at` abstract type schema.
+
+### ENTITY and FIELD
+
+
+Gemini tracks all the Entities using the ENTITY Entity. All fields instead are stored in the FIELD Entity. 
+It looks like a work game, but let's query them.
+
+```
+# The list of all available entities
+$ curl http://127.0.0.1:8090/api/entity -i
+
+# The list of all available fields
+$ curl http://127.0.0.1:8090/api/field -i
+```
+
+By convention, entity names are always expressed (and stored) in UPPERCASE notation. While fields are handled in
+LOWERCASE notation. 
+
+### Gemini META data
+Gemini handle meta data for each operation performed on a single EntityRecord. You can retrieve these meta information
+using the Gemini header.
+
+```
+Gemini: gemini.api
+
+The JSON response has the following schema
+{
+    "meta": {...}
+    "data": {...}
+}
+```
+
+NB: Core metadata are defined inside the `Core.at` schema and by default information about created and modified time
+are automatically stored by the framework.
+
+
+Let's query for example the `PrimitiveTypes` defines earlier.
+
+```
+$ curl -H "Gemini: gemini.api" http://127.0.0.1:8090/api/primitivetypes/test -i
+    HTTP/1.1 200
+    Gemini: gemini.api
+    Content-Type: application/json;charset=UTF-8
+
+    {
+        "data":{"code":"test","anotherDouble":0.01,"double":0.2,"isOk":true,"anotherLong":2,"anyNumber":0.01,"long":1},
+        "meta":{
+            "created":"2019-05-19T14:49:57.765151Z",
+            "modified":"2019-05-19T14:49:57.765151Z",
+            "uuid":"97907b5d-854a-34ff-92ef-251055adba2a"
+         }
+     }
+```
+
+#### UUID-V3
+
+Gemini automatically create a unique ID for each record by using UUID-v3 ids generated starting from the logical key.
+
+You can query resources also by their UUID, especially when the logical key is made by multiple fields.
+
+```
+# note that there are not meta because we have not inserted the Gemini header in the request
+# The uuid the same returned from the previuous example
+
+$ curl  http://127.0.0.1:8090/api/primitivetypes/97907b5d-854a-34ff-92ef-251055adba2a -i
+
+    HTTP/1.1 200
+    Content-Type: application/json;charset=UTF-8
+
+    {"code":"test","anotherDouble":0.01,"double":0.2,"isOk":true,"anotherLong":2,"anyNumber":0.01,"long":1}
+
+```
+
+Take a look at this article for some clarification [Rest API: UUID-V3 is the right way](https://medium.com/@h4t0n/rest-api-uuid-v3-is-the-right-way-3ca0695610dc)
+
 
 ## License
 GNU GENERAL PUBLIC LICENSE Version 3
