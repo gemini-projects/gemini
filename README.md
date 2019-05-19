@@ -15,6 +15,7 @@ You can find an article about the goal of this project [here](https://medium.com
     * [Entity and Logical Keys](#entity-and-logical-keys)
     * [Primitive Types](#primitive-types)
     * [Date And Time](#date-and-time)
+    * [Entity Reference](#entity-reference-types)
 * [Core Module](#gemini-core)
     * [Entity and Field](#entity-and-field)
     * [Gemini Meta Data](#gemini-meta-data)
