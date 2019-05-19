@@ -8,7 +8,10 @@ simple Abstract Type Schema definition (called Gemini DSL).
 
 * [Features](#features)
 * [Quick Start](#quick-start)
-* [Gemini DSL](#gemini---dsl)
+* [DSL and APIs](#dsl-and-apis)
+    * [Entity and Logical Keys](#entity-and-logical-keys)
+    * [Primitive Types](#primitive-types)
+    * [Date And Time](#date-and-time)
 
 ## Features
 * **REST Resources** (Entities) are defined with the simple **Gemini DSL**
@@ -98,9 +101,129 @@ working directory. Now you can customize this file with all your entities, by us
 Then restart the application to see your APIs in action.
 
 
-## Gemini - DSL
+## DSL and APIs
 
-// TODO - WIP - take a look at the IntegrationTest.at resource schema (core-module)
+### Entity and Logical Keys
+
+Entities are the most important element of Gemini. They defines:
+* REST Resources routes (via the EntityName)
+    * `/api/{entityName}` is the default route
+    * `GET api/{entityName}` for the list of available resources
+    * `POST api/{entityName}` to insert a new one
+* Body Fields (and their type)
+    * JSON is the out of the BOX supported content type
+* Entity Resource Record logical key (with `*`)
+    * `/api/{entityName}/{resourseLogicalKey}` is the target route for a single resource
+    * `GET /api/{entityName}/{resourseLogicalKey}` to get the single resource
+    * `PUT /api/{entityName}/{resourseLogicalKey}` to update/modify the single resource
+
+```
+# For example this is a valid Entity
+
+ENTITY SimpleText {
+    TEXT   code *
+}
+
+# lets insert a resource
+$ curl -d '{"code":"thelk"}' -H "Content-Type: application/json" -X POST http://127.0.0.1:8090/api/simpletext -i
+
+  HTTP/1.1 200
+  Content-Type: application/json;charset=UTF-8
+  
+  {"code":"thelk"}
+ 
+# now we can query the previous inserted one
+$ curl http://127.0.0.1:8090/api/simpletext/thelk -i
+  
+  HTTP/1.1 200
+  Content-Type: application/json;charset=UTF-8
+
+  {"code":"thelk"}
+```
+
+### Primitive Types
+
+Primitive types are numbers, strings and booleans and their aliases.
+
+```
+ENTITY PrimitiveTypes {
+    TEXT            code *          // TEXT is the single type for Strings  
+    DOUBLE          double
+    DECIMAL         anotherDouble
+    NUMBER          anyNumber       // (any number, no matter if it is a floating point or not)
+    LONG            long
+    QUANTITY        anotherLong
+    BOOL            isOk
+}
+```
+
+#### Numbers
+In Json notation *Number* is a single type. In Gemini it is the same, but it adds some semantic to each field (useful
+for validation)
+
+* **DOUBLE** or **DECIMAL**: floating point numbers
+* **LONG** or **QUANTITY**: integer numbers
+* **NUMBER**: any number no matter if it has decimals or not 
+
+*they may be extended (for example adding only naturals numbers and so on)*
+
+#### Strings and Text
+Any string field can be defined with the **TEXT** type. No matter its size, it is a JSON string.
+
+#### Boolean
+Boolean is *true* or *false* and can be defined with the **BOOL** type
+
+#### API example
+
+```
+$ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8090/api/primitivetypes -i
+  -d '{"code":"logicalKey","anotherDouble":7.77,"double":7.77,"isOk":true,"anotherLong":7,"anyNumber":70,"long":7}'
+  
+   HTTP/1.1 200
+   Content-Type: application/json;charset=UTF-8
+   
+   {"code":"logicalKey","anotherDouble":7.77,"double":7.77,"isOk":true,"anotherLong":7,"anyNumber":70,"long":7}
+```
+
+
+### Date And Time
+Dates and Times are Strings (in JSON notation). Gemini uses the ISO 8601 Data elements and interchange formats standard. 
+
+```
+ENTITY DatesEntity {
+    TEXT        code *
+    DATE        aDate
+    TIME        aTime
+    DATETIME    aDateTime
+}
+```
+
+#### Date
+**DATE** is the type you can use for a simple local date (no need of timezone).
+Out of the box supported JSON API format is `yyyy-MM-dd`.
+
+#### Time
+**TIME** is the type you can use for ISO-8601 standard time. ISO-TIME is the out of the box supported format.
+So for example the JSON String `09:41:43.973Z` is a valid time.
+
+#### Datetime
+**DATETIME** can be used for a date time field. It is a full ISO-8601 standard ISO-DATE-TIME.
+So for example `2019-05-19T09:41:30.000Z` is a valid value.
+
+#### API example
+
+```
+$ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8090/api/datestypes -i -d '{"aTime":"11:11:05.759Z","code":"lkdate","aDate":"2019-05-19","aDateTime":"2019-05-19T11:09:58Z"}'
+    
+    HTTP/1.1 200
+    Content-Type: application/json;charset=UTF-8
+
+    {"aTime":"11:11:05.759Z","code":"lkdate","aDate":"2019-05-19","aDateTime":"2019-05-19T11:09:58Z"}
+```
+
+### Entity Reference Types
+
+// TODO - WIP
 
 ## License
 GNU GENERAL PUBLIC LICENSE Version 3
