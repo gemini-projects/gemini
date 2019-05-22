@@ -2,6 +2,7 @@ package it.at7.gemini.core;
 
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.events.EventManagerInit;
+import it.at7.gemini.exceptions.GeminiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @ComponentScan({"it.at7.gemini.core"})
@@ -69,8 +71,8 @@ public class Gemini {
         }
     }
 
-    private void start() {
-        stateManager.changeState(State.STARTED);
+    private void start() throws GeminiException {
+        stateManager.changeState(State.STARTED, Optional.empty());
     }
 
 
@@ -78,12 +80,12 @@ public class Gemini {
         logger.info("SCHEMAS/EVENTS INITIALIZATION");
         schemaManagerInit.initializeSchemasStorage(modules, transaction);
         eventManagerInit.loadEvents(modules);
-        stateManager.changeState(State.SCHEMA_EVENTS_LOADED);
+        stateManager.changeState(State.SCHEMA_EVENTS_LOADED, Optional.of(transaction));
         schemaManagerInit.initializeSchemaEntityRecords(modules, transaction);
     }
 
-    private void initialize() {
-        stateManager.changeState(State.INITIALIZED);
+    private void initialize() throws GeminiException {
+        stateManager.changeState(State.INITIALIZED, Optional.empty());
     }
 
 }

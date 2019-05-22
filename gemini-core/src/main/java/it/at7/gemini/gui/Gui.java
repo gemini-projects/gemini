@@ -2,6 +2,8 @@ package it.at7.gemini.gui;
 
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.StateManager;
+import it.at7.gemini.exceptions.GeminiException;
+import it.at7.gemini.exceptions.GeminiRuntimeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -20,7 +22,7 @@ public class Gui implements ApplicationListener<ApplicationReadyEvent> {
     private StateManager stateManager;
 
     @PostConstruct
-    public void init() {
+    public void init() throws GeminiException {
         stateManager.changeState(State.WEB_APP_INITIALIZATION);
     }
 
@@ -30,6 +32,10 @@ public class Gui implements ApplicationListener<ApplicationReadyEvent> {
      */
     @Override
     public void onApplicationEvent(final ApplicationReadyEvent event) {
-        stateManager.changeState(State.WEB_APP_INITIALIZED);
+        try {
+            stateManager.changeState(State.WEB_APP_INITIALIZED);
+        } catch (GeminiException e) {
+            throw new GeminiRuntimeException(e);
+        }
     }
 }

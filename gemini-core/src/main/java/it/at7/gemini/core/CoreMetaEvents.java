@@ -7,6 +7,7 @@ import it.at7.gemini.core.events.OnUpdateField;
 import it.at7.gemini.schema.Entity;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 
 @Events(entityName = Entity.CORE_META, order = -100)
@@ -16,7 +17,10 @@ public class CoreMetaEvents {
     @BeforeInsertField(field = "modified")
     @OnUpdateField(field = "modified")
     public LocalDateTime transactionDate(EventContext context) {
-        return context.getTransaction().getOpenTime();
+        if (context.getTransaction().isPresent()) {
+            return context.getTransaction().get().getOpenTime();
+        }
+        return LocalDateTime.now(ZoneOffset.UTC);
     }
 
 }

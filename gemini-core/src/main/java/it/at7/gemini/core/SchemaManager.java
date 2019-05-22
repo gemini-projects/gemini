@@ -7,12 +7,14 @@ import java.util.Collection;
 import java.util.List;
 
 public interface SchemaManager {
-    
+
     Collection<Entity> getAllEntities();
 
     Entity getEntity(String entity);
 
     Module getModule(String module);
+
+    Collection<Module> getModules();
 
     /*
     void addNewRuntimeEntity(Entity newEntity, Transaction transaction) throws GeminiException;

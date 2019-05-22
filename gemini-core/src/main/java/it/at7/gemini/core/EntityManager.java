@@ -22,6 +22,8 @@ public interface EntityManager {
 
     EntityRecord putOrUpdate(EntityRecord rec, Transaction transaction) throws GeminiException;
 
+    EntityRecord putOrUpdate(EntityRecord rec, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
     default EntityRecord update(EntityRecord rec) throws GeminiException {
         return update(rec, rec.getLogicalKeyValue());
     }
@@ -56,4 +58,6 @@ public interface EntityManager {
     List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType, Transaction transaction) throws GeminiException;
 
     List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext) throws GeminiException;
+
+    List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, Transaction transaction) throws GeminiException;
 }

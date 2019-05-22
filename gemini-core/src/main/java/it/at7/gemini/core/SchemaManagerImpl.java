@@ -67,7 +67,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         checkSchemaAndCreateEntities(schemaRawRecordsMap);
 
         persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
-        this.stateManager.changeState(State.SCHEMA_STORAGE_INITIALIZED);
+        this.stateManager.changeState(State.SCHEMA_STORAGE_INITIALIZED, Optional.of(transaction));
     }
 
     @Override
@@ -84,7 +84,6 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, EntityRef.NAME);
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, FieldRef.NAME);
         */
-
         handleSchemasEntityRecords(entities.values(), transaction); // add core entityRecord for ENTITY and FIELD
         createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
         stateManager.changeState(State.SCHEMA_RECORDS_INITIALIZED);
@@ -102,6 +101,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         return modules.get(module.toUpperCase());
     }
 
+    @Override
+    public Collection<Module> getModules() {
+        return modules.values();
+    }
 
     @Override
     public List<EntityField> getEntityReferenceFields(Entity targetEntity) {
@@ -115,23 +118,40 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
     private Map<String, List<EntityRecord>> handleSchemasEntityRecords(Collection<Entity> entities, Transaction transaction) throws GeminiException {
         Map<String, List<EntityRecord>> fieldsRecordByEntityName = new HashMap<>();
+        EntityOperationContext entityOperationContext = getOperationContextForInitSchema();
         for (Entity entity : entities) {
-            updateENTITYRecord(transaction, entity);
+            updateENTITYRecord(transaction, entityOperationContext, entity);
         }
         persistenceSchemaManager.deleteUnnecessaryEntites(entities, transaction);
         for (Entity entity : entities) {
-            fieldsRecordByEntityName.put(entity.getName().toUpperCase(), updateEntityFieldsRecords(transaction, entity));
+            fieldsRecordByEntityName.put(entity.getName().toUpperCase(), updateEntityFieldsRecords(transaction, entityOperationContext, entity));
         }
         return fieldsRecordByEntityName;
     }
 
-    private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, Entity entity) throws GeminiException {
+    private EntityOperationContext getOperationContextForInitSchema() {
+        EntityOperationContext entityOperationContext = new EntityOperationContext();
+
+        Map<String, SchemaManagerInitListener> listenerMap = applicationContext.getBeansOfType(SchemaManagerInitListener.class);
+
+        Collection<SchemaManagerInitListener> listeners = listenerMap.values();
+        // TODO add sort ? by gemini module ?
+
+        for (SchemaManagerInitListener l : listeners) {
+            l.onSchemasEntityRecords(entityOperationContext);
+        }
+
+
+        return entityOperationContext;
+    }
+
+    private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, EntityOperationContext entityOperationContext, Entity entity) throws GeminiException {
         List<EntityRecord> fieldRecords = new ArrayList<>();
         Set<EntityField> fields = entity.getALLEntityFields();
         for (EntityField field : fields) {
             logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
             EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();
-            fieldEntityRecord = this.entityManager.putOrUpdate(fieldEntityRecord, transaction);
+            fieldEntityRecord = this.entityManager.putOrUpdate(fieldEntityRecord, entityOperationContext, transaction);
             field.setFieldIDValue(fieldEntityRecord.get(fieldEntityRecord.getEntity().getIdEntityField()));
             fieldRecords.add(fieldEntityRecord);
         }
@@ -139,10 +159,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         return fieldRecords;
     }
 
-    private void updateENTITYRecord(Transaction transaction, Entity entity) throws GeminiException {
+    private void updateENTITYRecord(Transaction transaction, EntityOperationContext entityOperationContext, Entity entity) throws GeminiException {
         logger.info("{}: creating/updating EntityRecord for {}", entity.getModule().getName(), entity.getName());
         EntityRecord entityRecord = entity.toInitializationEntityRecord();
-        entityRecord = entityManager.putOrUpdate(entityRecord, transaction);
+        entityRecord = entityManager.putOrUpdate(entityRecord, entityOperationContext, transaction);
         entity.setFieldIDValue(entityRecord.get(entity.getIdEntityField()));
     }
 

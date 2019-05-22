@@ -1,9 +1,7 @@
 package it.at7.gemini.core.events;
 
-import it.at7.gemini.core.EntityRecord;
+import it.at7.gemini.core.*;
 import it.at7.gemini.core.Module;
-import it.at7.gemini.core.SchemaManager;
-import it.at7.gemini.core.Transaction;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
 import it.at7.gemini.schema.Entity;
@@ -104,16 +102,16 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
     }
 
     @Override
-    public void beforeInsertFields(EntityRecord record, Transaction transaction) throws GeminiException {
-        handleEventForFields(record, transaction, this.beforeInsertField);
+    public void beforeInsertFields(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        handleEventForFields(record, transaction, entityOperationContext, this.beforeInsertField);
     }
 
     @Override
-    public void onUpdateFields(EntityRecord record, Transaction transaction) throws GeminiException {
-        handleEventForFields(record, transaction, this.onUpdateField);
+    public void onUpdateFields(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        handleEventForFields(record, transaction, entityOperationContext, this.onUpdateField);
     }
 
-    private void handleEventForFields(EntityRecord record, Transaction transaction, Map<String, Map<String, List<BeanWithMethod>>> methods) throws GeminiException {
+    private void handleEventForFields(EntityRecord record, Transaction transaction, EntityOperationContext entityOperationContext, Map<String, Map<String, List<BeanWithMethod>>> methods) throws GeminiException {
         Entity entity = record.getEntity();
         String entityName = entity.getName();
         Map<String, List<BeanWithMethod>> entityMethods = methods.get(entityName);
@@ -121,7 +119,7 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         Set<EntityField> metaEntityFields = entity.getMetaEntityFields();
         for (EntityField field : metaEntityFields) {
             if (entityMethods != null) {
-                invokeEventMethodForField(record, entityMethods, field, transaction);
+                invokeEventMethodForField(record, entityOperationContext, entityMethods, field, transaction);
                 continue;
             }
 
@@ -130,20 +128,20 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
             if (interfaceName != null) {
                 Map<String, List<BeanWithMethod>> interfaceMethods = methods.get(interfaceName.toUpperCase());
                 if (interfaceMethods != null) {
-                    invokeEventMethodForField(record, interfaceMethods, field, transaction);
+                    invokeEventMethodForField(record, entityOperationContext, interfaceMethods, field, transaction);
                 }
             }
         }
     }
 
-    private void invokeEventMethodForField(EntityRecord record, Map<String, List<BeanWithMethod>> entityMethods, EntityField field, Transaction transaction) throws GeminiException {
+    private void invokeEventMethodForField(EntityRecord record, EntityOperationContext entityOperationContext, Map<String, List<BeanWithMethod>> entityMethods, EntityField field, Transaction transaction) throws GeminiException {
         String fieldName = field.getName();
         List<BeanWithMethod> beanWithMethods = entityMethods.get(fieldName.toLowerCase());
         if (beanWithMethods != null && !beanWithMethods.isEmpty()) {
             // events precedence
             for (BeanWithMethod bm : beanWithMethods) {
                 try {
-                    EventContext eventContext = getEventContext(transaction);
+                    EventContext eventContext = getEventContext(transaction, entityOperationContext);
                     Object res = bm.method.invoke(bm.bean, eventContext);
                     if (res != null) {
                         record.put(field, res);
@@ -155,8 +153,11 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         }
     }
 
-    private EventContext getEventContext(Transaction transaction) {
-        return new EventContextBuilder(transaction).build();
+    private EventContext getEventContext(Transaction transaction, EntityOperationContext entityOperationContext) {
+        return new EventContextBuilder()
+                .with(transaction)
+                .with(entityOperationContext)
+                .build();
     }
 
     static class BeanWithMethod {

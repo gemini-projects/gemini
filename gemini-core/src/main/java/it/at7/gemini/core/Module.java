@@ -50,7 +50,7 @@ public interface Module extends StateListener {
         return false;
     }
 
-    default String getSchemaLocation(){
+    default String getSchemaLocation() {
         return getSchemaResourceLocation().replace("classpath: ", "");
     }
 }
