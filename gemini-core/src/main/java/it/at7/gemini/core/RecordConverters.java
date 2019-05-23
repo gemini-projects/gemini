@@ -192,6 +192,8 @@ public class RecordConverters {
             case ENTITY_REF_ARRAY:
                 convertEntityRefArrayToJSONValue(convertedMap, field, value);
                 break;
+            case PASSWORD:
+                break; // ignore password in API
             default:
                 throw new RuntimeException(String.format("No conversion found for fieldtype %s", fieldType));
         }

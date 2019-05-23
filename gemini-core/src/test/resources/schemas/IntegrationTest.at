@@ -18,6 +18,7 @@ ENTITY TestDataType {
     TestDomain1     domain1
     [TEXT]          textArray
     [TestDomain1]   domain1Array
+    PASSWORD        password
 }
 
 ENTITY TestDomainHierarchy {

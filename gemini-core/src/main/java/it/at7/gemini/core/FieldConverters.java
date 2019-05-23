@@ -33,6 +33,8 @@ public class FieldConverters {
                 return objValue;
             case TEXT:
                 return stValue;
+            case PASSWORD:
+                return stValue; // TODO Hash the password
             case NUMBER:
                 try {
                     return Long.parseLong(stValue);

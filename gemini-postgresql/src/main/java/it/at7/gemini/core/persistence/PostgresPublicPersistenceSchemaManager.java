@@ -382,6 +382,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case PK:
                 return data_type.equals("bigint");
             case TEXT:
+            case PASSWORD:
                 return data_type.equals("text");
             case NUMBER:
                 return data_type.equals("numeric");

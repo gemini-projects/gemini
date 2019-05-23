@@ -702,6 +702,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             case PK:
                 return 0;
             case TEXT:
+            case PASSWORD:
                 return "";
             case LONG:
                 return 0L;
@@ -734,6 +735,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             case PK:
                 return BigInteger.class;
             case TEXT:
+            case PASSWORD:
                 return String.class;
             case LONG:
                 return Long.class;
