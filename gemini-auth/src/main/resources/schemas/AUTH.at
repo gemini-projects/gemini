@@ -10,5 +10,6 @@ INTERFACE CoreMeta {
 }
 
 ENTITY User {
-    TEXT    nickName    *
+    TEXT    username    *
+    TEXT    description
 }

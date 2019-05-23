@@ -1,5 +1,8 @@
 dependencies {
     compile project(':gemini-core')
+
+    compileTestJava.dependsOn tasks.getByPath(':gemini-core:testClasses')
+    testCompile files(project(':gemini-core').sourceSets.test.output)
 }
 bootJar.enabled = false
 jar.enabled = true
