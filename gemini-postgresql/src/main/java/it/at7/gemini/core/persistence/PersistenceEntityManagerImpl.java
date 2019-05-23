@@ -413,6 +413,20 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                     // TODO query effective resolution
                     handled = true;
                 }
+                if (type == FieldType.PASSWORD) {
+                    handled = true;
+                    String jsonST = rs.getString(fieldName);
+                    Password pwd = null;
+                    if (jsonST != null) {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        try {
+                            pwd = objectMapper.readValue(jsonST, Password.class);
+                        } catch (IOException e) {
+                            throw new GeminiRuntimeException("Unable to convert Password from DB");
+                        }
+                    }
+                    er.put(field, pwd);
+                }
                 if (!handled) {
                     throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
                 }

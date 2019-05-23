@@ -22,6 +22,7 @@ public class FieldTypePersistenceUtility {
             case ENTITY_EMBEDED:
             case GENERIC_ENTITY_REF:
             case RECORD:
+            case PASSWORD:
                 return false;
         }
         return false;
@@ -49,6 +50,10 @@ public class FieldTypePersistenceUtility {
                 return true;
         }
         return false;
+    }
+
+    public static boolean passwordType(FieldType type) {
+        return type == FieldType.PASSWORD;
     }
 
     public static String pkDomainArrayFromEntity(String entityName) {

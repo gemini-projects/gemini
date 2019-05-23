@@ -310,6 +310,7 @@ public class RecordConverters {
             case BOOL:
                 return false;
             case ENTITY_REF:
+            case PASSWORD:
                 return null;
             case RECORD:
                 return new Object();

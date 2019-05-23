@@ -422,17 +422,13 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
 
 
     private String field(EntityField field) {
-        return field(field, false);
-    }
-
-    private String field(EntityField field, boolean isAlterColumn) {
         FieldType type = field.getType();
-        if (oneToOneType(type) || entityType(type)) {
-            return fieldName(field, true) + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
+        if (oneToOneType(type) || entityType(type) || passwordType(type)) {
+            // return fieldName(field, true) + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
+            return fieldName(field, true) + " " + getSqlPrimitiveType(field);
         }
         throw new RuntimeException(String.format("%s - Field of type %s Not Implemented", field.getName(), field.getType())); // TODO
     }
-
 
     private String fieldUnique(Field field) {
         FieldType type = field.getType();
@@ -462,6 +458,8 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 return "DATE";
             case DATETIME:
                 return "TIMESTAMP";
+            case PASSWORD:
+                return "JSON";
             case ENTITY_REF:
             case ENTITY_EMBEDED:
                 Entity entityRef = field.getEntityRef();
