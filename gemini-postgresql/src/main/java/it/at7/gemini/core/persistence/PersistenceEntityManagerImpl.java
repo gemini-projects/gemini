@@ -1,8 +1,11 @@
 package it.at7.gemini.core.persistence;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.Node;
 import it.at7.gemini.core.*;
+import it.at7.gemini.core.type.Password;
 import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
@@ -11,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.sql.Array;
@@ -443,7 +447,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
         for (EntityFieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
-            if (oneToOneType(type) || entityType(type)) {
+            if (oneToOneType(type) || entityType(type) || passwordType(type)) {
                 sql.append(first ? "(" : ",");
                 first = false;
                 sql.append(PostgresPublicPersistenceSchemaManager.fieldName(field.getEntityField(), true));
@@ -458,11 +462,14 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
         for (FieldValue field : sortedFields) {
             FieldType type = field.getField().getType();
-            if (oneToOneType(type) || entityType(type)) {
+            if (oneToOneType(type) || entityType(type) || passwordType(type)) {
                 String columnName = field.getField().getName().toLowerCase();
                 sql.append(first ? "(" : ",");
                 first = false;
                 sql.append(":").append(columnName);
+                if (type == FieldType.PASSWORD) {
+                    sql.append("::JSON");
+                }
                 params.put(columnName, fromFieldToPrimitiveValue(field, embededEntityRecords, transaction));
             }
         }
@@ -577,6 +584,11 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         if (oneToOneType(type)) {
             return value;
         }
+        if (type.equals(FieldType.PASSWORD)) {
+            if (Password.class.isAssignableFrom(value.getClass())) {
+                return toJSONValue(value);
+            }
+        }
         if (type.equals(FieldType.ENTITY_REF)) {
             EntityReferenceRecord refRecord;
             if (!EntityReferenceRecord.class.isAssignableFrom(value.getClass())) {
@@ -648,6 +660,15 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         throw new RuntimeException(String.format("fromFieldToPrimitiveValue - Not implemented %s", field.getType()));
     }
 
+    private Object toJSONValue(Object value) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new GeminiRuntimeException(String.format("Unable to Stringigy JSON value %s", value));
+        }
+    }
+
     @Override
     public UUID getUUIDforEntityRecord(EntityRecord record) {
         // uuid: EntityName + LogicalKey --> it should be unique
@@ -702,7 +723,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             case PK:
                 return 0;
             case TEXT:
-            case PASSWORD:
                 return "";
             case LONG:
                 return 0L;
@@ -713,6 +733,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             case TIME:
             case DATE:
             case DATETIME:
+            case ENTITY_REF_ARRAY:
+            case PASSWORD:
                 return null;
             case ENTITY_REF:
                 return 0;
@@ -720,8 +742,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 return new String[]{};
             case ENTITY_EMBEDED:
                 return 0;
-            case ENTITY_REF_ARRAY:
-                return null;
             case RECORD:
                 break;
         }

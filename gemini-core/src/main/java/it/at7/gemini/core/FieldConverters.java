@@ -1,5 +1,6 @@
 package it.at7.gemini.core;
 
+import it.at7.gemini.core.type.Password;
 import it.at7.gemini.exceptions.InvalidLogicalKeyValue;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetTime;
-import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +34,13 @@ public class FieldConverters {
             case TEXT:
                 return stValue;
             case PASSWORD:
-                return stValue; // TODO Hash the password
+                if (String.class.isAssignableFrom(objValue.getClass())) {
+                    return new Password(stValue);
+                }
+                if (Password.class.isAssignableFrom(objValue.getClass())) {
+                    return objValue;
+                }
+                break;
             case NUMBER:
                 try {
                     return Long.parseLong(stValue);
