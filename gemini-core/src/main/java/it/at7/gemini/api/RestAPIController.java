@@ -22,10 +22,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.at7.gemini.api.ApiUtility.*;
+import static it.at7.gemini.api.RestAPIController.API_URL;
 
 @RestController
-@RequestMapping("/api/{entity}")
+@RequestMapping(API_URL + "/{entity}")
 public class RestAPIController {
+
+    public static final String API_URL = "/api";
 
     private EntityManager entityManager;
     private ConfigurationService configurationService;
