@@ -2,6 +2,7 @@ package it.at7.gemini.core;
 
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
+import it.at7.gemini.schema.EntityField;
 
 import java.util.Collection;
 import java.util.List;
@@ -51,6 +52,12 @@ public interface EntityManager {
     default List<EntityRecord> getRecordsMatching(Entity entity, DynamicRecord searchRecord) throws GeminiException {
         assert searchRecord != null;
         return getRecordsMatching(entity, searchRecord.getFieldValues());
+    }
+
+    default List<EntityRecord> getRecordsMatching(Entity entity, String field, Object value) throws GeminiException {
+        EntityField entityField = entity.getField(field);
+        FieldValue fieldValue = FieldValue.create(entityField, value);
+        return getRecordsMatching(entity, Set.of(fieldValue));
     }
 
     List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType) throws GeminiException;

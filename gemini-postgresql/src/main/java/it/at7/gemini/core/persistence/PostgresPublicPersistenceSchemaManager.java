@@ -362,10 +362,10 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 String domain_name = resultSet.getString("domain_name");
                 if (!checkSqlType(field, data_type, domain_name)) {
                     String sqlAlterTable =
-                            "ALTER TABLE " + entity.getName().toLowerCase() +
+                            "ALTER TABLE " + wrapDoubleQuotes(entity.getName().toLowerCase()) +
                                     " DROP COLUMN " + fieldName(field, true);
                     sqlAlterTable += "; " +
-                            "ALTER TABLE " + entity.getName().toLowerCase() +
+                            "ALTER TABLE " + wrapDoubleQuotes(entity.getName().toLowerCase()) +
                             " ADD COLUMN " + field(field);
                     transaction.executeUpdate(sqlAlterTable);
                 }
@@ -382,8 +382,9 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case PK:
                 return data_type.equals("bigint");
             case TEXT:
-            case PASSWORD:
                 return data_type.equals("text");
+            case PASSWORD:
+                return data_type.equals("json");
             case NUMBER:
                 return data_type.equals("numeric");
             case LONG:

@@ -8,6 +8,7 @@ import javax.crypto.spec.PBEKeySpec;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Objects;
 
@@ -24,13 +25,13 @@ public class Password {
 
     public Password(String password) {
         try {
-            SecretKeyFactory skf = SecretKeyFactory.getInstance(PASSWORD_ALGO);
             SecureRandom random = new SecureRandom();
             byte saltBytes[] = new byte[20];
             random.nextBytes(saltBytes);
             Base64.Encoder b64encoder = Base64.getEncoder();
             this.salt = b64encoder.encodeToString(saltBytes);
             PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), saltBytes, HASH_ITERATION, KEY_LENGHT);
+            SecretKeyFactory skf = SecretKeyFactory.getInstance(PASSWORD_ALGO);
             SecretKey key = skf.generateSecret(spec);
             byte[] hashBytes = key.getEncoded();
             this.hash = b64encoder.encodeToString(hashBytes);
@@ -59,6 +60,20 @@ public class Password {
     @Override
     public int hashCode() {
         return Objects.hash(salt, hash);
+    }
+
+    public boolean isEquals(String password) {
+        byte[] saltBytes = Base64.getDecoder().decode(salt);
+        PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), saltBytes, HASH_ITERATION, KEY_LENGHT);
+        try {
+            SecretKeyFactory skf = SecretKeyFactory.getInstance(PASSWORD_ALGO);
+            SecretKey key = skf.generateSecret(spec);
+            byte[] passwordHash = key.getEncoded();
+            byte[] hashedBytes = Base64.getDecoder().decode(this.hash);
+            return Arrays.equals(passwordHash, hashedBytes);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new GeminiRuntimeException("Algorithm " + PASSWORD_ALGO + " not found");
+        }
     }
 
     @Override
