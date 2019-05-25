@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.Optional;
 
 import static it.at7.gemini.conf.State.SCHEMA_STORAGE_INITIALIZED;
@@ -55,6 +54,7 @@ public class AuthModule implements Module {
         String description = "Auto generated user for " + username;
         entityRecord.put(UserRef.FIELDS.USERNAME, username);
         entityRecord.put(UserRef.FIELDS.DESCRIPTION, description);
+        entityRecord.put(UserRef.FIELDS.FRAMEWORK, true);
         persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction.get());
     }
 }

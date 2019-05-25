@@ -5,5 +5,7 @@ public interface UserRef {
     class FIELDS {
         public static final String USERNAME = "username";
         public static final String DESCRIPTION = "description";
+        public static final String FRAMEWORK = "framework";
+        public static final String PASSWORD = "password";
     }
 }

@@ -1,5 +1,6 @@
 dependencies {
     compile project(':gemini-core')
+    compile 'org.springframework.boot:spring-boot-starter-security'
 
     compileTestJava.dependsOn tasks.getByPath(':gemini-core:testClasses')
     testCompile files(project(':gemini-core').sourceSets.test.output)
