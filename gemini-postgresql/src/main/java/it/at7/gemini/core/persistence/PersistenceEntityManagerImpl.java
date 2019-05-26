@@ -8,6 +8,7 @@ import it.at7.gemini.core.*;
 import it.at7.gemini.core.type.Password;
 import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.*;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -287,7 +288,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         } */
     }
 
-    private boolean sameOf(EntityRecord entityRecord, EntityRecord persistedEntityRecord, Transaction transaction) throws GeminiException {
+    private boolean sameOf(@NotNull EntityRecord entityRecord, @NotNull EntityRecord persistedEntityRecord, Transaction transaction) throws GeminiException {
         if ((entityRecord != null && persistedEntityRecord == null) || (entityRecord == null && persistedEntityRecord != null)) {
             return true; // base case
         }
@@ -296,15 +297,19 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             EntityField field = fieldValue.getEntityField();
             if (fieldCanBeIgnoredInSameOf(field))
                 continue;
-
-            if (field.getType().equals(FieldType.ENTITY_EMBEDED)) {
+            FieldType type = field.getType();
+            if (type.equals(FieldType.ENTITY_EMBEDED)) {
                 EntityRecord embE = entityRecord.get(field);
                 EntityRecord embPE = persistedEntityRecord.get(field);
                 if (!sameOf(embE, embPE, transaction)) {
                     return false;
                 }
+            } else if (type.equals(FieldType.PASSWORD)) {
+                // password is an Object that implements the equals
+                if (!fieldValue.getValue().equals(persistedEntityRecord.get(field))) {
+                    return false;
+                }
             } else {
-
                 // todo stiamo razzando via la roba non voluta
                 Object valueRec = fromFieldToPrimitiveValue(fieldValue, /* TODO  */ Map.of(), transaction);
                 EntityFieldValue persistedFVT = persistedEntityRecord.getEntityFieldValue(field);
