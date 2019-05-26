@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,7 +19,6 @@ import java.util.Optional;
 import static it.at7.gemini.conf.State.SCHEMA_STORAGE_INITIALIZED;
 
 @Service
-@ComponentScan({"it.at7.gemini.auth"})
 @ModuleDescription(
         name = "AUTH",
         dependencies = {"CORE"},
@@ -66,5 +67,16 @@ public class AuthModule implements Module {
         adminUer.put(UserRef.FIELDS.FRAMEWORK, false);
         adminUer.put(UserRef.FIELDS.PASSWORD, adminUsername);
         persistenceEntityManager.createOrUpdateEntityRecord(adminUer, transaction.get());
+    }
+
+    @Component
+    @ComponentScan(basePackages = {"it.at7.gemini.auth"},
+            excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "it.at7.gemini.auth.api.*"))
+    public class Core {
+    }
+
+    @Component
+    @ComponentScan(basePackages = {"it.at7.gemini.auth.api"})
+    public class API {
     }
 }
