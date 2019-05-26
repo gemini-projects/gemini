@@ -524,10 +524,15 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             EntityFieldValue field = sortedFields.get(i);
             String columnName = PostgresPublicPersistenceSchemaManager.fieldName(field.getEntityField(), true);
             FieldType type = field.getField().getType();
-            if (oneToOneType(type) || entityType(type)) {
+            if (oneToOneType(type) || entityType(type) || passwordType(type)) {
                 sql.append(String.format(" %s = :%s", columnName, field.getEntityField().getName().toLowerCase()));
+                if (type == FieldType.PASSWORD) {
+                    sql.append("::JSON");
+                }
                 sql.append(i == sortedFields.size() - 1 ? " " : " , ");
                 params.put(field.getEntityField().getName().toLowerCase(), fromFieldToPrimitiveValue(field, embededEntityRecords, transaction));
+            } else {
+                throw new GeminiRuntimeException(String.format("Modify entity record - type %s not handled", type));
             }
         }
         sql.append(String.format(" WHERE %s = %s", Field.ID_NAME, record.get(record.getEntity().getIdEntityField(), Long.class)));
