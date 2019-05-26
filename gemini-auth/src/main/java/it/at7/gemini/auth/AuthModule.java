@@ -46,15 +46,25 @@ public class AuthModule implements Module {
     private void createPredefinedUserForEachModule(Optional<Transaction> transaction) throws GeminiException {
         logger.info("Check/Create predefined Users");
         assert transaction.isPresent();
+        Entity userEntity = schemaManager.getEntity(UserRef.NAME);
 
         // GEMINI Core User
-        Entity userEntity = schemaManager.getEntity(UserRef.NAME);
-        EntityRecord entityRecord = new EntityRecord(userEntity);
+        EntityRecord geminiFrameworkUser = new EntityRecord(userEntity);
         String username = AuthModuleRef.USERS.GEMINI;
         String description = "Auto generated user for " + username;
-        entityRecord.put(UserRef.FIELDS.USERNAME, username);
-        entityRecord.put(UserRef.FIELDS.DESCRIPTION, description);
-        entityRecord.put(UserRef.FIELDS.FRAMEWORK, true);
-        persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction.get());
+        geminiFrameworkUser.put(UserRef.FIELDS.USERNAME, username);
+        geminiFrameworkUser.put(UserRef.FIELDS.DESCRIPTION, description);
+        geminiFrameworkUser.put(UserRef.FIELDS.FRAMEWORK, true);
+        persistenceEntityManager.createOrUpdateEntityRecord(geminiFrameworkUser, transaction.get());
+
+        // Admin
+        EntityRecord adminUer = new EntityRecord(userEntity);
+        String adminUsername = AuthModuleRef.USERS.ADMINISTRATOR;
+        String adminiDescription = "Auto generated user for " + adminUsername;
+        adminUer.put(UserRef.FIELDS.USERNAME, adminUsername);
+        adminUer.put(UserRef.FIELDS.DESCRIPTION, adminiDescription);
+        adminUer.put(UserRef.FIELDS.FRAMEWORK, false);
+        adminUer.put(UserRef.FIELDS.PASSWORD, adminUsername);
+        persistenceEntityManager.createOrUpdateEntityRecord(adminUer, transaction.get());
     }
 }

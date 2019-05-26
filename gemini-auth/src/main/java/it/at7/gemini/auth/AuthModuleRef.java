@@ -4,7 +4,7 @@ public class AuthModuleRef {
 
     public interface USERS {
         String GEMINI = "_GEMINI";
-        String ADMINISTRATOR = "Administrator";
+        String ADMINISTRATOR = "Admin";
     }
 
 }
