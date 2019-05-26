@@ -19,9 +19,6 @@ public class GeminiPostgresqlMain {
         logger.info("STARTING - GEMINI-ROOT APP CONTEXT ");
         SpringApplicationBuilder appBuilder = new SpringApplicationBuilder()
                 .parent(Gemini.class, PostgresqlGeminiGUIMain.class);
-        if (modules.length != 0) {
-            appBuilder.sources(modules);
-        }
         ConfigurableApplicationContext root = appBuilder
                 .web(WebApplicationType.NONE)
                 .bannerMode(Banner.Mode.OFF)
@@ -33,9 +30,12 @@ public class GeminiPostgresqlMain {
 
 
         logger.info("STARTING - GEMINI-GUI APP CONTEXT ");
-        ConfigurableApplicationContext gui = new SpringApplicationBuilder()
-                .parent(root).sources(Api.class, Gui.class, PostgresqlGeminiGUIMain.class).web(WebApplicationType.SERVLET)
-                .bannerMode(Banner.Mode.OFF)
+        SpringApplicationBuilder webAppBuilder = new SpringApplicationBuilder()
+                .parent(root).sources(Api.class, Gui.class, PostgresqlGeminiGUIMain.class).web(WebApplicationType.SERVLET);
+        if (modules.length != 0) {
+            webAppBuilder.sources(modules);
+        }
+        ConfigurableApplicationContext gui = webAppBuilder.bannerMode(Banner.Mode.OFF)
                 .run(args);
         gui.setId("GEMINI-GUI");
         logger.info("STARTED - GEMINI-GUI APP CONTEXT");
