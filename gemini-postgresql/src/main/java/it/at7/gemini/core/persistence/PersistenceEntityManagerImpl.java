@@ -297,6 +297,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             EntityField field = fieldValue.getEntityField();
             if (fieldCanBeIgnoredInSameOf(field))
                 continue;
+            if (fieldValue.getValue() == null && persistedEntityRecord.get(field) == null) {
+                continue;
+            }
             FieldType type = field.getType();
             if (type.equals(FieldType.ENTITY_EMBEDED)) {
                 EntityRecord embE = entityRecord.get(field);
