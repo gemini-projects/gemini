@@ -7,10 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.Banner;
 import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.util.Set;
+
 
 public class GeminiPostgresqlMain {
     private static final Logger logger = LoggerFactory.getLogger(GeminiPostgresqlMain.class);
@@ -24,7 +26,7 @@ public class GeminiPostgresqlMain {
 
         logger.info("STARTING - GEMINI-ROOT APP CONTEXT ");
         SpringApplicationBuilder appBuilder = new SpringApplicationBuilder()
-                .parent(Gemini.class, PostgresqlGeminiGUIMain.class);
+                .parent(AutoConfiguration.class, Gemini.class);
         if (coreBean.size() != 0) {
             appBuilder.sources(coreBean.toArray(new Class[0]));
         }
@@ -40,7 +42,7 @@ public class GeminiPostgresqlMain {
 
         logger.info("STARTING - GEMINI-GUI APP CONTEXT ");
         SpringApplicationBuilder webAppBuilder = new SpringApplicationBuilder()
-                .parent(root).sources(Api.class, Gui.class, PostgresqlGeminiGUIMain.class).web(WebApplicationType.SERVLET);
+                .parent(root).sources(Api.class, Gui.class, AutoConfiguration.class).web(WebApplicationType.SERVLET);
         if (apiBean.size() != 0) {
             webAppBuilder.sources(apiBean.toArray(new Class[0]));
         }
@@ -48,6 +50,10 @@ public class GeminiPostgresqlMain {
                 .run(args);
         gui.setId("GEMINI-GUI");
         logger.info("STARTED - GEMINI-GUI APP CONTEXT");
+    }
+
+    @EnableAutoConfiguration
+    public static class AutoConfiguration {
     }
 
 }
