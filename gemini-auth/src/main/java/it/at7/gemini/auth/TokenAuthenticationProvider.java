@@ -1,14 +1,13 @@
 package it.at7.gemini.auth;
 
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TokenAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
+public class TokenAuthenticationProvider implements AuthenticationProvider {
 
     private final UserAuthenticationService userAuthenticationService;
 
@@ -17,16 +16,15 @@ public class TokenAuthenticationProvider extends AbstractUserDetailsAuthenticati
     }
 
     @Override
-    protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         Object token = authentication.getCredentials();
-
         String authenticatedUser = userAuthenticationService.authenticateByToken(String.valueOf(token));
-
-        return User.builder().username(authenticatedUser).password(authenticatedUser).authorities("admin").build();
+        return new UsernamePasswordAuthenticationToken(authenticatedUser, token, authentication.getAuthorities());
     }
 
     @Override
-    protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
-        // No need to additional check
+    public boolean supports(Class<?> authentication) {
+        return (JwtAuthenticationToken.class
+                .isAssignableFrom(authentication));
     }
 }

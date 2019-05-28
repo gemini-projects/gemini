@@ -1,7 +1,6 @@
 package it.at7.gemini.auth;
 
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -30,7 +29,7 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
                 .map(v -> v.replace(BEARER, "").trim())
                 .orElseThrow(() -> new BadCredentialsException("Missing authentication token."));
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(token, token);
+        Authentication auth = new JwtAuthenticationToken(token);
         return getAuthenticationManager().authenticate(auth);
     }
 

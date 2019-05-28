@@ -32,12 +32,8 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    private TokenAuthenticationProvider authenticationProvider;
-
     @Autowired
-    public SecurityConfiguration(TokenAuthenticationProvider authenticationProvider) {
-        this.authenticationProvider = authenticationProvider;
-    }
+    private TokenAuthenticationProvider authenticationProvider;
 
     private static final RequestMatcher PUBLIC_URLS = new OrRequestMatcher(
             new AntPathRequestMatcher(LOGIN_URL)
