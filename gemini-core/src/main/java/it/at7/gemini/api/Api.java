@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.PostConstruct;
 
@@ -33,7 +36,19 @@ public class Api implements ApplicationListener<ApplicationReadyEvent> {
         try {
             stateManager.changeState(State.API_INITIALIZED);
         } catch (GeminiException e) {
-            throw  new GeminiRuntimeException(e);
+            throw new GeminiRuntimeException(e);
+        }
+    }
+
+
+    /**
+     * Configuration to enable Cors when Spring Security is not used
+     */
+    @Configuration
+    public class WebConfig implements WebMvcConfigurer {
+        @Override
+        public void addCorsMappings(CorsRegistry registry) {
+            registry.addMapping("/**");
         }
     }
 }
