@@ -28,13 +28,14 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     }
 
     @Override
-    public String create(String username) {
+    public AccessToken createBearer(String username) {
         Instant issuedAt = Instant.now();
-        return JWT.create()
+        String access_token = JWT.create()
                 .withIssuedAt(Date.from(issuedAt))
                 .withExpiresAt(Date.from(issuedAt.plusSeconds(defaultExpiration)))
                 .withClaim(USER_CLAIM, username)
                 .sign(algorithm);
+        return AccessToken.bearer(access_token, defaultExpiration);
     }
 
     @Override

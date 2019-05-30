@@ -12,10 +12,12 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.sql.SQLException;
 
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -43,6 +45,10 @@ public abstract class UnitTestBase {
         return true;
     }
 
+    public boolean initializeSecurity() {
+        return false;
+    }
+
     @AfterClass
     public static void clean() {
         if (webApp != null) {
@@ -57,7 +63,10 @@ public abstract class UnitTestBase {
 
     public void setupWebMockMvc(ConfigurableApplicationContext wApp) {
         webApp = wApp;
-        mockMvc = webAppContextSetup((WebApplicationContext) wApp).build();
+        DefaultMockMvcBuilder mockMvcBuilder = webAppContextSetup((WebApplicationContext) wApp);
+        if (initializeSecurity())
+            mockMvcBuilder = mockMvcBuilder.apply(springSecurity());
+        mockMvc = mockMvcBuilder.build();
     }
     //=============================================================/
 

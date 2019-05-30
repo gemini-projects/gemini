@@ -27,7 +27,7 @@ public class JwtAuthenticationService implements UserAuthenticationService {
     }
 
     @Override
-    public String login(String username, String password) throws BadCredentialsException {
+    public AccessToken login(String username, String password) throws BadCredentialsException {
         Entity userEntity = this.entityManager.getEntity(UserRef.NAME);
         try {
             List<EntityRecord> recordsMatching = this.entityManager.getRecordsMatching(userEntity, UserRef.FIELDS.USERNAME, username);
@@ -37,7 +37,7 @@ public class JwtAuthenticationService implements UserAuthenticationService {
             EntityRecord userRecord = recordsMatching.get(0);
             Password pwd = userRecord.get(UserRef.FIELDS.PASSWORD);
             if (pwd != null && pwd.isEquals(password)) {
-                return jwtTokenService.create(userRecord.get(UserRef.FIELDS.USERNAME));
+                return jwtTokenService.createBearer(userRecord.get(UserRef.FIELDS.USERNAME));
             }
             throw new BadCredentialsException(String.format("Invalid password for %s", username));
         } catch (GeminiException e) {

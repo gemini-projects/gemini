@@ -47,6 +47,7 @@ subprojects {
     dependencies {
         compile 'org.jetbrains:annotations:17.0.0'
         testCompile 'org.springframework.boot:spring-boot-starter-test'
+        testCompile 'org.springframework.security:spring-security-test'
     }
 
     def jacocoExecutionDataFiles = fileTree(buildDir).include("/jacoco/*.exec")

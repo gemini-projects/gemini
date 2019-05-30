@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Set;
 
 @Component
 public class IntegrationTestMain {
@@ -98,6 +99,16 @@ public class IntegrationTestMain {
         ConfigurableApplicationContext webApp = new SpringApplicationBuilder()
                 .parent(root).sources(Api.class, Autoconfiguration.class)
                 .sources(classes).web(WebApplicationType.SERVLET)
+                .bannerMode(Banner.Mode.OFF)
+                .run();
+        return webApp;
+    }
+
+    public static ConfigurableApplicationContext initializeFullIntegrationWebApp(Set<Class> coreBean, Set<Class> apiBean) {
+        ConfigurableApplicationContext root = initializeGemini(coreBean.toArray(new Class[0]));
+        ConfigurableApplicationContext webApp = new SpringApplicationBuilder()
+                .parent(root).sources(apiBean.toArray(new Class[0])).sources(Api.class, Autoconfiguration.class)
+                .web(WebApplicationType.SERVLET)
                 .bannerMode(Banner.Mode.OFF)
                 .run();
         return webApp;

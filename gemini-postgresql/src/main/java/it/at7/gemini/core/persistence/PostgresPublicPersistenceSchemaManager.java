@@ -410,7 +410,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case TEXT_ARRAY:
                 return data_type.contains("ARRAY");
         }
-        throw new RuntimeException(String.format("Field %s not handled for drop/create dirty column", type));
+        throw new RuntimeException(String.format("Field %s not handled for drop/createBearer dirty column", type));
     }
 
     private String primaryKeyField(String id) {

@@ -8,7 +8,7 @@ import java.util.Map;
 public interface JwtTokenService {
     String USER_CLAIM = "username";
 
-    String create(String username);
+    AccessToken createBearer(String username);
 
     Map<String, Claim> verify(String token) throws JWTVerificationException;
 }

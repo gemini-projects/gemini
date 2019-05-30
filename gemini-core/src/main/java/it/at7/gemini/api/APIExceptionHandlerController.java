@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice({"it.at7.gemini"})
+@RestControllerAdvice({"it.at7.gemini.api"})
 public class APIExceptionHandlerController {
     public static final Logger logger = LoggerFactory.getLogger(APIExceptionHandlerController.class);
 
