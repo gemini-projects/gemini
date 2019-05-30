@@ -95,9 +95,19 @@ public abstract class LoginAndBearerAbstTest extends UnitTestBase {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':10}"));
-
-
     }
 
+
+    @Test
+    public void n4_getRequestWithoutToken() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper(); // for json conversion
+
+        //==== basic object -- default value
+        mockMvc.perform(get(API_PATH + "/TestDataType/lk")
+                .header(AUTHORIZATION, "Bearer" + " invalid " + access_token)
+                .accept(APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isUnauthorized());
+    }
 
 }
