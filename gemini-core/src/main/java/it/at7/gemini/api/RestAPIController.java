@@ -31,10 +31,10 @@ public class RestAPIController {
     public static final String API_URL = "/api";
 
     private EntityManager entityManager;
-    private ConfigurationService configurationService;
+    private GeminiConfigurationService configurationService;
 
     @Autowired
-    public RestAPIController(EntityManager entityManager, ConfigurationService configurationService) {
+    public RestAPIController(EntityManager entityManager, GeminiConfigurationService configurationService) {
         this.entityManager = entityManager;
         this.configurationService = configurationService;
     }

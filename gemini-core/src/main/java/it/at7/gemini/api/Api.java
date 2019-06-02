@@ -19,11 +19,18 @@ import javax.annotation.PostConstruct;
 @Service("API")
 public class Api implements ApplicationListener<ApplicationReadyEvent> {
 
-    @Autowired
     private StateManager stateManager;
+    private OpenApiServiceImpl openApiService;
+
+    @Autowired
+    public Api(StateManager stateManager, OpenApiServiceImpl openApiService) {
+        this.stateManager = stateManager;
+        this.openApiService = openApiService;
+    }
 
     @PostConstruct
     public void init() throws GeminiException {
+        openApiService.init();
         stateManager.changeState(State.API_INITIALIZATION);
     }
 

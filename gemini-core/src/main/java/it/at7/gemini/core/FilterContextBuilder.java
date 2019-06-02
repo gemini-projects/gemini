@@ -10,7 +10,7 @@ public class FilterContextBuilder {
 
     private static final String ORDER_BY_SEPARATOR = ",";
 
-    private final ConfigurationService configurationService;
+    private final GeminiConfigurationService configurationService;
 
     private String searchString;
     private FilterContext.FilterType filterType;
@@ -22,7 +22,7 @@ public class FilterContextBuilder {
         this.configurationService = null;
     }
 
-    public FilterContextBuilder(ConfigurationService configurationService) {
+    public FilterContextBuilder(GeminiConfigurationService configurationService) {
         this.configurationService = configurationService;
     }
 

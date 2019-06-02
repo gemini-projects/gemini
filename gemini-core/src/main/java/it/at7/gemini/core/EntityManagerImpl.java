@@ -24,11 +24,11 @@ public class EntityManagerImpl implements EntityManager {
     private TransactionManager transactionManager;
     private PersistenceEntityManager persistenceEntityManager;
     private StateManager stateManager;
-    private ConfigurationService configurationService;
+    private GeminiConfigurationService configurationService;
     private EventManager eventManager;
 
     @Autowired
-    public EntityManagerImpl(SchemaManager schemaManager, TransactionManager transactionManager, PersistenceEntityManager persistenceEntityManager, StateManager stateManager, ConfigurationService configurationService, EventManager eventManager) {
+    public EntityManagerImpl(SchemaManager schemaManager, TransactionManager transactionManager, PersistenceEntityManager persistenceEntityManager, StateManager stateManager, GeminiConfigurationService configurationService, EventManager eventManager) {
         this.schemaManager = schemaManager;
         this.transactionManager = transactionManager;
         this.persistenceEntityManager = persistenceEntityManager;

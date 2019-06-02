@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ConfigurationService {
+public class GeminiConfigurationService {
 
     @Value("${gemini.dynamicSchema:DISABLED}")
     private String dynamicSchema;
@@ -19,5 +19,12 @@ public class ConfigurationService {
 
     public int getApiListLimit() {
         return apiListLimit;
+    }
+
+    @Value(("${gemini.api.openapi.schema:false}"))
+    private boolean openapiSchema;
+
+    public boolean isOpenapiSchema() {
+        return openapiSchema;
     }
 }
