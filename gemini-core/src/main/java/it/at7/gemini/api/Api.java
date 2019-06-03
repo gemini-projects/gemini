@@ -1,5 +1,6 @@
 package it.at7.gemini.api;
 
+import it.at7.gemini.api.openapi.OpenApiServiceImpl;
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.StateManager;
 import it.at7.gemini.exceptions.GeminiException;

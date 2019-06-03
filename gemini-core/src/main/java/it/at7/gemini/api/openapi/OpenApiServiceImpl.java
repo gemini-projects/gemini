@@ -1,4 +1,4 @@
-package it.at7.gemini.api;
+package it.at7.gemini.api.openapi;
 
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.Module;
@@ -7,6 +7,7 @@ import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -22,14 +23,16 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
     private final GeminiConfigurationService configurationService;
     private final StateManager stateManager;
     private final SchemaManager schemaManager;
+    private final Environment environment;
 
     private OpenAPIBuilder openAPIBuilder;
 
     @Autowired
-    public OpenApiServiceImpl(GeminiConfigurationService configurationService, StateManager stateManager, SchemaManager schemaManager) {
+    public OpenApiServiceImpl(GeminiConfigurationService configurationService, StateManager stateManager, SchemaManager schemaManager, Environment environment) {
         this.configurationService = configurationService;
         this.stateManager = stateManager;
         this.schemaManager = schemaManager;
+        this.environment = environment;
     }
 
     public void init() {
@@ -46,6 +49,8 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
                 makeOpenAPISchema();
                 break;
             case API_INITIALIZED:
+                String localPort = environment.getProperty("local.server.port");
+                openAPIBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
                 storeOpenAPISchema();
                 break;
             default:
