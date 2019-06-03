@@ -7,8 +7,12 @@ import it.at7.gemini.core.Module;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+
+import static it.at7.gemini.api.openapi.OpenAPIBuilder.SchemaType.ENTITY;
+import static it.at7.gemini.api.openapi.OpenAPIBuilder.SchemaType.ENTITY_LK;
 
 public class OpenAPIBuilder {
     public static String OPENAPI_VERSION = "3.0.2";
@@ -92,21 +96,25 @@ public class OpenAPIBuilder {
         rootEntityPath.summary = String.format("%s resource route", entity.getName());
 
         // Embedable entities are not exposed
-        if(!entity.isEmbedable()) {
+        if (!entity.isEmbedable()) {
             // GET and POST on /entityname
             rootEntityPath.get = getEntityListMethod(entity);
             rootEntityPath.post = postNewEntityMethod(entity);
             this.pathsByName.put("/" + entityName, rootEntityPath);
+
+            if (!entity.getLogicalKey().isEmpty()) {
+                addComponentSchema(entity, ENTITY_LK);
+            }
         }
 
         // SCHEMAS
-        addComponentSchema(entity);
+        addComponentSchema(entity, ENTITY);
     }
 
     private Method getEntityListMethod(Entity entity) {
         Method method = new Method();
         method.summary = String.format("Get the list from %s resources", entity.getName());
-        method.tags = List.of(entity.getModule().getName());
+        method.tags = getTagsForEntityMethod(entity);
 
         // 200 response has not components default
         Response response200 = new Response();
@@ -123,7 +131,7 @@ public class OpenAPIBuilder {
     private Method postNewEntityMethod(Entity entity) {
         Method method = new Method();
         method.summary = String.format("Create a new %s resource", entity.getName());
-        method.tags = List.of(entity.getModule().getName());
+        method.tags = getTagsForEntityMethod(entity);
 
         method.requestBody = new RequestBody();
         method.requestBody.required = true;
@@ -142,18 +150,29 @@ public class OpenAPIBuilder {
         return method;
     }
 
+    @NotNull
+    private List<String> getTagsForEntityMethod(Entity entity) {
+        return List.of(entity.getModule().getName(), entity.getName());
+    }
+
     public void addServer(String url, String description) {
         this.servers.add(Server.from(url, description));
     }
 
 
-    private void addComponentSchema(Entity entity) {
+    private void addComponentSchema(Entity entity, SchemaType schemaType) {
         Schema schema = new Schema();
         schema.type = "object";
         schema.properties = new LinkedHashMap<>();
+        List<String> requiredFields = new ArrayList<>();
         for (EntityField field : entity.getDataEntityFields()) {
-            String name = field.getName().toLowerCase();
+            if (schemaType == ENTITY_LK && !field.isLogicalKey())
+                continue;
+
+            if (field.isLogicalKey())
+                requiredFields.add(field.getName().toLowerCase());
             SchemaProperty schemaProperty = new SchemaProperty();
+            String name = field.getName().toLowerCase();
             switch (field.getType()) {
                 case TEXT:
                     schemaProperty.type = "string";
@@ -190,12 +209,14 @@ public class OpenAPIBuilder {
                     break;
                 case ENTITY_REF:
                     schemaProperty.type = "object";
-                    schemaProperty.$ref = String.format("#/components/schemas/%s", field.getEntityRef().getName());
+                    schemaProperty.$ref = String.format("#/components/schemas/%s", entityLkSchemaName(field.getEntityRef()));
                     break;
                 case ENTITY_EMBEDED:
                     schemaProperty.type = "object";
+                    schemaProperty.$ref = String.format("#/components/schemas/%s", field.getEntityRef().getName());
                     break;
                 case GENERIC_ENTITY_REF:
+                    // TODO
                     break;
                 case TEXT_ARRAY:
                     schemaProperty.type = "array";
@@ -208,14 +229,30 @@ public class OpenAPIBuilder {
                     schemaProperty.items.type = "object";
                     break;
                 case RECORD:
+                    // TODO
                     break;
             }
-
-
             schema.properties.put(name, schemaProperty);
         }
+        if (!requiredFields.isEmpty()) {
+            schema.required = requiredFields;
+        }
+
         Map<String, Schema> schemas = (Map<String, Schema>) this.components.get("schemas");
-        schemas.put(entity.getName(), schema);
+        String schemaName = "";
+        switch (schemaType) {
+            case ENTITY:
+                schemaName = entity.getName();
+                break;
+            case ENTITY_LK:
+                schemaName = entityLkSchemaName(entity);
+                break;
+        }
+        schemas.put(schemaName, schema);
+    }
+
+    private String entityLkSchemaName(Entity entity) {
+        return entity.getName() + "_LK";
     }
 
 
@@ -276,6 +313,7 @@ public class OpenAPIBuilder {
     static class Schema {
         public String type;
         public Map<String, SchemaProperty> properties;
+        public List<String> required;
     }
 
     static class SchemaProperty {
@@ -283,5 +321,10 @@ public class OpenAPIBuilder {
         public String format;
         public SchemaProperty items;
         public String $ref;
+    }
+
+    enum SchemaType {
+        ENTITY,
+        ENTITY_LK
     }
 }

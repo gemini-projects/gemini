@@ -1,7 +1,9 @@
 package it.at7.gemini.schema;
 
-import it.at7.gemini.core.*;
+import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Module;
+import it.at7.gemini.core.RecordConverters;
+import it.at7.gemini.core.Services;
 import it.at7.gemini.exceptions.EntityFieldException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.lang.Nullable;
@@ -210,6 +212,10 @@ public class Entity {
 
         public List<EntityField> getLogicalKeyList() {
             return new ArrayList<>(logicalKeySet);
+        }
+
+        public boolean isEmpty(){
+            return logicalKeySet.isEmpty();
         }
     }
 }
