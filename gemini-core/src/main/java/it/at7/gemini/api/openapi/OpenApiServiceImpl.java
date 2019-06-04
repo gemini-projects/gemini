@@ -65,7 +65,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
         openAPIBuilder.addModulesToTags(orderedModules);
         for (Module module : orderedModules) {
             List<Entity> entities = entitiesByModule.get(module);
-            entities.forEach(e -> openAPIBuilder.addEntityPaths(e));
+            entities.forEach(e -> openAPIBuilder.handleEntity(e));
         }
 
     }

@@ -100,7 +100,8 @@ public class OpenAPIBuilder {
             // GET and POST on /entityname
             rootEntityPath.get = getEntityListMethod(entity);
             rootEntityPath.post = postNewEntityMethod(entity);
-            this.pathsByName.put("/" + entityName, rootEntityPath);
+            this.pathsByName.put("/" + entityPathName, rootEntityPath);
+
 
             if (!entity.getLogicalKey().isEmpty()) {
                 addComponentSchema(entity, ENTITY_LK);
@@ -119,7 +120,10 @@ public class OpenAPIBuilder {
         // 200 response has not components default
         Response response200 = new Response();
         response200.description = "Successful operation";
-        // todo reponse json
+        response200.content = new LinkedHashMap<>();
+        response200.content.put("application/json",
+                Map.of("schema",
+                        Map.of("$ref", String.format("#/components/schemas/%s", entity.getName()))));
         method.responses.put("200", response200);
 
         method.responses.put("401", UNAUTHORIZED_REF);
@@ -135,6 +139,7 @@ public class OpenAPIBuilder {
 
         method.requestBody = new RequestBody();
         method.requestBody.required = true;
+        method.requestBody.content = new LinkedHashMap<>();
         method.requestBody.content.put("application/json",
                 Map.of("schema",
                         Map.of("$ref", String.format("#/components/schemas/%s", entity.getName()))));
@@ -289,11 +294,12 @@ public class OpenAPIBuilder {
     static class RequestBody {
         public String description;
         public boolean required;
-        public Map<String, Object> content = new LinkedHashMap<>();
+        public Map<String, Object> content;
     }
 
     static class Response {
         public String description;
+        public Map<String, Object> content;
     }
 
     static class Server {
