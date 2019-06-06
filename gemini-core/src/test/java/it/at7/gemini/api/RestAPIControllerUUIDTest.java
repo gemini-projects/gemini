@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static it.at7.gemini.api.ApiUtility.GEMINI_DATA_TYPE;
+import static it.at7.gemini.api.ApiUtility.GEMINI_API_META_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
 import static it.at7.gemini.core.RecordConverters.GEMINI_META_FIELD;
 import static it.at7.gemini.core.RecordConverters.GEMINI_UUID_FIELD;
@@ -41,7 +41,7 @@ public abstract class RestAPIControllerUUIDTest extends UnitTestBase {
         geminiAPIJson.put("meta", new HashMap<>());
         String jsonString = objectMapper.writeValueAsString(geminiAPIJson);
         MvcResult result = mockMvc.perform(post(API_PATH + "/TestDataType")
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .contentType(APPLICATION_JSON)
                 .content(jsonString)
                 .accept(APPLICATION_JSON))
@@ -69,7 +69,7 @@ public abstract class RestAPIControllerUUIDTest extends UnitTestBase {
 
         //==== basic object -- withGeminiSearchString default value
         mockMvc.perform(get(API_PATH + "/TestDataType/" + lkUUID)
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
@@ -90,7 +90,7 @@ public abstract class RestAPIControllerUUIDTest extends UnitTestBase {
         geminiAPIJson.put("meta", new HashMap<>());
         String jsonString = objectMapper.writeValueAsString(geminiAPIJson);
         mockMvc.perform(put(API_PATH + "/TestDataType/" + lkUUID)
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .contentType(APPLICATION_JSON)
                 .content(jsonString)
                 .accept(APPLICATION_JSON))

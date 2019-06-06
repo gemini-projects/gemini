@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static it.at7.gemini.api.ApiUtility.GEMINI_DATA_TYPE;
+import static it.at7.gemini.api.ApiUtility.GEMINI_API_META_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
 import static it.at7.gemini.core.RecordConverters.GEMINI_META_FIELD;
 import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
@@ -167,7 +167,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
 
         //==== basic object -- default value -- gemini API data type (WITH META Fields)
         MvcResult result = mockMvc.perform(get(API_PATH + "/TestDataType/lk")
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .accept(APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -235,7 +235,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
         jsonString = objectMapper.writeValueAsString(json);
         MvcResult result = mockMvc.perform(put(API_PATH + "/TestDataType/lk")
                 .contentType(APPLICATION_JSON)
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .content(jsonString)
                 .accept(APPLICATION_JSON))
                 .andExpect(content()

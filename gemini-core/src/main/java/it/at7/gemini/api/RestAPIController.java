@@ -39,7 +39,6 @@ public class RestAPIController {
         this.configurationService = configurationService;
     }
 
-
     @RequestMapping(value = "/**")
     @ResponseStatus(HttpStatus.OK)
     Object allRequestHandler(@PathVariable String entity,
@@ -49,14 +48,14 @@ public class RestAPIController {
 
         List<String> geminiHeaderValues = getGeminiHeader(request);
         Object results = requestHandler(entity, body, request, response);
-        if (noGeminiDataType(geminiHeaderValues)) {
+        if (noGeminiDataType(geminiHeaderValues, request.getHeader("Accept"))) {
             return results;
         }
         return handleGeminiDataTypeResponse(results, request, response);
     }
 
     private Object handleGeminiDataTypeResponse(Object results, HttpServletRequest request, HttpServletResponse response) throws InvalidRequesException {
-        response.setHeader(GEMINI_HEADER, GEMINI_DATA_TYPE);
+        response.setHeader(GEMINI_HEADER, GEMINI_API_META_TYPE);
         if (results instanceof EntityRecord) {
             return GeminiWrappers.EntityRecordApiType.of((EntityRecord) results);
         }
@@ -154,10 +153,9 @@ public class RestAPIController {
                 if (RecordConverters.containGeminiDataTypeFields(mapBody))
                     return handleInsertRecord(e, body);
             }
-            throw InvalidRequesException.INVALID_BODY();
-        } else {
-            return handleInsertRecord(e, body);
         }
+        // even if the header is geminiDataType let's to handle insert without meta
+        return handleInsertRecord(e, body);
     }
 
     private Object handleInsertRecord(Entity e, Object body) throws GeminiException {

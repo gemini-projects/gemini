@@ -1,8 +1,10 @@
 package it.at7.gemini.api.openapi;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.at7.gemini.api.ApiUtility;
 import it.at7.gemini.core.Module;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
@@ -12,8 +14,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static it.at7.gemini.api.openapi.OpenAPIBuilder.SchemaType.ENTITY;
-import static it.at7.gemini.api.openapi.OpenAPIBuilder.SchemaType.ENTITY_LK;
+import static it.at7.gemini.api.openapi.OpenAPIBuilder.SchemaType.*;
+import static it.at7.gemini.core.RecordConverters.GEMINI_UUID_FIELD;
 
 public class OpenAPIBuilder {
     public static String OPENAPI_VERSION = "3.0.2";
@@ -64,6 +66,18 @@ public class OpenAPIBuilder {
         uuidSchemaProp.format = "uuid";
         uuid.schema = uuidSchemaProp;
         parameters.put("uuid", uuid);
+
+        // Gemini Header Parameter
+        Parameter geminiHeader = new Parameter();
+        geminiHeader.name = "Gemini";
+        geminiHeader.in = "header";
+        geminiHeader.required = false;
+        geminiHeader.description = "Optional Header to enable Gemini Request/Response feature: \n * `gemini.api` - to enable Meta Data Response ";
+        SchemaProperty gemHeaderSchemaProp = new SchemaProperty();
+        gemHeaderSchemaProp.type = "string";
+        gemHeaderSchemaProp._enum = List.of("gemini.api");
+        geminiHeader.schema = gemHeaderSchemaProp;
+        parameters.put("GeminiHeader", geminiHeader);
 
         return parameters;
     }
@@ -122,29 +136,50 @@ public class OpenAPIBuilder {
             rootEntityPath.summary = String.format("%s resource route", entityName);
             rootEntityPath.get = getEntityListMethod(entity);
             rootEntityPath.post = postNewEntityMethod(entity);
+            rootEntityPath.parameters = List.of(Map.of("$ref", "#/components/parameters/GeminiHeader"));
             this.pathsByName.put("/" + entityPathName, rootEntityPath);
 
 
-            // PUT and DELETE on /entityname/{uuid} -- always available
+            // GET / PUT and DELETE on /entityname/{uuid} -- always available
             Path uuidEntityPath = new Path();
             uuidEntityPath.summary = String.format("%s resource by UUID root", entityName);
-            uuidEntityPath.get = getEntityUUIDMethod(entity);
-            uuidEntityPath.put = putEntityUUIDMethod(entity);
-            uuidEntityPath.delete = deleteEntityUUIDMethod(entity);
+            uuidEntityPath.get = getEntityUUIDandLKMethod(entity, "Get the %s resource by its uuid");
+            uuidEntityPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its uuid");
+            uuidEntityPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its uuid");
+            uuidEntityPath.parameters = List.of(
+                    Map.of("$ref", "#/components/parameters/uuid"),
+                    Map.of("$ref", "#/components/parameters/GeminiHeader"));
             this.pathsByName.put("/" + entityPathName + "/{uuid}", uuidEntityPath);
 
             Entity.LogicalKey logicalKey = entity.getLogicalKey();
             // NOT Embedable with a LK can be used as reference
             if (!logicalKey.isEmpty()) {
-                String lkPath = entity.getLogicalKey().getLogicalKeyList().stream().map(e -> "{" + e.getName().toLowerCase() + "}").collect(Collectors.joining("/"));
-                // this.pathsByName.put("/" + entityPathName + "/" + lkPath, uuidEntityPath);
+                String lkPathString = entity.getLogicalKey().getLogicalKeyList().stream().map(e -> "{" + e.getName().toLowerCase() + "}").collect(Collectors.joining("/"));
+                Path lkPath = new Path();
+                lkPath.summary = String.format("%s resource by Entity Logical Key", entityName);
+                lkPath.parameters = entity.getLogicalKey().getLogicalKeyList().stream().map(lk -> {
+                    Parameter lkP = new Parameter();
+                    lkP.in = "path";
+                    lkP.required = true;
+                    lkP.name = lk.getName().toLowerCase();
+                    lkP.schema = new SchemaProperty();
+                    fromFieldToProperty(lk, lkP.schema);
+                    return lkP;
+                }).collect(Collectors.toList());
+                lkPath.parameters.add(Map.of("$ref", "#/components/parameters/GeminiHeader"));
 
+                lkPath.get = getEntityUUIDandLKMethod(entity, "Get the %s resource by its Logical Key");
+                lkPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its Logical Key");
+                lkPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its Logical Key");
+
+                this.pathsByName.put("/" + entityPathName + "/" + lkPathString, lkPath);
                 addComponentSchema(entity, ENTITY_LK);
             }
         }
 
         // SCHEMAS
         addComponentSchema(entity, ENTITY);
+        addComponentSchema(entity, ENTITY_WITH_META);
     }
 
     private Method getEntityListMethod(Entity entity) {
@@ -156,6 +191,13 @@ public class OpenAPIBuilder {
         Response response200 = new Response();
         response200.description = "Successful operation";
         response200.content = new LinkedHashMap<>();
+
+
+        response200.content.put(String.format("application/json; %s=%s", ApiUtility.GEMINI_CONTENT_TYPE, ApiUtility.GEMINI_API_META_TYPE),
+                Map.of("schema",
+                        Map.of("type", "array",
+                                "items",
+                                Map.of("$ref", entityWithMetaSchemaName(entity)))));
         response200.content.put("application/json",
                 Map.of("schema",
                         Map.of("type", "array",
@@ -169,32 +211,40 @@ public class OpenAPIBuilder {
         return method;
     }
 
-    private Method getEntityUUIDMethod(Entity entity) {
+    private Method getEntityUUIDandLKMethod(Entity entity, String summary) {
         Method method = new Method();
-        method.summary = String.format("Get the %s resource by its uuid", entity.getName());
-        uuidCommonMethodDesc(entity, method, "Successful operation - return the wanted resource");
+        method.summary = String.format(summary, entity.getName());
+        uuidLkCommonMethodDesc(entity, method, "Successful operation - return the wanted resource");
         return method;
     }
 
-    private Method deleteEntityUUIDMethod(Entity entity) {
+    private Method deleteEntityUUIDandLKMethod(Entity entity, String summary) {
         Method method = new Method();
-        method.summary = String.format("Delete any %s resource by its uuid", entity.getName());
-        uuidCommonMethodDesc(entity, method, "Successfull DELETE operation - return the remove resource");
+        method.summary = String.format(summary, entity.getName());
+        uuidLkCommonMethodDesc(entity, method, "Successfull DELETE operation - return the remove resource");
         return method;
     }
 
-    private Method putEntityUUIDMethod(Entity entity) {
+    private Method putEntityUUIDandLKMethod(Entity entity, String summary) {
         Method method = new Method();
-        method.summary = String.format("Update any %s resource by its uuid", entity.getName());
-        uuidCommonMethodDesc(entity, method, "Successfull UPDATE operation - return the modified resource");
+        method.summary = String.format(summary, entity.getName());
+        uuidLkCommonMethodDesc(entity, method, "Successfull UPDATE operation - return the modified resource");
+        requestBodyEntitySchema(entity, method);
         return method;
+    }
+    
+    private void requestBodyEntitySchema(Entity entity, Method method) {
+        method.requestBody = new RequestBody();
+        method.requestBody.required = true;
+        method.requestBody.content = new LinkedHashMap<>();
+        method.requestBody.content.put("application/json",
+                Map.of("schema",
+                        Map.of("$ref", String.format("#/components/schemas/%s", entity.getName()))));
     }
 
     @NotNull
-    private void uuidCommonMethodDesc(Entity entity, Method method, String s) {
+    private void uuidLkCommonMethodDesc(Entity entity, Method method, String s) {
         method.tags = getTagsForEntityMethod(entity);
-        method.parameters = new LinkedList<>();
-        method.parameters.add(Map.of("$ref", "#/components/parameters/uuid"));
 
         Response response200 = new Response();
         response200.description = s;
@@ -207,6 +257,22 @@ public class OpenAPIBuilder {
 
     @NotNull
     private void response200JsonEntityRecord(Entity entity, Response response) {
+        /*  with one of
+            response.content.put("application/json",
+                Map.of("schema",
+                        Map.of("oneOf", List.of(
+                                Map.of("type", "array",
+                                        "items",
+                                        Map.of("$ref", String.format("#/components/schemas/%s", entity.getName()))),
+                                Map.of("$ref", String.format("#/components/schemas/%s", entityWithMetaSchemaName(entity)))
+                                )
+                        )
+                )); */
+
+        response.content.put(String.format("application/json; %s=%s", ApiUtility.GEMINI_CONTENT_TYPE, ApiUtility.GEMINI_API_META_TYPE),
+                Map.of("schema",
+                        Map.of("$ref", String.format("#/components/schemas/%s", entityWithMetaSchemaName(entity)))));
+
         response.content.put("application/json",
                 Map.of("schema",
                         Map.of("$ref", String.format("#/components/schemas/%s", entity.getName()))));
@@ -216,14 +282,7 @@ public class OpenAPIBuilder {
         Method method = new Method();
         method.summary = String.format("Create a new %s resource", entity.getName());
         method.tags = getTagsForEntityMethod(entity);
-
-        method.requestBody = new RequestBody();
-        method.requestBody.required = true;
-        method.requestBody.content = new LinkedHashMap<>();
-        method.requestBody.content.put("application/json",
-                Map.of("schema",
-                        Map.of("$ref", String.format("#/components/schemas/%s", entity.getName()))));
-
+        requestBodyEntitySchema(entity, method);
         // 200 response has not components default
         Response response200 = new Response();
         response200.description = "Resource created";
@@ -246,100 +305,126 @@ public class OpenAPIBuilder {
 
 
     private void addComponentSchema(Entity entity, SchemaType schemaType) {
+        Map<String, Schema> schemas = (Map<String, Schema>) this.components.get("schemas");
+
+        if (schemaType.equals(ENTITY)) {
+            Schema entitySchema = createSchemaFor(entity.getDataEntityFields());
+            schemas.put(entity.getName(), entitySchema);
+        }
+        if (schemaType.equals(ENTITY_LK)) {
+            Schema entitySchema = createSchemaFor(entity.getLogicalKey().getLogicalKeySet());
+            schemas.put(entityLkSchemaName(entity), entitySchema);
+        }
+        if (!entity.isEmbedable()) {
+            if (schemaType.equals(ENTITY_WITH_META)) {
+                Schema rootSchema = new Schema();
+                rootSchema.type = "object";
+                rootSchema.properties = new LinkedHashMap<>();
+                Schema metaSchema = createSchemaFor(entity.getMetaEntityFields());
+
+                SchemaProperty uuidProperty = new SchemaProperty();
+                uuidProperty.type = "string";
+                uuidProperty.format = "uuid";
+                metaSchema.properties.put(GEMINI_UUID_FIELD, uuidProperty);
+
+                rootSchema.properties.put("meta", metaSchema);
+                Schema dataSchema = createSchemaFor(entity.getDataEntityFields());
+                rootSchema.properties.put("data", dataSchema);
+                rootSchema.required = List.of("meta", "data");
+                schemas.put(entityWithMetaSchemaName(entity), rootSchema);
+            }
+        }
+    }
+
+    private Schema createSchemaFor(Set<EntityField> fields) {
         Schema schema = new Schema();
         schema.type = "object";
         schema.properties = new LinkedHashMap<>();
         List<String> requiredFields = new ArrayList<>();
-        for (EntityField field : entity.getDataEntityFields()) {
-            if (schemaType == ENTITY_LK && !field.isLogicalKey())
-                continue;
-
+        for (EntityField field : fields) {
             if (field.isLogicalKey())
                 requiredFields.add(field.getName().toLowerCase());
             SchemaProperty schemaProperty = new SchemaProperty();
             String name = field.getName().toLowerCase();
-            switch (field.getType()) {
-                case TEXT:
-                    schemaProperty.type = "string";
-                    break;
-                case NUMBER:
-                    schemaProperty.type = "number";
-                    break;
-                case LONG:
-                    schemaProperty.type = "integer";
-                    schemaProperty.format = "int64";
-                    break;
-                case DOUBLE:
-                    schemaProperty.type = "number";
-                    schemaProperty.format = "double";
-                    break;
-                case BOOL:
-                    schemaProperty.type = "boolean";
-                    break;
-                case TIME:
-                    schemaProperty.type = "string";
-                    schemaProperty.format = "time";
-                    break;
-                case DATE:
-                    schemaProperty.type = "string";
-                    schemaProperty.format = "date";
-                    break;
-                case DATETIME:
-                    schemaProperty.type = "string";
-                    schemaProperty.format = "date-time";
-                    break;
-                case PASSWORD:
-                    schemaProperty.type = "string";
-                    schemaProperty.format = "password";
-                    break;
-                case ENTITY_REF:
-                    schemaProperty.type = "object";
-                    schemaProperty.$ref = String.format("#/components/schemas/%s", entityLkSchemaName(field.getEntityRef()));
-                    break;
-                case ENTITY_EMBEDED:
-                    schemaProperty.type = "object";
-                    schemaProperty.$ref = String.format("#/components/schemas/%s", field.getEntityRef().getName());
-                    break;
-                case GENERIC_ENTITY_REF:
-                    // TODO
-                    break;
-                case TEXT_ARRAY:
-                    schemaProperty.type = "array";
-                    schemaProperty.items = new SchemaProperty();
-                    schemaProperty.items.type = "string";
-                    break;
-                case ENTITY_REF_ARRAY:
-                    schemaProperty.type = "array";
-                    schemaProperty.items = new SchemaProperty();
-                    schemaProperty.items.type = "object";
-                    break;
-                case RECORD:
-                    // TODO
-                    break;
-            }
+            fromFieldToProperty(field, schemaProperty);
             schema.properties.put(name, schemaProperty);
         }
         if (!requiredFields.isEmpty()) {
             schema.required = requiredFields;
         }
+        return schema;
+    }
 
-        Map<String, Schema> schemas = (Map<String, Schema>) this.components.get("schemas");
-        String schemaName = "";
-        switch (schemaType) {
-            case ENTITY:
-                schemaName = entity.getName();
+    private void fromFieldToProperty(EntityField field, SchemaProperty schemaProperty) {
+        switch (field.getType()) {
+            case TEXT:
+                schemaProperty.type = "string";
                 break;
-            case ENTITY_LK:
-                schemaName = entityLkSchemaName(entity);
+            case NUMBER:
+                schemaProperty.type = "number";
+                break;
+            case LONG:
+                schemaProperty.type = "integer";
+                schemaProperty.format = "int64";
+                break;
+            case DOUBLE:
+                schemaProperty.type = "number";
+                schemaProperty.format = "double";
+                break;
+            case BOOL:
+                schemaProperty.type = "boolean";
+                break;
+            case TIME:
+                schemaProperty.type = "string";
+                schemaProperty.format = "time";
+                break;
+            case DATE:
+                schemaProperty.type = "string";
+                schemaProperty.format = "date";
+                break;
+            case DATETIME:
+                schemaProperty.type = "string";
+                schemaProperty.format = "date-time";
+                break;
+            case PASSWORD:
+                schemaProperty.type = "string";
+                schemaProperty.format = "password";
+                break;
+            case ENTITY_REF:
+                schemaProperty.type = "object";
+                schemaProperty.$ref = String.format("#/components/schemas/%s", entityLkSchemaName(field.getEntityRef()));
+                break;
+            case ENTITY_EMBEDED:
+                schemaProperty.type = "object";
+                schemaProperty.$ref = String.format("#/components/schemas/%s", field.getEntityRef().getName());
+                break;
+            case GENERIC_ENTITY_REF:
+                // TODO
+                break;
+            case TEXT_ARRAY:
+                schemaProperty.type = "array";
+                schemaProperty.items = new SchemaProperty();
+                schemaProperty.items.type = "string";
+                break;
+            case ENTITY_REF_ARRAY:
+                schemaProperty.type = "array";
+                schemaProperty.items = new SchemaProperty();
+                schemaProperty.items.type = "object";
+                break;
+            case RECORD:
+                // TODO
                 break;
         }
-        schemas.put(schemaName, schema);
     }
+
 
     private String entityLkSchemaName(Entity entity) {
         return entity.getName() + "_LK";
     }
 
+    private String entityWithMetaSchemaName(Entity entity) {
+        return entity.getName() + "_META";
+    }
 
     static class Tag {
 
@@ -359,6 +444,7 @@ public class OpenAPIBuilder {
     static class Path {
         public String summary;
         public String description;
+        public List<Object> parameters;
         public Method get;
         public Method put;
         public Method post;
@@ -400,7 +486,7 @@ public class OpenAPIBuilder {
 
     static class Schema {
         public String type;
-        public Map<String, SchemaProperty> properties;
+        public Map<String, Object> properties;
         public List<String> required;
     }
 
@@ -409,6 +495,8 @@ public class OpenAPIBuilder {
         public String format;
         public SchemaProperty items;
         public String $ref;
+        @JsonProperty("enum")
+        public List<Object> _enum;
     }
 
     static class Parameter {
@@ -421,6 +509,7 @@ public class OpenAPIBuilder {
 
     enum SchemaType {
         ENTITY,
+        ENTITY_WITH_META,
         ENTITY_LK
     }
 }

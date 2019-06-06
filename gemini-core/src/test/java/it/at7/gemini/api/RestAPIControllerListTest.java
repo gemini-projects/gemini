@@ -15,12 +15,13 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 import java.util.Map;
 
-import static it.at7.gemini.api.ApiUtility.GEMINI_DATA_TYPE;
+import static it.at7.gemini.api.ApiUtility.GEMINI_API_META_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
 import static it.at7.gemini.core.FilterContextBuilder.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class RestAPIControllerListTest extends UnitTestBase {
@@ -45,7 +46,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
 
         // with gemini API Data Type - default limit
         mockMvc.perform(get(API_PATH + "/TestDataType")
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .contentType(APPLICATION_JSON)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -96,7 +97,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
         // gemini Api Meta - have limit
         mockMvc.perform(get(API_PATH + "/TestDataType")
                 .param(LIMIT_PARAMETER, "30")
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .contentType(APPLICATION_JSON)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -123,7 +124,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
         // gemini Api Meta - no limit
         mockMvc.perform(get(API_PATH + "/TestDataType")
                 .param(LIMIT_PARAMETER, "0")
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .contentType(APPLICATION_JSON)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -153,7 +154,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
         mockMvc.perform(get(API_PATH + "/TestDataType")
                 .param(LIMIT_PARAMETER, "50")
                 .param(START_PARAMETER, "150")
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .contentType(APPLICATION_JSON)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -185,7 +186,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
 
         mockMvc.perform(get(API_PATH + "/TestDataType")
                 .param(ORDER_BY_PARAMETER, "-numberLong")
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .contentType(APPLICATION_JSON)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -216,7 +217,7 @@ public abstract class RestAPIControllerListTest extends UnitTestBase {
 
         mockMvc.perform(get(API_PATH + "/TestDataType")
                 .param(ORDER_BY_PARAMETER, "numberLong")
-                .header(GEMINI_HEADER, GEMINI_DATA_TYPE)
+                .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .contentType(APPLICATION_JSON)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
