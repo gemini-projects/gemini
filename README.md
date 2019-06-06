@@ -9,11 +9,15 @@ ___
 
 
 
-Gemini is an opinionated REST framework fully developed in Java (Spring) for automatically generate CRUD REST APIs starting from a 
-simple Abstract Type Schema definition (called Gemini DSL).
+Gemini is a backend REST framework to automatically create CRUD REST APIs from scratch (with no coding),  starting from
+a simple Schema definition called Gemini DSL. Briefly Gemini automatically handles for you:
+* **Persistence**: creating all the storage and entity managers
+* **API controllers**: creating all the common REST methods
+* **API documentation**: creating the openapi language-agnostic interface to RESTful APIs 
+* **Authentication**: by using OAuth2 // WIP work in progress
+* **API callbacks**: to add business logic with ease // WIP work in progress
 
-You can find an article about the goal of this project [here](https://medium.com/@h4t0n/gemini-dsl-f85e205f1419)
-
+## Index
 
 * [Features](#features)
 * [Quick Start](#quick-start)
@@ -30,7 +34,7 @@ You can find an article about the goal of this project [here](https://medium.com
 ## Features
 * **REST Resources** (Entities) are defined with the simple **Gemini DSL**
     * Support for simple data types (TEXT, NUMBERS, DATES, TIME ...)
-    * Support for custom and complex types (FILE, IMAGE, ...) // WIP
+    * Support for custom and complex types (FILE, IMAGE, ...) // WIP work in progress
 * **Automagical generation** of REST CRUD APIs for each Resource
     * POST - PUT - GET - DELETE are available out of the box
     * Support for custom routes (Gemini Services available)  
@@ -38,6 +42,7 @@ You can find an article about the goal of this project [here](https://medium.com
     * Gemini Entity Manager check records and relations (by using Entity Logical Keys)
     * Gemini Persistence Manager automatically handle storage and data
         * Postgresql Driver available
+* REST openApi documentation 
 
 
 For example lets use the Gemini DSL to define....
@@ -113,6 +118,9 @@ Now you can run the jar.
 Gemini automatically setup its internal structures and creates the ```schema/Runtime.at``` abstract type file in the
 working directory. Now you can customize this file with all your entities, by using the Gemini DSL.
 Then restart the application to see your APIs in action.
+
+If you want to easily navigate APIs you can use the Swagger openapi tools. Gemini automatically generate the openapi 3
+json file `api/openapi.json`
 
 
 ## DSL and APIs
