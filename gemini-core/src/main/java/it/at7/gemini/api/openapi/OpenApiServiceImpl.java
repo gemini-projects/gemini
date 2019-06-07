@@ -27,6 +27,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
     private final Environment environment;
 
     private OpenAPIBuilder openAPIAllBuilder;
+    private OpenAPIBuilder runtimeAPIBuilder;
 
     @Autowired
     public OpenApiServiceImpl(GeminiConfigurationService configurationService, StateManager stateManager, SchemaManager schemaManager, Environment environment) {
@@ -40,6 +41,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
         if (configurationService.isOpenapiSchema()) {
             stateManager.register(this);
             openAPIAllBuilder = new OpenAPIBuilder();
+            runtimeAPIBuilder = new OpenAPIBuilder(false);
         }
     }
 
@@ -52,7 +54,9 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
             case API_INITIALIZED:
                 String localPort = environment.getProperty("local.server.port");
                 openAPIAllBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
-                storeOpenAPISchema();
+                runtimeAPIBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
+                storeOpenAPISchema(openAPIAllBuilder, "all.json");
+                storeOpenAPISchema(runtimeAPIBuilder, "runtime.json");
                 break;
             default:
                 break;
@@ -67,15 +71,19 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
         for (Module module : orderedModules) {
             List<Entity> entities = entitiesByModule.get(module);
             entities.forEach(e -> openAPIAllBuilder.handleEntity(e));
+
+            if (module.getName().equals("RUNTIME")) {
+                entities.forEach(e -> runtimeAPIBuilder.handleEntity(e));
+            }
         }
 
     }
 
-    private void storeOpenAPISchema() {
-        String json = this.openAPIAllBuilder.toJsonString();
+    private void storeOpenAPISchema(OpenAPIBuilder openAPIBuilder, String fileName) {
+        String json = openAPIBuilder.toJsonString();
         try {
             String openApiDir = configurationService.getOpenApiDir();
-            Path allPath = Paths.get(openApiDir, "all.json");
+            Path allPath = Paths.get(openApiDir, fileName);
             File file = new File(allPath.toString());
             file.getParentFile().mkdirs();
             Files.write(allPath, json.getBytes());
