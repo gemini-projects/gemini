@@ -21,10 +21,17 @@ public class GeminiConfigurationService {
         return apiListLimit;
     }
 
-    @Value(("${gemini.api.openapi.schema:false}"))
+    @Value("${gemini.api.openapi.schema:false}")
     private boolean openapiSchema;
 
     public boolean isOpenapiSchema() {
         return openapiSchema;
+    }
+
+    @Value("${gemini.api.openapi.dir:./openapi/schema}")
+    private String openApiDir;
+
+    public String getOpenApiDir() {
+        return openApiDir;
     }
 }

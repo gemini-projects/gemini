@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,7 +26,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
     private final SchemaManager schemaManager;
     private final Environment environment;
 
-    private OpenAPIBuilder openAPIBuilder;
+    private OpenAPIBuilder openAPIAllBuilder;
 
     @Autowired
     public OpenApiServiceImpl(GeminiConfigurationService configurationService, StateManager stateManager, SchemaManager schemaManager, Environment environment) {
@@ -38,7 +39,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
     public void init() {
         if (configurationService.isOpenapiSchema()) {
             stateManager.register(this);
-            openAPIBuilder = new OpenAPIBuilder();
+            openAPIAllBuilder = new OpenAPIBuilder();
         }
     }
 
@@ -50,7 +51,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
                 break;
             case API_INITIALIZED:
                 String localPort = environment.getProperty("local.server.port");
-                openAPIBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
+                openAPIAllBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
                 storeOpenAPISchema();
                 break;
             default:
@@ -62,20 +63,22 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
         Collection<Entity> allEntities = this.schemaManager.getAllEntities();
         Map<Module, List<Entity>> entitiesByModule = allEntities.stream().collect(Collectors.groupingBy(Entity::getModule));
         List<Module> orderedModules = entitiesByModule.keySet().stream().sorted(Comparator.comparingInt(Module::order)).collect(Collectors.toList());
-        openAPIBuilder.addModulesToTags(orderedModules);
+        openAPIAllBuilder.addModulesToTags(orderedModules);
         for (Module module : orderedModules) {
             List<Entity> entities = entitiesByModule.get(module);
-            entities.forEach(e -> openAPIBuilder.handleEntity(e));
+            entities.forEach(e -> openAPIAllBuilder.handleEntity(e));
         }
 
     }
 
     private void storeOpenAPISchema() {
-        String json = this.openAPIBuilder.toJsonString();
+        String json = this.openAPIAllBuilder.toJsonString();
         try {
-            File file = new File("./api/openapi.json");
+            String openApiDir = configurationService.getOpenApiDir();
+            Path allPath = Paths.get(openApiDir, "all.json");
+            File file = new File(allPath.toString());
             file.getParentFile().mkdirs();
-            Files.write(Paths.get("./api/openapi.json"), json.getBytes());
+            Files.write(allPath, json.getBytes());
         } catch (IOException e) {
             throw new GeminiRuntimeException(e);
         }
