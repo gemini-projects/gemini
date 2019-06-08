@@ -17,6 +17,10 @@ a simple Schema definition called Gemini DSL. Briefly Gemini automatically handl
 * **Authentication**: by using OAuth2 // WIP work in progress
 * **API callbacks**: to add business logic with ease // WIP work in progress
 
+<p align="center">
+   <img src="./gemini_hiw.gif" height="200">
+</p>
+
 ## Index
 
 * [Features](#features)
