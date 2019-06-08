@@ -18,7 +18,7 @@ a simple Schema definition called Gemini DSL. Briefly Gemini automatically handl
 * **API callbacks**: to add business logic with ease // WIP work in progress
 
 <p align="center">
-   <img src="./gemini_hiw.gif" height="200">
+   <img src="./gemini_hiw.gif" height="400">
 </p>
 
 ## Index
