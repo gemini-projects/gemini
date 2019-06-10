@@ -13,7 +13,7 @@ Gemini is a backend REST framework to automatically create CRUD REST APIs from s
 a simple Schema definition called Gemini DSL. Briefly Gemini automatically handles for you:
 * **Persistence**: creating all the storage and entity managers
 * **API controllers**: creating all the common REST methods
-* **API documentation**: creating the openapi language-agnostic interface to RESTful APIs 
+* **Swagger API documentation**: creating the openapi language-agnostic interface to RESTful APIs 
 * **Authentication**: by using OAuth2 // WIP work in progress
 * **API callbacks**: to add business logic with ease // WIP work in progress
 
