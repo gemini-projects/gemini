@@ -16,7 +16,9 @@ import static it.at7.gemini.api.RestAPIController.API_URL;
 
 @RestController
 public class LoginController {
-    public static final String LOGIN_PATH = API_URL + "/login";
+    public static final String AUTH_URL = "/auth";
+
+    public static final String LOGIN_PATH = API_URL + AUTH_URL + "/login";
 
     private final UserAuthenticationService authenticationService;
 
@@ -35,7 +37,7 @@ public class LoginController {
     @PostMapping(value = LOGIN_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
     public AccessToken login(@RequestBody LoginRequest loginRequest) {
         if (loginRequest.username == null || loginRequest.password == null) {
-            throw  new BadCredentialsException("Must provide both username and password");
+            throw new BadCredentialsException("Must provide both username and password");
         }
         return authenticationService.login(loginRequest.username, loginRequest.password);
     }
