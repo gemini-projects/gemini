@@ -9,4 +9,6 @@ public interface UserAuthenticationService {
     String authenticateByToken(String token) throws AuthenticationException;
 
     void logout(String username);
+
+    AccessToken refreshLogin(String refresh_token);
 }

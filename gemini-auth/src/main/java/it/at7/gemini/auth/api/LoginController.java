@@ -19,6 +19,7 @@ public class LoginController {
     public static final String AUTH_URL = "/auth";
 
     public static final String LOGIN_PATH = API_URL + AUTH_URL + "/login";
+    public static final String REFRESH_TOKEN_PATH = API_URL + AUTH_URL + "/refresh_token";
 
     private final UserAuthenticationService authenticationService;
 
@@ -42,8 +43,20 @@ public class LoginController {
         return authenticationService.login(loginRequest.username, loginRequest.password);
     }
 
+    @PostMapping(value = REFRESH_TOKEN_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AccessToken refreshToken(@RequestBody RefreshTokenRequest rftRequest) {
+        if (rftRequest.refresh_token == null) {
+            throw new BadCredentialsException("Must provide refresh_token");
+        }
+        return authenticationService.refreshLogin(rftRequest.refresh_token);
+    }
+
     static class LoginRequest {
         public String username;
         public String password;
+    }
+
+    static class RefreshTokenRequest {
+        public String refresh_token;
     }
 }

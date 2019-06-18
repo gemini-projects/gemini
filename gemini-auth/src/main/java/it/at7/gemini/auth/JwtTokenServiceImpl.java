@@ -17,14 +17,14 @@ import java.util.Map;
 public class JwtTokenServiceImpl implements JwtTokenService {
 
     private final Algorithm algorithm;
-    private final int defaultExpiration;
+    private final int expiration;
 
     @Autowired
     public JwtTokenServiceImpl(
             @Value("${gemini.jwt.secret}") String secret,
-            @Value("${gemini.jwt.defaultExp:3600}") int defaultExpiration) {
+            @Value("${gemini.jwt.defaultExp:5}") int expiration) {
         this.algorithm = Algorithm.HMAC512(secret);
-        this.defaultExpiration = defaultExpiration;
+        this.expiration = expiration;
     }
 
     @Override
@@ -32,10 +32,16 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         Instant issuedAt = Instant.now();
         String access_token = JWT.create()
                 .withIssuedAt(Date.from(issuedAt))
-                .withExpiresAt(Date.from(issuedAt.plusSeconds(defaultExpiration)))
+                .withExpiresAt(Date.from(issuedAt.plusSeconds(expiration)))
                 .withClaim(USER_CLAIM, username)
                 .sign(algorithm);
-        return AccessToken.bearer(access_token, defaultExpiration);
+
+        String refresh_token = JWT.create()
+                .withIssuedAt(Date.from(issuedAt))
+                .withExpiresAt(Date.from(issuedAt.plusSeconds(expiration * 10)))
+                .withClaim(USER_CLAIM, username)
+                .sign(algorithm);
+        return AccessToken.bearer(access_token, refresh_token, expiration);
     }
 
     @Override
