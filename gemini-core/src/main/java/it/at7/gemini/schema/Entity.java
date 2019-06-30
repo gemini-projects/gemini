@@ -214,7 +214,7 @@ public class Entity {
             return new ArrayList<>(logicalKeySet);
         }
 
-        public boolean isEmpty(){
+        public boolean isEmpty() {
             return logicalKeySet.isEmpty();
         }
     }
