@@ -391,4 +391,4 @@ Take a look at this article for some clarification [Rest API: UUID-V3 is the rig
 
 
 ## License
-GNU GENERAL PUBLIC LICENSE Version 3
+Apache License 2.0
