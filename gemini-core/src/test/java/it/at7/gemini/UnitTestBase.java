@@ -54,6 +54,7 @@ public abstract class UnitTestBase {
         if (webApp != null) {
             ConfigurableApplicationContext parent = (ConfigurableApplicationContext) webApp.getParent();
             parent.close();
+            parentContext.close();
             webApp.close();
         } else {
             parentContext.close();

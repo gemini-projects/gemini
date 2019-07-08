@@ -21,7 +21,7 @@ addons:
   postgresql: "11.2"
 script:
   - gradle clean
-  - gradle jacocoRootReport
+  - gradle jacocoRootReport --stacktrace
 after_success:
   - bash <(curl -s https://codecov.io/bash) 
   
