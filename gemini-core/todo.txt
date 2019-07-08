@@ -7,3 +7,5 @@
 - FIX resolution delete (cascade)
 - Salvare lo schema precedente per poi controllare i campi non più presenti.. invece che leggerli dal DB ?? Potrebbe
   essere utile per i campi meta
+- Introdurre Entità non esposte direttamente a GET ??
+- Chiavi LK su GET Rest e annidate e gestite da OPENAPI

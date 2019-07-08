@@ -13,7 +13,7 @@ import it.at7.gemini.schema.FieldType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
 import static it.at7.gemini.api.openapi.OpenAPIBuilder.SchemaType.*;
 import static it.at7.gemini.core.RecordConverters.GEMINI_UUID_FIELD;
@@ -31,6 +31,7 @@ public class OpenAPIBuilder {
     private final Map<String, String> DEFAULTERR_REF = Map.of("$ref", "#/components/responses/DefaultError");
 
     private final boolean moduleTag;
+    private final List<Path> RESTentitiesPaths = new ArrayList<>();
 
     public OpenAPIBuilder() {
         this(true);
@@ -150,7 +151,7 @@ public class OpenAPIBuilder {
             rootEntityPath.post = postNewEntityMethod(entity);
             // rootEntityPath.parameters = List.of(Map.of("$ref", "#/components/parameters/GeminiHeader"));
             this.pathsByName.put("/" + entityPathName, rootEntityPath);
-
+            this.RESTentitiesPaths.add(rootEntityPath);
 
             // GET / PUT and DELETE on /entityname/{uuid} -- always available
             Path uuidEntityPath = new Path();
@@ -163,7 +164,9 @@ public class OpenAPIBuilder {
                     // Map.of("$ref", "#/components/parameters/GeminiHeader")
             );
             this.pathsByName.put("/" + entityPathName + "/{uuid}", uuidEntityPath);
+            this.RESTentitiesPaths.add(uuidEntityPath);
 
+            // GET / PUT and DELETE on /entityname/{logicalKey/...}
             Entity.LogicalKey logicalKey = entity.getLogicalKey();
             // NOT Embedable with a LK can be used as reference
             if (!logicalKey.isEmpty()) {
@@ -178,6 +181,7 @@ public class OpenAPIBuilder {
                 lkPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its Logical Key");
 
                 this.pathsByName.put("/" + entityPathName + "/" + lkPathString, lkPath);
+                this.RESTentitiesPaths.add(lkPath);
                 addComponentSchema(entity, ENTITY_LK);
             }
         }
@@ -437,11 +441,9 @@ public class OpenAPIBuilder {
                 schemaProperty.format = "password";
                 break;
             case ENTITY_REF:
-                schemaProperty.type = "object";
                 schemaProperty.$ref = String.format("#/components/schemas/%s", entityLkSchemaName(field.getEntityRef()));
                 break;
             case ENTITY_EMBEDED:
-                schemaProperty.type = "object";
                 schemaProperty.$ref = String.format("#/components/schemas/%s", field.getEntityRef().getName());
                 break;
             case GENERIC_ENTITY_REF:
@@ -470,6 +472,28 @@ public class OpenAPIBuilder {
 
     private String entityWithMetaSchemaName(Entity entity) {
         return entity.getName() + "_META";
+    }
+
+    public void addSecurityComponent(String name, SecuritySchema securitySchema) {
+        Map<String, SecuritySchema> securitySchemes = (Map<String, SecuritySchema>) this.components.computeIfAbsent("securitySchemes", k -> new HashMap<String, SecuritySchema>());
+        securitySchemes.put(name, securitySchema);
+    }
+
+    public void secureAllEntityPaths(String securitySchemaName) {
+        Map<String, SecuritySchema> securitySchemes = (Map<String, SecuritySchema>) this.components.get("securitySchemes");
+        if (securitySchemes == null || !securitySchemes.containsKey(securitySchemaName)) {
+            throw new GeminiRuntimeException(String.format("Security schema %s not found", securitySchemaName));
+        }
+        Consumer<Method> secureLambda = m -> {
+            if (m != null)
+                m.security.add(Map.of(securitySchemaName, List.of()));
+        };
+        this.RESTentitiesPaths.forEach(p -> {
+            secureLambda.accept(p.get);
+            secureLambda.accept(p.post);
+            secureLambda.accept(p.put);
+            secureLambda.accept(p.delete);
+        });
     }
 
     static class Tag {
@@ -503,6 +527,7 @@ public class OpenAPIBuilder {
         public RequestBody requestBody;
         public Map<String, Object> responses = new LinkedHashMap<>();
         public List<Object> parameters;
+        public List<Map<String, Object>> security = new ArrayList<>();
     }
 
     static class RequestBody {
@@ -552,6 +577,13 @@ public class OpenAPIBuilder {
         public boolean required;
         public SchemaProperty schema;
     }
+
+    static class SecuritySchema {
+        public String type;
+        public String description;
+        public Map<String, Map<String, Object>> flows;
+    }
+
 
     enum SchemaType {
         ENTITY,

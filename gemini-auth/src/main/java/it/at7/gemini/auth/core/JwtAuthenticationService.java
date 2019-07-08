@@ -1,4 +1,4 @@
-package it.at7.gemini.auth;
+package it.at7.gemini.auth.core;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;

@@ -1,4 +1,4 @@
-package it.at7.gemini.auth;
+package it.at7.gemini.auth.core;
 
 import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityOperationContext;

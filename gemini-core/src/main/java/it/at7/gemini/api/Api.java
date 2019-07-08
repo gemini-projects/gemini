@@ -1,6 +1,5 @@
 package it.at7.gemini.api;
 
-import it.at7.gemini.api.openapi.OpenApiServiceImpl;
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.StateManager;
 import it.at7.gemini.exceptions.GeminiException;
@@ -14,25 +13,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import javax.annotation.PostConstruct;
-
 @ComponentScan({"it.at7.gemini.api"})
 @Service("API")
 public class Api implements ApplicationListener<ApplicationReadyEvent> {
 
     private StateManager stateManager;
-    private OpenApiServiceImpl openApiService;
 
     @Autowired
-    public Api(StateManager stateManager, OpenApiServiceImpl openApiService) {
+    public Api(StateManager stateManager) {
         this.stateManager = stateManager;
-        this.openApiService = openApiService;
-    }
-
-    @PostConstruct
-    public void init() throws GeminiException {
-        openApiService.init();
-        stateManager.changeState(State.API_INITIALIZATION);
     }
 
     /**
@@ -42,6 +31,7 @@ public class Api implements ApplicationListener<ApplicationReadyEvent> {
     @Override
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         try {
+            stateManager.changeState(State.API_INITIALIZATION);
             stateManager.changeState(State.API_INITIALIZED);
         } catch (GeminiException e) {
             throw new GeminiRuntimeException(e);

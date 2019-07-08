@@ -1,4 +1,4 @@
-package api;
+package it.at7.gemini.auth;
 
 import it.at7.gemini.api.RestAPIControllerListTest;
 import it.at7.gemini.boot.IntegrationTestMain;

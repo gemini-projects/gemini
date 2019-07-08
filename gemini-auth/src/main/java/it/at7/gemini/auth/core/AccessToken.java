@@ -1,4 +1,4 @@
-package it.at7.gemini.auth;
+package it.at7.gemini.auth.core;
 
 
 public class AccessToken {

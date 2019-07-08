@@ -1,4 +1,4 @@
-package it.at7.gemini.auth;
+package it.at7.gemini.auth.core;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;

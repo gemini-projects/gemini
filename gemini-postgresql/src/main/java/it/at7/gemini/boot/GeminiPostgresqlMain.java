@@ -44,7 +44,7 @@ public class GeminiPostgresqlMain {
 
         logger.info("STARTING - GEMINI-GUI APP CONTEXT ");
         SpringApplicationBuilder webAppBuilder = new SpringApplicationBuilder()
-                .parent(root).sources(Api.class, Gui.class, AutoConfiguration.class).web(WebApplicationType.SERVLET);
+                .parent(root).sources(Api.class).sources(Gui.class, AutoConfiguration.class).web(WebApplicationType.SERVLET);
         if (apiBean.size() != 0) {
             webAppBuilder.sources(apiBean.toArray(new Class[0]));
         }

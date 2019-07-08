@@ -1,9 +1,9 @@
-package it.at7.gemini.auth.conf;
+package it.at7.gemini.auth.api;
 
 
-import it.at7.gemini.auth.NoRedirectStrategy;
-import it.at7.gemini.auth.TokenAuthenticationFilter;
-import it.at7.gemini.auth.TokenAuthenticationProvider;
+import it.at7.gemini.auth.core.NoRedirectStrategy;
+import it.at7.gemini.auth.core.TokenAuthenticationFilter;
+import it.at7.gemini.auth.core.TokenAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;

@@ -29,17 +29,16 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
     private OpenAPIBuilder openAPIAllBuilder;
     private OpenAPIBuilder runtimeAPIBuilder;
 
+    private List<Runnable> API_INITIALIZER_LISTENER = new ArrayList<>();
+
     @Autowired
     public OpenApiServiceImpl(GeminiConfigurationService configurationService, StateManager stateManager, SchemaManager schemaManager, Environment environment) {
         this.configurationService = configurationService;
         this.stateManager = stateManager;
         this.schemaManager = schemaManager;
         this.environment = environment;
-    }
-
-    public void init() {
         if (configurationService.isOpenapiSchema()) {
-            stateManager.register(this);
+            this.stateManager.register(this);
             openAPIAllBuilder = new OpenAPIBuilder();
             runtimeAPIBuilder = new OpenAPIBuilder(false);
         }
@@ -47,19 +46,22 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
 
     @Override
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
-        switch (actual) {
-            case API_INITIALIZATION:
-                makeOpenAPISchema();
-                break;
-            case API_INITIALIZED:
-                String localPort = environment.getProperty("local.server.port");
-                openAPIAllBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
-                runtimeAPIBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
-                storeOpenAPISchema(openAPIAllBuilder, "all.json");
-                storeOpenAPISchema(runtimeAPIBuilder, "runtime.json");
-                break;
-            default:
-                break;
+        if (configurationService.isOpenapiSchema()) {
+            switch (actual) {
+                case API_INITIALIZATION:
+                    makeOpenAPISchema();
+                    break;
+                case API_INITIALIZED:
+                    API_INITIALIZER_LISTENER.forEach(Runnable::run);
+                    String localPort = environment.getProperty("local.server.port");
+                    openAPIAllBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
+                    runtimeAPIBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
+                    storeOpenAPISchema(openAPIAllBuilder, "all.json");
+                    storeOpenAPISchema(runtimeAPIBuilder, "runtime.json");
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -89,6 +91,34 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
             Files.write(allPath, json.getBytes());
         } catch (IOException e) {
             throw new GeminiRuntimeException(e);
+        }
+    }
+
+    @Override
+    public void addOAuth2PasswordFlow(String name, Map<String, Object> flowParameters) {
+        if (configurationService.isOpenapiSchema()) {
+            String tokenUrl = (String) flowParameters.get("tokenUrl");
+            if (tokenUrl == null || tokenUrl.equals("")) {
+                throw new GeminiRuntimeException("Unable to initialize OAuth2 Password Flow - No tokenUrl Provided");
+            }
+            OpenAPIBuilder.SecuritySchema securitySchema = new OpenAPIBuilder.SecuritySchema();
+            securitySchema.type = "oauth2";
+            securitySchema.description = (String) flowParameters.getOrDefault("description", "See https://developers.getbase.com/docs/rest/articles/oauth2/requests");
+            securitySchema.flows = Map.of("password",
+                    Map.of("tokenUrl", tokenUrl)
+            );
+            this.openAPIAllBuilder.addSecurityComponent(name, securitySchema);
+            this.runtimeAPIBuilder.addSecurityComponent(name, securitySchema);
+        }
+    }
+
+    @Override
+    public void secureAllEntities(String securitySchemaName) {
+        if (configurationService.isOpenapiSchema()) {
+            API_INITIALIZER_LISTENER.add(() -> {
+                this.openAPIAllBuilder.secureAllEntityPaths(securitySchemaName);
+                this.runtimeAPIBuilder.secureAllEntityPaths(securitySchemaName);
+            });
         }
     }
 }

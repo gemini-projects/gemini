@@ -1,7 +1,7 @@
 package it.at7.gemini.auth.api;
 
-import it.at7.gemini.auth.AccessToken;
-import it.at7.gemini.auth.UserAuthenticationService;
+import it.at7.gemini.auth.core.AccessToken;
+import it.at7.gemini.auth.core.UserAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;

@@ -107,7 +107,7 @@ public class IntegrationTestMain {
     public static ConfigurableApplicationContext initializeFullIntegrationWebApp(Set<Class> coreBean, Set<Class> apiBean) {
         ConfigurableApplicationContext root = initializeGemini(coreBean.toArray(new Class[0]));
         ConfigurableApplicationContext webApp = new SpringApplicationBuilder()
-                .parent(root).sources(apiBean.toArray(new Class[0])).sources(Api.class, Autoconfiguration.class)
+                .parent(root).sources(Api.class, Autoconfiguration.class).sources(apiBean.toArray(new Class[0]))
                 .web(WebApplicationType.SERVLET)
                 .bannerMode(Banner.Mode.OFF)
                 .run();

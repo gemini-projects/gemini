@@ -1,6 +1,7 @@
 package it.at7.gemini.auth;
 
 import it.at7.gemini.UnitTestNoMockWeb;
+import it.at7.gemini.auth.core.AuthModuleRef;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.EntityRef;

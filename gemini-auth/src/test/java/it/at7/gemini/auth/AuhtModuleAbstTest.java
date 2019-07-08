@@ -1,6 +1,8 @@
 package it.at7.gemini.auth;
 
 import it.at7.gemini.UnitTestNoMockWeb;
+import it.at7.gemini.auth.core.AuthModuleRef;
+import it.at7.gemini.auth.core.UserRef;
 import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.FilterContext;

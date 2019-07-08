@@ -14,14 +14,21 @@ public class Services {
     private static SchemaManager schemaManager;
     private static StateManager stateManager;
     private static TransactionManager transactionManager;
+    private static GeminiConfigurationService configurationService;
 
     @Autowired
-    public Services(EntityManager entityManager, PersistenceEntityManager persistenceEntityManager, SchemaManager schemaManager, StateManager stateManager, TransactionManager transactionManager) {
+    public Services(EntityManager entityManager,
+                    PersistenceEntityManager persistenceEntityManager,
+                    SchemaManager schemaManager, StateManager stateManager,
+                    TransactionManager transactionManager,
+                    GeminiConfigurationService configurationService
+    ) {
         Services.entityManager = entityManager;
         Services.persistenceEntityManager = persistenceEntityManager;
         Services.schemaManager = schemaManager;
         Services.stateManager = stateManager;
         Services.transactionManager = transactionManager;
+        Services.configurationService = configurationService;
     }
 
     public static EntityManager getEntityManager() {
@@ -47,5 +54,10 @@ public class Services {
 
     public static TransactionManager getTransactionManager() {
         return transactionManager;
+    }
+
+    public static GeminiConfigurationService getConfigurationService() {
+        assert configurationService != null;
+        return configurationService;
     }
 }

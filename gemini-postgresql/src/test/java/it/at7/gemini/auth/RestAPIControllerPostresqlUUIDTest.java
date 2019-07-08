@@ -1,4 +1,4 @@
-package api;
+package it.at7.gemini.auth;
 
 import it.at7.gemini.api.RestAPIControllerUUIDTest;
 import it.at7.gemini.boot.IntegrationTestMain;
