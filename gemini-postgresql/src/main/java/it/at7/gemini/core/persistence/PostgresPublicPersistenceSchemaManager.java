@@ -408,7 +408,9 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             case RECORD:
                 break;
             case TEXT_ARRAY:
+            case ENTITY_REF_ARRAY:
                 return data_type.contains("ARRAY");
+
         }
         throw new RuntimeException(String.format("Field %s not handled for drop/createBearer dirty column", type));
     }

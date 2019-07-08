@@ -130,8 +130,11 @@ public class FieldConverters {
                     }
                     Object[] elements = genColl.toArray();
                     Object firstElem = elements[0];
-                    if (EntityRecord.class.isAssignableFrom(firstElem.getClass()) ||
-                            EntityReferenceRecord.class.isAssignableFrom(firstElem.getClass())) {
+                    Class<?> firstElementClass = firstElem.getClass();
+                    if (EntityRecord.class.isAssignableFrom(firstElementClass) ||
+                            EntityReferenceRecord.class.isAssignableFrom(firstElementClass) ||
+                            String.class.isAssignableFrom(firstElementClass)
+                    ) {
                         return objValue;
                     }
                 }
