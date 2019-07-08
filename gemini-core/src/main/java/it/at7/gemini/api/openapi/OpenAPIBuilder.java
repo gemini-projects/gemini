@@ -9,6 +9,7 @@ import it.at7.gemini.core.Module;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
+import it.at7.gemini.schema.FieldType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -163,7 +164,7 @@ public class OpenAPIBuilder {
             Entity.LogicalKey logicalKey = entity.getLogicalKey();
             // NOT Embedable with a LK can be used as reference
             if (!logicalKey.isEmpty()) {
-                String lkPathString = entity.getLogicalKey().getLogicalKeyList().stream().map(e -> "{" + e.getName().toLowerCase() + "}").collect(Collectors.joining("/"));
+                String lkPathString = getEntityLKPath(entity, true);
                 Path lkPath = new Path();
                 lkPath.summary = String.format("%s resource by Entity Logical Key", entityName);
                 lkPath.parameters = entity.getLogicalKey().getLogicalKeyList().stream().map(lk -> {
@@ -189,6 +190,45 @@ public class OpenAPIBuilder {
         // SCHEMAS
         addComponentSchema(entity, ENTITY);
         addComponentSchema(entity, ENTITY_WITH_META);
+    }
+
+    private String getEntityLKPath(Entity entity, boolean isLevel0) {
+        List<String> lks = new ArrayList<>();
+        entity.getLogicalKey().getLogicalKeyList().forEach(lk -> {
+            if (lk.getType().equals(FieldType.ENTITY_REF)) {
+                assert lk.getEntityRef() != null;
+                lks.add(getEntityLKPath(lk.getEntityRef(), false));
+            } else {
+                String fieldName = lk.getName().toLowerCase();
+                lks.add("{" + lkPathParameterName(entity, isLevel0, fieldName) + "}");
+            }
+        });
+        return String.join("/", lks);
+    }
+
+    @NotNull
+    private List<Parameter> getEntityLKParameters(Entity entity, boolean isLevel0) {
+        List<Parameter> parameters = new ArrayList<>();
+        entity.getLogicalKey().getLogicalKeyList().forEach(lk -> {
+            if (lk.getType().equals(FieldType.ENTITY_REF)) {
+                assert lk.getEntityRef() != null;
+                parameters.addAll(getEntityLKParameters(lk.getEntityRef(), false));
+            } else {
+                Parameter lkP = new Parameter();
+                lkP.in = "path";
+                lkP.required = true;
+                lkP.name = lkPathParameterName(entity, isLevel0, lk.getName().toLowerCase());
+                lkP.schema = new SchemaProperty();
+                fromFieldToProperty(lk, lkP.schema);
+                parameters.add(lkP);
+            }
+        });
+        return parameters;
+
+    }
+
+    private String lkPathParameterName(Entity entity, boolean isLevel0, String fieldName) {
+        return isLevel0 ? fieldName : (entity.getName().toLowerCase() + "_" + fieldName);
     }
 
     private Method getEntityListMethod(Entity entity) {
