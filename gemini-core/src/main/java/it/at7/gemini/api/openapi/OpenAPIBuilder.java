@@ -77,6 +77,7 @@ public class OpenAPIBuilder {
         parameters.put("uuid", uuid);
 
         // Gemini Header Parameter
+        /*  --- remove the gemini header from openAPI - need a parameter to enable ? It is better to use the content-type
         Parameter geminiHeader = new Parameter();
         geminiHeader.name = "Gemini";
         geminiHeader.in = "header";
@@ -87,6 +88,7 @@ public class OpenAPIBuilder {
         gemHeaderSchemaProp._enum = List.of("gemini.api");
         geminiHeader.schema = gemHeaderSchemaProp;
         parameters.put("GeminiHeader", geminiHeader);
+         */
 
         return parameters;
     }
@@ -146,7 +148,7 @@ public class OpenAPIBuilder {
             rootEntityPath.summary = String.format("%s resource route", entityName);
             rootEntityPath.get = getEntityListMethod(entity);
             rootEntityPath.post = postNewEntityMethod(entity);
-            rootEntityPath.parameters = List.of(Map.of("$ref", "#/components/parameters/GeminiHeader"));
+            // rootEntityPath.parameters = List.of(Map.of("$ref", "#/components/parameters/GeminiHeader"));
             this.pathsByName.put("/" + entityPathName, rootEntityPath);
 
 
@@ -157,8 +159,9 @@ public class OpenAPIBuilder {
             uuidEntityPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its uuid");
             uuidEntityPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its uuid");
             uuidEntityPath.parameters = List.of(
-                    Map.of("$ref", "#/components/parameters/uuid"),
-                    Map.of("$ref", "#/components/parameters/GeminiHeader"));
+                    Map.of("$ref", "#/components/parameters/uuid")
+                    // Map.of("$ref", "#/components/parameters/GeminiHeader")
+            );
             this.pathsByName.put("/" + entityPathName + "/{uuid}", uuidEntityPath);
 
             Entity.LogicalKey logicalKey = entity.getLogicalKey();
@@ -167,16 +170,8 @@ public class OpenAPIBuilder {
                 String lkPathString = getEntityLKPath(entity, true);
                 Path lkPath = new Path();
                 lkPath.summary = String.format("%s resource by Entity Logical Key", entityName);
-                lkPath.parameters = entity.getLogicalKey().getLogicalKeyList().stream().map(lk -> {
-                    Parameter lkP = new Parameter();
-                    lkP.in = "path";
-                    lkP.required = true;
-                    lkP.name = lk.getName().toLowerCase();
-                    lkP.schema = new SchemaProperty();
-                    fromFieldToProperty(lk, lkP.schema);
-                    return lkP;
-                }).collect(Collectors.toList());
-                lkPath.parameters.add(Map.of("$ref", "#/components/parameters/GeminiHeader"));
+                lkPath.parameters =  (List) getEntityLKParameters(entity, true);
+                // lkPath.parameters.add(Map.of("$ref", "#/components/parameters/GeminiHeader"));
 
                 lkPath.get = getEntityUUIDandLKMethod(entity, "Get the %s resource by its Logical Key");
                 lkPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its Logical Key");

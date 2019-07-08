@@ -9,7 +9,7 @@ public class ApiUtility {
     public static final String GEMINI_CONTENT_TYPE = "gemini";
 
     public static boolean noGeminiDataType(List<String> geminiHeader, String acceptType) {
-        // first of all check the conte type
+        // first of all check the content type
         if (acceptType.contains(String.format("%s=%s", GEMINI_CONTENT_TYPE, GEMINI_API_META_TYPE))) {
             return false;
         }

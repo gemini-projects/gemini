@@ -224,7 +224,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             query.addToSql(" ORDER BY " + oby.toString());
         } else {
             // deterministic order by API
-            // TODO need order by update
+            // TODO need order by update field
             Entity.LogicalKey logicalKey = entity.getLogicalKey();
             StringJoiner sj = new StringJoiner(", ");
             for (EntityField field : logicalKey.getLogicalKeyList()) {

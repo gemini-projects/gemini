@@ -29,6 +29,10 @@ public interface PersistenceEntityManager {
         return getEntityRecordByLogicalKey(entity, logicalKeyRecord.getLogicalKeyValue(), transaction);
     }
 
+    default Optional<EntityRecord> getEntityRecordByLogicalKey(Entity entity, EntityReferenceRecord entityReferenceRecord, Transaction transaction) throws GeminiException {
+        return getEntityRecordByLogicalKey(entity, entityReferenceRecord.getLogicalKeyRecord().getFieldValues(), transaction);
+    }
+
     Optional<EntityRecord> getEntityRecordByLogicalKey(Entity entity, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException;
 
     Optional<EntityRecord> getEntityRecordByLogicalKey(EntityRecord record, Transaction transaction) throws GeminiException;

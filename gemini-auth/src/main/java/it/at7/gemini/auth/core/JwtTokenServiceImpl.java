@@ -1,4 +1,4 @@
-package it.at7.gemini.auth;
+package it.at7.gemini.auth.core;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -22,7 +22,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     @Autowired
     public JwtTokenServiceImpl(
             @Value("${gemini.jwt.secret}") String secret,
-            @Value("${gemini.jwt.defaultExp:5}") int expiration) {
+            @Value("${gemini.jwt.defaultExp:3600}") int expiration) {
         this.algorithm = Algorithm.HMAC512(secret);
         this.expiration = expiration;
     }
