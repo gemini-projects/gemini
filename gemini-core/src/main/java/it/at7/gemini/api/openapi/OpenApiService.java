@@ -7,4 +7,6 @@ public interface OpenApiService {
     void addOAuth2PasswordFlow(String name, Map<String, Object> flowParameters);
 
     void secureAllEntities(String securitySchemaName);
+
+    // TODO ?? void addPath(OpenAPIBuilder.Path path);
 }

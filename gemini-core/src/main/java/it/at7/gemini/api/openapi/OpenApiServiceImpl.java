@@ -105,7 +105,8 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
             securitySchema.type = "oauth2";
             securitySchema.description = (String) flowParameters.getOrDefault("description", "See https://developers.getbase.com/docs/rest/articles/oauth2/requests");
             securitySchema.flows = Map.of("password",
-                    Map.of("tokenUrl", tokenUrl)
+                    Map.of("tokenUrl", tokenUrl,
+                            "refreshUrl", flowParameters.get("refreshUrl"))
             );
             this.openAPIAllBuilder.addSecurityComponent(name, securitySchema);
             this.runtimeAPIBuilder.addSecurityComponent(name, securitySchema);
@@ -121,4 +122,13 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
             });
         }
     }
+
+    /* @Override
+    public void addPath(OpenAPIBuilder.Path path) {
+        if (configurationService.isOpenapiSchema()) {
+            API_INITIALIZER_LISTENER.add(() -> {
+                this.openAPIAllBuilder.addPath(path);
+            });
+        }
+    } */
 }

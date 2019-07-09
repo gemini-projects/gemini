@@ -511,7 +511,7 @@ public class OpenAPIBuilder {
         }
     }
 
-    static class Path {
+    public static class Path {
         public String summary;
         public String description;
         public List<Object> parameters;
