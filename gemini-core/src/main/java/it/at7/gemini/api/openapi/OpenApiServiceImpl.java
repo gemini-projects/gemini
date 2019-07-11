@@ -76,6 +76,8 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
 
             if (module.getName().equals("RUNTIME")) {
                 entities.forEach(e -> runtimeAPIBuilder.handleEntity(e));
+            } else {
+                entities.forEach(e -> runtimeAPIBuilder.addComponentSchema(e, OpenAPIBuilder.SchemaType.ENTITY_LK));
             }
         }
 
