@@ -6,7 +6,10 @@ import it.at7.gemini.core.persistence.PersistenceSchemaManager;
 import it.at7.gemini.dsl.RecordParser;
 import it.at7.gemini.dsl.SchemaParser;
 import it.at7.gemini.dsl.entities.*;
-import it.at7.gemini.exceptions.*;
+import it.at7.gemini.exceptions.FieldTypeNotKnown;
+import it.at7.gemini.exceptions.GeminiException;
+import it.at7.gemini.exceptions.GeminiGenericException;
+import it.at7.gemini.exceptions.TypeNotFoundException;
 import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,8 +143,6 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         for (SchemaManagerInitListener l : listeners) {
             l.onSchemasEntityRecords(entityOperationContext);
         }
-
-
         return entityOperationContext;
     }
 

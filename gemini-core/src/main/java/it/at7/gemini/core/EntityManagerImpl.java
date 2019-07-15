@@ -12,6 +12,7 @@ import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.EntityRef;
 import it.at7.gemini.schema.FieldRef;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,33 +39,32 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
+    public TransactionManager getTransactionManager() {
+        return transactionManager;
+    }
+
+    @Override
     public Collection<Entity> getAllEntities() {
         return schemaManager.getAllEntities();
     }
 
     @Override
+    @Nullable
     public Entity getEntity(String entity) {
         return schemaManager.getEntity(entity);
     }
 
-    @Override
-    public EntityRecord putIfAbsent(EntityRecord rec) throws GeminiException {
-        checkEnabledState();
-        return transactionManager.executeInSingleTrasaction(transaction -> {
-            return putIfAbsent(rec, transaction);
-        });
-    }
 
     @Override
-    public Collection<EntityRecord> putIfAbsent(Collection<EntityRecord> recs) throws GeminiException {
+    public EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
-        return transactionManager.executeInSingleTrasaction(transaction -> {
-            Collection<EntityRecord> ret = new ArrayList<>();
-            for (EntityRecord rec : recs) {
-                ret.add(putIfAbsent(rec, transaction));
-            }
-            return ret;
-        });
+        checkDynamicSchema(record);
+        Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
+        if (!rec.isPresent()) {
+            // can insert the entity record
+            return createNewEntityRecord(record, entityOperationContext, transaction);
+        }
+        throw EntityRecordException.MULTIPLE_LK_FOUND(record);
     }
 
     @Override
@@ -146,21 +146,6 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, Transaction transaction) throws GeminiException {
         return persistenceEntityManager.getEntityRecordsMatching(entity, filterContext, transaction);
-    }
-
-
-    private EntityRecord putIfAbsent(EntityRecord record, Transaction transaction) throws GeminiException {
-        return putIfAbsent(record, EntityOperationContext.EMPTY, transaction);
-    }
-
-    private EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
-        checkDynamicSchema(record);
-        Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
-        if (!rec.isPresent()) {
-            // can insert the entity record
-            return createNewEntityRecord(record, entityOperationContext, transaction);
-        }
-        throw EntityRecordException.MULTIPLE_LK_FOUND(record);
     }
 
     private EntityRecord createNewEntityRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {

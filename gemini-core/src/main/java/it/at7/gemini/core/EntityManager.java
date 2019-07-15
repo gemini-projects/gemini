@@ -3,21 +3,133 @@ package it.at7.gemini.core;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public interface EntityManager {
 
+    // === UTILITY METHODS === //
+
+    /**
+     * Get all the entities handled by Gemini
+     */
     Collection<Entity> getAllEntities();
 
+    /**
+     * Return the transaction manager to implement default interface methods
+     */
+    TransactionManager getTransactionManager();
+
+    /**
+     * Get the entity by its name or return null
+     *
+     * @param entity name
+     * @return entity object
+     */
+    @Nullable
     Entity getEntity(String entity);
+    // ===================== //
 
-    EntityRecord putIfAbsent(EntityRecord rec) throws GeminiException;
 
-    Collection<EntityRecord> putIfAbsent(Collection<EntityRecord> recs) throws GeminiException;
+    /**
+     * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
+     * Record is inserted is a new fresh Transaction returned by getTransactionManager() and using a default empty
+     * {@link EntityResolutionContext}
+     *
+     * @param record record to add
+     * @return the inserted EntityRecord
+     * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
+     */
+    default EntityRecord putIfAbsent(EntityRecord record) throws GeminiException {
+        return putIfAbsent(record, EntityOperationContext.EMPTY);
+    }
+
+    /**
+     * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
+     * Record is inserted is a new fresh Transaction returned by getTransactionManager() and using a default empty
+     * {@link EntityResolutionContext}
+     *
+     * @param record record to add
+     * @return the inserted EntityRecord
+     * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
+     */
+    default EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext operationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return putIfAbsent(record, operationContext, transaction);
+        });
+    }
+
+    /**
+     * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
+     * Record is inserted is the provided transaction using the default empty {@link EntityResolutionContext}
+     *
+     * @param record      record to add
+     * @param transaction the transaction to be used to insert the record
+     * @return the inserted EntityRecord
+     * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
+     */
+    default EntityRecord putIfAbsent(EntityRecord record, Transaction transaction) throws GeminiException {
+        return putIfAbsent(record, EntityOperationContext.EMPTY, transaction);
+    }
+
+    /**
+     * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
+     * Record is inserted is the provided transaction using the provided {@link EntityResolutionContext}
+     *
+     * @param record                 record to add
+     * @param transaction            the transaction to be used to insert the record
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return the inserted EntityRecord
+     * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
+     */
+    EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+
+    /**
+     * Create all the entityRecord or throws Exception if at least one of them already exists. All the records are
+     * inserted in the same fresh transaction.
+     *
+     * @param records EntityRecords to insert at all
+     * @return all the inserted Entity Records
+     * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
+     */
+    default Collection<EntityRecord> putIfAbsent(Collection<EntityRecord> records) throws GeminiException {
+        return putIfAbsent(records, EntityOperationContext.EMPTY);
+    }
+
+    /**
+     * Create all the entityRecord or throws Exception if at least one of them already exists. All the records are
+     * inserted in the same fresh transaction with the provided entityOperatioContext
+     *
+     * @param records                EntityRecords to insert at all
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return all the inserted Entity Records
+     * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
+     */
+    default Collection<EntityRecord> putIfAbsent(Collection<EntityRecord> records, EntityOperationContext entityOperationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return putIfAbsent(records, entityOperationContext, transaction);
+        });
+    }
+
+    /**
+     * Create all the entityRecord or throws Exception if at least one of them already exists. All the records are
+     * inserted in the provided transaction with the provided entityOperatioContext
+     *
+     * @param records                EntityRecords to insert at all
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @param transaction
+     * @return all the inserted Entity Records
+     * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
+     */
+    default Collection<EntityRecord> putIfAbsent(Collection<EntityRecord> records, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        Collection<EntityRecord> ret = new ArrayList<>();
+        for (EntityRecord rec : records) {
+            ret.add(putIfAbsent(rec, entityOperationContext, transaction));
+        }
+        return ret;
+    }
 
     EntityRecord putOrUpdate(EntityRecord rec) throws GeminiException;
 
