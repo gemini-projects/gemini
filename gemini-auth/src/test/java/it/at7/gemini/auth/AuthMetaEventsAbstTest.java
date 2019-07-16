@@ -16,7 +16,7 @@ import java.util.List;
 public abstract class AuthMetaEventsAbstTest extends UnitTestNoMockWeb {
 
     @Test
-    public void n1_testAuthEventBefore() throws GeminiException {
+    public void n1_testAuthEventBefore_onSchemasEntityRecords() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
         List<EntityRecord> records = entityManager.getRecordsMatching(entityManager.getEntity(EntityRef.NAME), FilterContext.withGeminiSearchString("name == ENTITY"));
         Assert.assertEquals(1, records.size());
@@ -26,5 +26,7 @@ public abstract class AuthMetaEventsAbstTest extends UnitTestNoMockWeb {
         Assert.assertEquals(AuthModuleRef.USERS.GEMINI, createdUserRec.getLogicalKeyRecord().get("username"));
         Assert.assertEquals(AuthModuleRef.USERS.GEMINI, modifiedUserRec.getLogicalKeyRecord().get("username"));
     }
+
+
 
 }

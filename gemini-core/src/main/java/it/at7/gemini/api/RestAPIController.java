@@ -32,11 +32,13 @@ public class RestAPIController {
 
     private EntityManager entityManager;
     private GeminiConfigurationService configurationService;
+    private ApiListenersManager apiListenersManager;
 
     @Autowired
-    public RestAPIController(EntityManager entityManager, GeminiConfigurationService configurationService) {
+    public RestAPIController(EntityManager entityManager, GeminiConfigurationService configurationService, ApiListenersManager apiListenersManager) {
         this.entityManager = entityManager;
         this.configurationService = configurationService;
+        this.apiListenersManager = apiListenersManager;
     }
 
     @RequestMapping(value = "/**")
@@ -73,6 +75,7 @@ public class RestAPIController {
         String method = request.getMethod();
         Map<String, String[]> parameters = request.getParameterMap(); // query string params
         List<String> geminiHeader = getGeminiHeader(request);
+        EntityOperationContext entityOperationContext = createEntityOperationContext(entity, body, request);
         if (paths.size() == 2) {
             // this is a root entity requet - METHOD ALLOWED POST AND GET (for list)
             switch (method) {
@@ -80,9 +83,9 @@ public class RestAPIController {
                     if (body == null) {
                         throw InvalidRequesException.BODY_REQUIRED();
                     }
-                    return handleInsertRecord(e, geminiHeader, body);
+                    return handleInsertRecord(e, geminiHeader, body, entityOperationContext);
                 case "GET":
-                    return handleGetEntityList(e, parameters);
+                    return handleGetEntityList(e, parameters, entityOperationContext);
                 default:
                     throw InvalidRequesException.INVALID_METHOD_FOR_REQUEST(method);
             }
@@ -118,6 +121,14 @@ public class RestAPIController {
         throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
     }
 
+    private EntityOperationContext createEntityOperationContext(String entity, Object body, HttpServletRequest request) {
+        EntityOperationContext entityOperationContext = new EntityOperationContext();
+        for (RestAPIControllerListener apiControllerListener : apiListenersManager.getApiControllerListeners()) {
+            apiControllerListener.onEntityOperationContextCreate(entity, body, request, entityOperationContext);
+        }
+        return entityOperationContext;
+    }
+
     @NotNull
     private String[] decodeLogicalKeyStrings(List<String> paths) {
         List<String> lkStrings = paths.subList(2, paths.size());
@@ -137,47 +148,48 @@ public class RestAPIController {
     }
 
 
-    private GeminiWrappers.EntityRecordsList handleGetEntityList(Entity e, Map<String, String[]> parameters) throws GeminiException {
+    private GeminiWrappers.EntityRecordsList handleGetEntityList(Entity e, Map<String, String[]> parameters, EntityOperationContext entityOperationContext) throws GeminiException {
         FilterContext filterContext = new FilterContextBuilder(configurationService)
                 .fromParameters(parameters)
                 .build();
         List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterContext);
+        // TODO add entity Operation Context ??
         return GeminiWrappers.EntityRecordsList.of(recordList, filterContext);
     }
 
 
-    private Object handleInsertRecord(Entity e, List<String> geminiHeader, Object body) throws GeminiException {
+    private Object handleInsertRecord(Entity e, List<String> geminiHeader, Object body, EntityOperationContext entityOperationContext) throws GeminiException {
         if (geminiDataType(geminiHeader)) {
             if (Map.class.isAssignableFrom(body.getClass())) {
                 Map<String, Object> mapBody = (Map<String, Object>) body;
                 if (RecordConverters.containGeminiDataTypeFields(mapBody))
-                    return handleInsertRecord(e, body);
+                    return handleInsertRecord(e, body, entityOperationContext);
             }
         }
         // even if the header is geminiDataType let's to handle insert without meta
-        return handleInsertRecord(e, body);
+        return handleInsertRecord(e, body, entityOperationContext);
     }
 
-    private Object handleInsertRecord(Entity e, Object body) throws GeminiException {
+    private Object handleInsertRecord(Entity e, Object body, EntityOperationContext entityOperationContext) throws GeminiException {
         if (Map.class.isAssignableFrom(body.getClass()))
-            return handleInsertRecord((Map<String, Object>) body, e);
+            return handleInsertRecord((Map<String, Object>) body, e, entityOperationContext);
         if (List.class.isAssignableFrom(body.getClass())) {
-            return handleInsertRecords((List<Map<String, Object>>) body, e);
+            return handleInsertRecords((List<Map<String, Object>>) body, e, entityOperationContext);
         }
         throw InvalidRequesException.INVALID_BODY();
     }
 
-    private EntityRecord handleInsertRecord(Map<String, Object> body, Entity e) throws GeminiException {
+    private EntityRecord handleInsertRecord(Map<String, Object> body, Entity e, EntityOperationContext entityOperationContext) throws GeminiException {
         EntityRecord rec = RecordConverters.entityRecordFromMap(e, body);
-        return entityManager.putIfAbsent(rec);
+        return entityManager.putIfAbsent(rec, entityOperationContext);
     }
 
-    private Object handleInsertRecords(List<Map<String, Object>> body, Entity e) throws GeminiException {
+    private Object handleInsertRecords(List<Map<String, Object>> body, Entity e, EntityOperationContext entityOperationContext) throws GeminiException {
         List<EntityRecord> records = new ArrayList<>();
         for (Map<String, Object> record : body) {
             records.add(RecordConverters.entityRecordFromMap(e, record));
         }
-        Collection<EntityRecord> entityRecords = entityManager.putIfAbsent(records);
+        Collection<EntityRecord> entityRecords = entityManager.putIfAbsent(records, entityOperationContext);
         return GeminiWrappers.EntityRecordsList.of(entityRecords);
     }
 
