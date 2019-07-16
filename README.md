@@ -4,9 +4,9 @@
 
 ___
 
+![License](https://img.shields.io/github/license/h4t0n/gemini.svg)
 [![Build Status](https://travis-ci.org/h4t0n/gemini.svg?branch=master)](https://travis-ci.org/h4t0n/gemini)
 [![Twitter](https://img.shields.io/badge/Twitter-@h4t0n-blue.svg?style=flat)](http://twitter.com/h4t0n)
-
 
 
 Gemini is a backend REST framework to automatically create CRUD REST APIs from scratch (with no coding),  starting from
