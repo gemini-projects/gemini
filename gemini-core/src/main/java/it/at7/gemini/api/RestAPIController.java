@@ -104,11 +104,11 @@ public class RestAPIController {
                 String[] lkStringsArray = decodeLogicalKeyStrings(paths);
                 switch (method) {
                     case "GET":
-                        return handleGetRecord(e, lkStringsArray);
+                        return handleGetRecord(e, entityOperationContext, lkStringsArray);
                     case "PUT":
-                        return handleUpdateRecord(e, body, lkStringsArray);
+                        return handleUpdateRecord(e, body, entityOperationContext, lkStringsArray);
                     case "DELETE":
-                        return handleDeleteRecord(e, lkStringsArray);
+                        return handleDeleteRecord(e, entityOperationContext, lkStringsArray);
                     default:
                         throw InvalidRequesException.INVALID_METHOD_FOR_REQUEST(method);
                 }
@@ -152,7 +152,7 @@ public class RestAPIController {
         FilterContext filterContext = new FilterContextBuilder(configurationService)
                 .fromParameters(parameters)
                 .build();
-        List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterContext);
+        List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterContext, entityOperationContext);
         // TODO add entity Operation Context ??
         return GeminiWrappers.EntityRecordsList.of(recordList, filterContext);
     }
@@ -194,35 +194,35 @@ public class RestAPIController {
     }
 
 
-    private Object handleUpdateRecord(Entity e, Object body, String... logicalKey) throws GeminiException {
+    private Object handleUpdateRecord(Entity e, Object body, EntityOperationContext entityOperationContext, String... logicalKey) throws GeminiException {
         if (Map.class.isAssignableFrom(body.getClass()))
-            return handleUpdateRecord(e, (Map<String, Object>) body, logicalKey);
+            return handleUpdateRecord(e, (Map<String, Object>) body, entityOperationContext, logicalKey);
         throw InvalidRequesException.INVALID_BODY();
     }
 
-    private EntityRecord handleUpdateRecord(Entity e, Map<String, Object> body, String... logicalKey) throws GeminiException {
+    private EntityRecord handleUpdateRecord(Entity e, Map<String, Object> body, EntityOperationContext entityOperationContext, String... logicalKey) throws GeminiException {
         EntityRecord rec = RecordConverters.entityRecordFromMap(e, body);
         try {
             UUID uuid = UUID.fromString(logicalKey[0]);
-            return entityManager.update(rec, uuid);
+            return entityManager.update(uuid, rec, entityOperationContext);
         } catch (IllegalArgumentException e1) {
             // it is not a UUID
             List<EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(e, logicalKey);
-            return entityManager.update(rec, logicalKeyValues);
+            return entityManager.update(logicalKeyValues, rec, entityOperationContext);
         }
     }
 
-    private EntityRecord handleDeleteRecord(Entity entity, String... logicalKey) throws GeminiException {
+    private EntityRecord handleDeleteRecord(Entity entity, EntityOperationContext entityOperationContext, String... logicalKey) throws GeminiException {
         try {
             UUID uuid = UUID.fromString(logicalKey[0]);
-            return entityManager.delete(entity, uuid);
+            return entityManager.delete(entity, uuid, entityOperationContext);
         } catch (IllegalArgumentException e1) {
             List<EntityFieldValue> logicalKeyValues = RecordConverters.logicalKeyFromStrings(entity, logicalKey);
-            return entityManager.delete(entity, logicalKeyValues);
+            return entityManager.delete(entity, logicalKeyValues, entityOperationContext);
         }
     }
 
-    private EntityRecord handleGetRecord(Entity e, String... logicalKey) throws GeminiException {
+    private EntityRecord handleGetRecord(Entity e, EntityOperationContext entityOperationContext, String... logicalKey) throws GeminiException {
         try {
             UUID uuid = UUID.fromString(logicalKey[0]);
             return entityManager.get(e, uuid);

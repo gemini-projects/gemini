@@ -29,6 +29,7 @@ public interface EntityManager {
      */
     @Nullable
     Entity getEntity(String entity);
+
     // ===================== //
 
 
@@ -62,7 +63,7 @@ public interface EntityManager {
 
     /**
      * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
-     * Record is inserted is the provided transaction using the default empty {@link EntityResolutionContext}
+     * Record is inserted is the provided transaction using the default empty {@link EntityOperationContext}
      *
      * @param record      record to add
      * @param transaction the transaction to be used to insert the record
@@ -75,7 +76,7 @@ public interface EntityManager {
 
     /**
      * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
-     * Record is inserted is the provided transaction using the provided {@link EntityResolutionContext}
+     * Record is inserted is the provided transaction using the provided {@link EntityOperationContext}
      *
      * @param record                 record to add
      * @param transaction            the transaction to be used to insert the record
@@ -84,7 +85,6 @@ public interface EntityManager {
      * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
      */
     EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
-
 
     /**
      * Create all the entityRecord or throws Exception if at least one of them already exists. All the records are
@@ -121,7 +121,7 @@ public interface EntityManager {
      * @param entityOperationContext the operationContext to retrieve information and custom logic
      * @param transaction
      * @return all the inserted Entity Records
-     * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
+     * @throws GeminiException in general {@link it.at7.gemini.exceptions.EntityRecordException}: if the record (by lk) already exists
      */
     default Collection<EntityRecord> putIfAbsent(Collection<EntityRecord> records, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         Collection<EntityRecord> ret = new ArrayList<>();
@@ -131,30 +131,261 @@ public interface EntityManager {
         return ret;
     }
 
-    EntityRecord putOrUpdate(EntityRecord rec) throws GeminiException;
-
-    EntityRecord putOrUpdate(EntityRecord rec, Transaction transaction) throws GeminiException;
-
-    EntityRecord putOrUpdate(EntityRecord rec, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
-
-    default EntityRecord update(EntityRecord rec) throws GeminiException {
-        return update(rec, rec.getLogicalKeyValue());
+    /**
+     * Create entity record if absent or update if it already exists (accordingly to its logical Key).
+     * Record is inserted in a new fresh transaction using the default empty {@link EntityOperationContext}
+     *
+     * @param record record to add
+     * @return the inserted EntityRecord
+     * @throws GeminiException if something goes wrong with persistence operations
+     */
+    default EntityRecord putOrUpdate(EntityRecord record) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return putOrUpdate(record, transaction);
+        });
     }
 
-    EntityRecord update(EntityRecord rec, Collection<? extends FieldValue> logicalKey) throws GeminiException;
-
-    EntityRecord update(EntityRecord rec, UUID uuid) throws GeminiException;
-
-    default EntityRecord delete(EntityRecord entityRecord) throws GeminiException {
-        return delete(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
+    /**
+     * Create entity record if absent or update if it already exists (accordingly to its logical Key).
+     * Record is inserted is the provided transaction using the default empty {@link EntityOperationContext}
+     *
+     * @param record      record to add
+     * @param transaction the transaction to be used to insert the record
+     * @return the inserted EntityRecord
+     * @throws GeminiException if something goes wrong with persistence operations
+     */
+    default EntityRecord putOrUpdate(EntityRecord record, Transaction transaction) throws GeminiException {
+        return putOrUpdate(record, EntityOperationContext.EMPTY, transaction);
     }
 
-    EntityRecord delete(Entity e, Collection<? extends FieldValue> logicalKey) throws GeminiException;
+    /**
+     * Create entity record if absent or update if it already exists (accordingly to its logical Key).
+     * Record is inserted is the provided transaction using the provided {@link EntityOperationContext}
+     *
+     * @param record                 record to add
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @param transaction            the transaction to be used to insert the record
+     * @return the inserted EntityRecord
+     * @throws GeminiException if something goes wrong with persistence operations
+     */
+    EntityRecord putOrUpdate(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
-    EntityRecord delete(Entity e, UUID uuid) throws GeminiException;
+    /**
+     * Update the provided record in a new fresh transaction and using the default EnittyOperationContext.
+     *
+     * @param record record to update. If the record contains the persistence ID the implementation must allow
+     *               the update of logical key fields. Otherwise the record is firts of all retrieved (from persistence
+     *               manager) by its logical key and then updated.
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord update(EntityRecord record) throws GeminiException {
+        return update(record, EntityOperationContext.EMPTY);
+    }
 
-    default EntityRecord get(EntityRecord entityRecord) throws GeminiException {
-        return get(entityRecord.getEntity(), entityRecord.getLogicalKeyValue());
+    /**
+     * Update the provided record in a new fresh transaction and using the provided EnittyOperationContext.
+     *
+     * @param record                 record to update. If the record contains the persistence ID the implementation must allow
+     *                               the update of logical key fields. Otherwise the record is firts of all retrieved (from persistence
+     *                               manager) by its logical key and then updated.
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord update(EntityRecord record, EntityOperationContext entityOperationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return update(record, entityOperationContext, transaction);
+        });
+    }
+
+    /**
+     * Update the entity record retrieved by the logicalKey in a new fresh transaction and using default EnittyOperationContext.
+     *
+     * @param logicalKey fields to retrieve the persisted entity record to update
+     * @param record     record to be used to ovveride the persisted entity record returned by logical key.
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord update(Collection<? extends FieldValue> logicalKey, EntityRecord record) throws GeminiException {
+        return update(logicalKey, record, EntityOperationContext.EMPTY);
+    }
+
+    /**
+     * Update the entity record retrieved by the logicalKey in a new fresh transaction and using the provided EnittyOperationContext.
+     *
+     * @param logicalKey             fields to retrieve the persisted entity record to update
+     * @param record                 record to be used to ovveride the persisted entity record returned by logical key.
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord update(Collection<? extends FieldValue> logicalKey, EntityRecord record, EntityOperationContext entityOperationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return update(logicalKey, record, entityOperationContext, transaction);
+        });
+    }
+
+    /**
+     * Update the entity record retrieved by the UUID in a new fresh transaction and using the provided EnittyOperationContext.
+     *
+     * @param uuid                   uuid
+     * @param record                 record to be used to ovveride the persisted entity record returned by logical key.
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord update(UUID uuid, EntityRecord record, EntityOperationContext entityOperationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return update(uuid, record, entityOperationContext, transaction);
+        });
+    }
+
+    /**
+     * Update the provided record in the provided transaction and using the provided EnittyOperationContext.
+     *
+     * @param record                 record to update. If the record contains the persistence ID the implementation must allow
+     *                               the update of logical key fields. Otherwise the record is firts of all retrieved (from persistence
+     *                               manager) by its logical key and then updated.
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @param transaction            the transaction to be used to update the record
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    EntityRecord update(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+    /**
+     * Update the entity record retrieved by the logicalKey in the provided transaction and using the provided EnittyOperationContext.
+     *
+     * @param logicalKey             fields to retrieve the persisted entity record to update
+     * @param record                 record to be used to ovveride the persisted entity record returned by logical key.
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    EntityRecord update(Collection<? extends FieldValue> logicalKey, EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+    /**
+     * Update the entity record retrieved by the UUID in the provided transaction and using the provided EnittyOperationContext.
+     *
+     * @param uuid                   uuid
+     * @param record                 record to be used to ovveride the persisted entity record returned by logical key.
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    EntityRecord update(UUID uuid, EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+    /**
+     * Delete the provided record in a new fresh transaction and using the default EnittyOperationContext.
+     *
+     * @param record record to delete. If the record contains the persistence ID the implementation must delete by it
+     *               Otherwise the record is firts of all retrieved (from persistence manager) by its logical key and then updated.
+     * @return record deleted
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord delete(EntityRecord record) throws GeminiException {
+        return delete(record, EntityOperationContext.EMPTY);
+    }
+
+    /**
+     * Delete the provided record in a new fresh transaction and using provided EntityOperationContext
+     *
+     * @param record                 record to delete. If the record contains the persistence ID the implementation must delete by it
+     *                               Otherwise the record is firts of all retrieved (from persistence manager) by its logical key and then updated.
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record deleted
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord delete(EntityRecord record, EntityOperationContext entityOperationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return delete(record, entityOperationContext, transaction);
+        });
+    }
+
+    /**
+     * Delete an entity record by its UUID in a new fresh transaction and using provided EntityOperationContext
+     *
+     * @param entity                 target Entity
+     * @param uuid                   entity record identifier
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record deleted
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord delete(Entity entity, UUID uuid, EntityOperationContext entityOperationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return delete(entity, uuid, entityOperationContext, transaction);
+        });
+    }
+
+    /**
+     * Delete an entity record by its logical key in a new fresh transaction and using the default EntityOperationContext
+     *
+     * @param entity     target Entity
+     * @param logicalKey entity record identifier (by its logical key)
+     * @return record deleted
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey) throws GeminiException {
+        return delete(entity, logicalKey, EntityOperationContext.EMPTY);
+    }
+
+    /**
+     * Delete an entity record by its logical key in a new fresh transaction and using the provided EntityOperationContext
+     *
+     * @param entity                 target Entity
+     * @param logicalKey             entity record identifier (by its logical key)
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record deleted
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    default EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey, EntityOperationContext entityOperationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return delete(entity, logicalKey, entityOperationContext, transaction);
+        });
+    }
+
+    /**
+     * Delete the provided record in the provided transaction and using the provided EnittyOperationContext.
+     *
+     * @param record                 record to delete. If the record contains the persistence ID the implementation must allow
+     *                               the update of logical key fields. Otherwise the record is first of all retrieved (from persistence
+     *                               manager) by its logical key and then deleted.
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @param transaction            the transaction to be used to update the record
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    EntityRecord delete(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+
+    /**
+     * Delete an entity record by its UUID in the provided transaction and using provided EntityOperationContext
+     *
+     * @param entity                 target Entity
+     * @param uuid                   entity record identifier
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record deleted
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    EntityRecord delete(Entity entity, UUID uuid, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+    /**
+     * Delete an entity record by its logical key the provided transaction and using the provided EntityOperationContext
+     *
+     * @param entity                 target Entity
+     * @param logicalKey             entity record identifier (by its logical key)
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @return record deleted
+     * @throws GeminiException if the record is not found or something goes wrong with persistence operations
+     */
+    EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+
+    // TODO from here improve documentation and add entityOperationContext
+
+    default EntityRecord get(EntityRecord record) throws GeminiException {
+        return get(record.getEntity(), record.getLogicalKeyValue());
     }
 
     EntityRecord get(Entity e, Collection<? extends FieldValue> logicalKey) throws GeminiException;
@@ -176,7 +407,11 @@ public interface EntityManager {
 
     List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType, Transaction transaction) throws GeminiException;
 
-    List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext) throws GeminiException;
+    default List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext) throws GeminiException {
+        return getRecordsMatching(entity, filterContext, EntityOperationContext.EMPTY);
+    }
 
-    List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, Transaction transaction) throws GeminiException;
+    List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext) throws GeminiException;
+
+    List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 }

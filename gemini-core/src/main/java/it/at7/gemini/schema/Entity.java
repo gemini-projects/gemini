@@ -117,6 +117,7 @@ public class Entity {
         return logicalKey;
     }
 
+    @NotNull
     public EntityField getIdEntityField() {
         return idField;
     }

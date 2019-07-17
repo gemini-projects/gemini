@@ -3,6 +3,7 @@ package it.at7.gemini.core;
 import it.at7.gemini.exceptions.EntityFieldException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -79,6 +80,7 @@ public class EntityRecord implements RecordBase {
         return true;
     }
 
+    @NotNull
     public Entity getEntity() {
         return entity;
     }
@@ -166,6 +168,10 @@ public class EntityRecord implements RecordBase {
         return get(getEntity().getIdEntityField());
     }
 
+    public boolean hasID() {
+        return getStore().containsKey(getEntity().getIdEntityField().getName()) && getID() != null;
+    }
+
     public EntityFieldValue getIDEntityFieldValueType() {
         Object value = get(getEntity().getIdEntityField());
         return EntityFieldValue.create(getEntity().getIdEntityField(), value);
@@ -175,9 +181,12 @@ public class EntityRecord implements RecordBase {
         this.uuid = uuid;
     }
 
+    public boolean hasUUID() {
+        return this.uuid != null;
+    }
+
     @Nullable
     public UUID getUUID() {
         return this.uuid;
     }
-
 }

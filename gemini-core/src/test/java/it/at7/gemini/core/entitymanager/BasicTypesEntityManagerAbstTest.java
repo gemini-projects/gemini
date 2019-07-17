@@ -80,7 +80,7 @@ public abstract class BasicTypesEntityManagerAbstTest extends UnitTestNoMockWeb 
         entityRecord.put("numberLong", 10);
         entityRecord.put("long", 10);
         Set<EntityFieldValue> logicalKey = entityRecord.getLogicalKeyValue();
-        EntityRecord updated = Services.getEntityManager().update(entityRecord, logicalKey);
+        EntityRecord updated = Services.getEntityManager().update(logicalKey, entityRecord);
         Assert.assertEquals(10L, (long) updated.get("numberLong"));
         Assert.assertEquals(10L, (long) updated.get("long"));
         testDefaultMetaValues(updated);
@@ -95,7 +95,7 @@ public abstract class BasicTypesEntityManagerAbstTest extends UnitTestNoMockWeb 
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
         Set<EntityFieldValue> logicalKey = entityRecord.getLogicalKeyValue();
         entityRecord.put("text", "anotherLogicalKey");
-        EntityRecord updated = Services.getEntityManager().update(entityRecord, logicalKey);
+        EntityRecord updated = Services.getEntityManager().update(logicalKey, entityRecord);
         Assert.assertEquals(10L, (long) updated.get("numberLong")); // previous update
         assertEquals("anotherLogicalKey", updated.get("text")); // new logical Key
         Services.getEntityManager().get(entityRecord.getEntity(), logicalKey); // not found the previous logical key
