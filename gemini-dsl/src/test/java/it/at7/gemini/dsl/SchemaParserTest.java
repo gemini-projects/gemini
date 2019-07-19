@@ -103,4 +103,14 @@ public class SchemaParserTest {
         assertTrue(singleRecord.isOneRecord());
     }
 
+    @Test(expected = SyntaxError.class)
+    public void testOneRecordShouldNotHaveLG() throws SyntaxError {
+        String dsl = "ENTITY ONEREC SingleRecord {" +
+                "   TEXT    code *" +
+                " NUMBER    value" +
+                " }";
+        StringReader reader = new StringReader(dsl);
+        SchemaParser.parse(reader);
+    }
+
 }

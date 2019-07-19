@@ -41,22 +41,36 @@ public class RawEntityBuilder {
         return this;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public boolean getIsOneRec() {
+        return this.oneRecord;
+    }
+
     public RawEntity build() {
         return new RawEntity(name, embedable, oneRecord, entries, implementsIntefaces);
     }
 
     public static class EntryBuilder {
+        private final RawEntityBuilder entityBuilder;
         private String type;
         private String name;
         private boolean isLogicalKey;
 
-        public EntryBuilder(String type, String name) {
+        public EntryBuilder(RawEntityBuilder entityBuilder, String type, String name) {
+            this.entityBuilder = entityBuilder;
             this.type = type;
             if (!name.matches(namePattern)) {
                 throw new RuntimeException(String.format("name %s doesn't match regexp ^[a-zA-Z0-9_]{3,}$", name));
             }
             this.name = name;
             this.isLogicalKey = false;
+        }
+
+        public RawEntityBuilder getEntityBuilder() {
+            return entityBuilder;
         }
 
         public void isLogicalKey() {

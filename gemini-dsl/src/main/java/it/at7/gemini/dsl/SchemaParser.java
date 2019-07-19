@@ -79,20 +79,23 @@ public class SchemaParser {
         } while (foundAny);
     }
 
-    private void parseModelEntry(RawEntityBuilder builder) throws SyntaxError {
+    private void parseModelEntry(RawEntityBuilder entityBuilder) throws SyntaxError {
         expect(TokenType.WORD);
         String type = lexer.getVal();
         nextToken();
         expect(TokenType.WORD);
         String name = lexer.getVal();
-        RawEntityBuilder.EntryBuilder entryBuilder = new RawEntityBuilder.EntryBuilder(type, name);
+        RawEntityBuilder.EntryBuilder entryBuilder = new RawEntityBuilder.EntryBuilder(entityBuilder, type, name);
         parseEntryQualifier(entryBuilder);
-        builder.addEntry(entryBuilder.build());
+        entityBuilder.addEntry(entryBuilder.build());
     }
 
-    private void parseEntryQualifier(RawEntityBuilder.EntryBuilder entryBuilder) {
+    private void parseEntryQualifier(RawEntityBuilder.EntryBuilder entryBuilder) throws SyntaxError {
         nextToken();
         if (currentToken.equals(TokenType.ASTERISK)) {
+            if (entryBuilder.getEntityBuilder().getIsOneRec()) {
+                throw new SyntaxError(String.format("Entity %s has only one record - cannot have a logical key entry", entryBuilder.getEntityBuilder().getName()));
+            }
             entryBuilder.isLogicalKey();
             parseEntryQualifier(entryBuilder);
         }
