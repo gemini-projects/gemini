@@ -9,7 +9,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SchemaParserTest {
 
@@ -87,6 +88,19 @@ public class SchemaParserTest {
     public void testSyntaxError() throws SyntaxError {
         String dsl = "ENTITY Error AHHH";
         SchemaParser.parse(new StringReader(dsl));
+    }
+
+    @Test
+    public void testOneRecord() throws SyntaxError {
+        String dsl = "ENTITY ONEREC SingleRecord {" +
+                "   TEXT    code " +
+                " NUMBER    value" +
+                " }";
+        StringReader reader = new StringReader(dsl);
+        RawSchema rawSchema = SchemaParser.parse(reader);
+        Map<String, RawEntity> rawEntitiesByName = rawSchema.getRawEntitiesByName();
+        RawEntity singleRecord = rawEntitiesByName.get("SINGLERECORD");
+        assertTrue(singleRecord.isOneRecord());
     }
 
 }

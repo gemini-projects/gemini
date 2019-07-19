@@ -37,10 +37,7 @@ public class SchemaParser {
     private RawEntity parseEntity() throws SyntaxError {
         RawEntityBuilder builder = new RawEntityBuilder();
         nextToken();
-        if (currentToken.equals(EMBEDABLE)) {
-            builder.isEmbedable();
-            nextToken();
-        }
+        parseEntityModifiers(builder);
         expect(TokenType.WORD);
         builder.addName(lexer.getVal());
         nextToken();
@@ -63,6 +60,23 @@ public class SchemaParser {
         }
         nextToken();
         return builder.build();
+    }
+
+    private void parseEntityModifiers(RawEntityBuilder builder) {
+        boolean foundAny;
+        do {
+            foundAny = false;
+            if (currentToken.equals(EMBEDABLE)) {
+                builder.isEmbedable();
+                nextToken();
+                foundAny = true;
+            }
+            if (currentToken.equals(ONEREC)) {
+                builder.isOneRec();
+                nextToken();
+                foundAny = true;
+            }
+        } while (foundAny);
     }
 
     private void parseModelEntry(RawEntityBuilder builder) throws SyntaxError {

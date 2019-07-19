@@ -12,6 +12,7 @@ public class Lexer {
         ENTITY("ENTITY"),
         EMBEDABLE("EMBEDABLE"),
         IMPLEMENTS("IMPLEMENTS"),
+        ONEREC("ONEREC"),
         L_BRACE("{"),
         R_BRACE("}"),
         ASTERISK("*"),

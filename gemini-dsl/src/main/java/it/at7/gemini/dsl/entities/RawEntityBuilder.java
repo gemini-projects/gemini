@@ -8,6 +8,7 @@ public class RawEntityBuilder {
 
     private String name;
     private boolean embedable = false;
+    private boolean oneRecord = false;
     private List<RawEntity.Entry> entries = new ArrayList<>();
     private List<String> implementsIntefaces = new ArrayList<>();
 
@@ -29,12 +30,19 @@ public class RawEntityBuilder {
         return this;
     }
 
-    public void isEmbedable() {
+    public RawEntityBuilder isEmbedable() {
         this.embedable = true;
+        return this;
+    }
+
+    public RawEntityBuilder isOneRec() {
+        assert !this.embedable;
+        this.oneRecord = true;
+        return this;
     }
 
     public RawEntity build() {
-        return new RawEntity(name, embedable, entries, implementsIntefaces);
+        return new RawEntity(name, embedable, oneRecord, entries, implementsIntefaces);
     }
 
     public static class EntryBuilder {
