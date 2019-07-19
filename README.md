@@ -9,6 +9,8 @@ ___
 [![Twitter](https://img.shields.io/badge/Twitter-@h4t0n-blue.svg?style=flat)](http://twitter.com/h4t0n)
 ![Last Commit](https://img.shields.io/github/last-commit/h4t0n/gemini.svg)
 
+Gemini make it easy to create full backends for modern web/mobile application, microservice and MVP.
+
 Gemini is a backend REST framework to automatically create CRUD REST APIs from scratch (with no coding),  starting from
 a simple Schema definition called Gemini DSL. Briefly Gemini automatically handles for you:
 * **Persistence**: creating all the storage and entity managers
