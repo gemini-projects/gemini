@@ -34,9 +34,11 @@ public class Entity {
     private final LogicalKey logicalKey;
     private final EntityField idField;
     private final boolean embedable;
+    private final boolean oneRecord;
     private Object idValue;
 
-    public Entity(Module module, String name, boolean embedable, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
+    public Entity(Module module, String name, boolean embedable, boolean oneRecord, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
+        this.oneRecord = oneRecord;
         Assert.notNull(module, "Module must be not null");
         Assert.notNull(name, "Entity name must be not null");
         this.module = module;
@@ -71,6 +73,15 @@ public class Entity {
 
     public boolean isEmbedable() {
         return embedable;
+    }
+
+    /**
+     * Entity must contain only a single record
+     *
+     * @return
+     */
+    public boolean isOneRecord() {
+        return oneRecord;
     }
 
     public EntityField getField(String fieldName) throws EntityFieldException {
@@ -148,6 +159,7 @@ public class Entity {
         values.put("name", name);
         values.put("module", module.getName());
         values.put("embedable", embedable);
+        values.put("onerecord", oneRecord);
         values.put("displayName", name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase());
         Entity entity = Services.getSchemaManager().getEntity(ENTITY);
         assert entity != null;

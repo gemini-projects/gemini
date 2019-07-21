@@ -5,6 +5,7 @@ import it.at7.gemini.core.Transaction;
 import it.at7.gemini.core.TransactionImpl;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
+import it.at7.gemini.exceptions.SingleRecordEntityException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.Field;
@@ -81,10 +82,37 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     public boolean entityStorageExists(Entity entity, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         try {
-            return entityStorageExists(entity.getName(), transactionImpl);
+            // we use raw jdbc connection
+            String sqlTableExists = "" +
+                    "   SELECT EXISTS ( " +
+                    "       SELECT 1" +
+                    "       FROM   information_schema.tables " +
+                    "       WHERE  table_schema = :table_schema" +
+                    "       AND    table_name =  :table_name" +
+                    "   );";
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("table_schema", "public");
+            parameters.put("table_name", entity.getName().toLowerCase());
+            boolean exist = transactionImpl.executeQuery(sqlTableExists, parameters, this::exists);
+            if (exist && entity.isOneRecord()) {
+                checkEntityHashOnlyOneRecord(entity, transactionImpl);
+            }
+            return exist;
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
         }
+    }
+
+    private void checkEntityHashOnlyOneRecord(Entity entity, TransactionImpl transactionImpl) throws SQLException, GeminiException {
+        String sqlTableExists = "SELECT NOT(COUNT(*) > 1) FROM " + getEntityNameForSQL(entity);
+        boolean ok = transactionImpl.executeQuery(sqlTableExists, this::exists);
+        if (!ok) {
+            throw new SingleRecordEntityException(entity);
+        }
+    }
+
+    private String getEntityNameForSQL(Entity entity) {
+        return wrapDoubleQuotes(entity.getName().toLowerCase());
     }
 
     @Override
@@ -181,20 +209,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         }
     } */
 
-    private boolean entityStorageExists(String name, TransactionImpl transaction) throws GeminiException, SQLException {
-        // we use raw jdbc connection
-        String sqlTableExists = "" +
-                "   SELECT EXISTS ( " +
-                "       SELECT 1" +
-                "       FROM   information_schema.tables " +
-                "       WHERE  table_schema = :table_schema" +
-                "       AND    table_name =  :table_name" +
-                "   );";
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("table_schema", "public");
-        parameters.put("table_name", name.toLowerCase());
-        return transaction.executeQuery(sqlTableExists, parameters, this::exists);
-    }
 
     private void createEntityStorage(Entity entity, TransactionImpl transaction) throws GeminiException {
         logger.info("{}: creating Entity {}", entity.getModule().getName(), entity.getName());
@@ -209,6 +223,11 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         handleUniqueLogicalKeyConstraint(sqlBuilder, entity);
         sqlBuilder.append(" );");
         transaction.executeUpdate(sqlBuilder.toString());
+        // insert the single entity record once at table creation
+        if (entity.isOneRecord()) {
+            transaction.executeInsert(String.format("INSERT INTO %s default VALUES", getEntityNameForSQL(entity)));
+        }
+
         // TODO for runtime is better unique constrain or index ?? check later
         // checkOrCreteLogicalKeyUniqueIndex(entity.getName(), entity.getLogicalKey(), transaction);
     }

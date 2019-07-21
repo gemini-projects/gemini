@@ -86,7 +86,8 @@ public class TransactionImpl implements Transaction {
     }
 
     /**
-     *  Get the Transaction open time
+     * Get the Transaction open time
+     *
      * @return null if Transaction is not open
      */
     @Override
@@ -101,6 +102,10 @@ public class TransactionImpl implements Transaction {
 
     public int executeUpdate(String sql, @Nullable Map<String, Object> parameters) throws GeminiException {
         return createStatement(sql, parameters, PreparedStatement::executeUpdate);
+    }
+
+    public long executeInsert(String sql) throws GeminiException {
+        return executeInsert(sql, null);
     }
 
     public long executeInsert(String sql, @Nullable Map<String, Object> parameters) throws GeminiException {
@@ -119,6 +124,10 @@ public class TransactionImpl implements Transaction {
             ResultSet resultSet = ps.executeQuery();
             return callback.accept(resultSet);
         });
+    }
+
+    public <R> R executeQuery(String sql, CallbackWithResultThrowingSqlException<R, ResultSet> callback) throws SQLException, GeminiException {
+        return executeQuery(sql, null, callback);
     }
 
     public void executeQuery(String sql, CallbackThrowingSqlException<ResultSet> callback) throws GeminiException, SQLException {

@@ -12,7 +12,8 @@ public class EntityException extends GeminiException {
         ENTITY_FOUND,
         ENTITY_NOT_FOUND,
         ENTITY_FIELD_FOUND,
-        API_NOT_ALLOWED_ON_EMBEDABLE
+        API_NOT_ALLOWED_ON_EMBEDABLE,
+        API_ALLOWED_ONLY_ON_ONEREC
     }
 
     public EntityException(EntityException.Code errorCode, String message, Entity entity) {
@@ -37,5 +38,9 @@ public class EntityException extends GeminiException {
 
     public static EntityException API_NOT_ALLOWED_ON_EMBEDABLE(String entity) {
         return new EntityException(API_NOT_ALLOWED_ON_EMBEDABLE, String.format("Entity %s is embedable - API not allowed", entity), entity);
+    }
+
+    public static EntityException API_ALLOWED_ONLY_ON_ONEREC(String entity) {
+        return new EntityException(API_ALLOWED_ONLY_ON_ONEREC, String.format("Entity %s is not one record - API not allowed", entity), entity);
     }
 }

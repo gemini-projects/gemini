@@ -74,3 +74,8 @@ INTERFACE InterfaceToExtend {
 ENTITY EntityWithInterfaceToExtend IMPLEMENTS InterfaceToExtend {
     TEXT   entityText *
 }
+
+ENTITY ONEREC SingletonTest {
+    TEXT    text
+    NUMBER  number
+}

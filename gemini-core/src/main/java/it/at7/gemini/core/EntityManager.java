@@ -414,4 +414,16 @@ public interface EntityManager {
     List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext) throws GeminiException;
 
     List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+    default EntityRecord getRecord(Entity entity) throws GeminiException {
+        return getRecord(entity, EntityOperationContext.EMPTY);
+    }
+
+    default EntityRecord getRecord(Entity entity, EntityOperationContext entityOperationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return getRecord(entity, entityOperationContext, transaction);
+        });
+    }
+
+    EntityRecord getRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 }

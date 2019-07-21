@@ -51,4 +51,5 @@ public interface PersistenceEntityManager {
 
     UUID getUUIDforEntityRecord(EntityRecord record) throws GeminiException;
 
+    EntityRecord getEntityRecordSingleton(Entity entity, Transaction transaction) throws GeminiException;
 }

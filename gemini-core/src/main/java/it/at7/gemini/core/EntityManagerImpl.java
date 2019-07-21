@@ -4,10 +4,7 @@ import it.at7.gemini.conf.DynamicSchema;
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.events.EventManager;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
-import it.at7.gemini.exceptions.EntityRecordException;
-import it.at7.gemini.exceptions.GeminiException;
-import it.at7.gemini.exceptions.InvalidStateException;
-import it.at7.gemini.exceptions.SchemaException;
+import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.EntityRef;
@@ -205,6 +202,17 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         return persistenceEntityManager.getEntityRecordsMatching(entity, filterContext, transaction);
+    }
+
+
+
+    @Override
+    public EntityRecord getRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        if (!entity.isOneRecord()) {
+            throw EntityException.API_ALLOWED_ONLY_ON_ONEREC(entity.getName());
+        }
+        // TODO entityOperationContext
+        return persistenceEntityManager.getEntityRecordSingleton(entity, transaction);
     }
 
     private EntityRecord createNewEntityRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {

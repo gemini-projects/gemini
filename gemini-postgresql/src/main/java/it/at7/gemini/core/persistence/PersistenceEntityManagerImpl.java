@@ -180,6 +180,21 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
     }
 
+    @Override
+    public EntityRecord getEntityRecordSingleton(Entity entity, Transaction transaction) throws GeminiException {
+        TransactionImpl transactionImpl = (TransactionImpl) transaction;
+        try {
+            QueryWithParams query = createSelectQueryFor(entity);
+            Optional<EntityRecord> entityRecord = executeOptionalEntityRecordQuery(entity, transactionImpl, query);
+            if (!entityRecord.isPresent()) {
+                throw EntityRecordException.ONERECORD_ENTITY_MUSTEXIST(entity);
+            }
+            return entityRecord.get();
+        } catch (SQLException e) {
+            throw GeminiGenericException.wrap(e);
+        }
+    }
+
     private Optional<EntityRecord> executeOptionalEntityRecordQuery(Entity entity, TransactionImpl transactionImpl, QueryWithParams query) throws SQLException, GeminiException {
         return transactionImpl.executeQuery(query.getSql(), query.getParams(), resultSet -> {
             List<EntityRecord> entityRecords = fromResultSetToEntityRecord(resultSet, entity, null, transactionImpl);

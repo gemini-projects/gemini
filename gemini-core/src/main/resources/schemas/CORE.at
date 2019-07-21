@@ -17,6 +17,7 @@ ENTITY Entity {
     TEXT            name *
     TEXT            module
     BOOL            embedable
+    BOOL            onerecord
     TEXT		    displayName
 }
 
@@ -69,3 +70,10 @@ ENTITY FieldResolution {
     TEXT    value
 }
 
+ENTITY ONEREC APIConfig {
+    TEXT    title
+    TEXT    description
+    TEXT    termsOfService
+    // contact
+    TEXT    version
+}
