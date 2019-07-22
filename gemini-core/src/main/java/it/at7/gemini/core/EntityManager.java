@@ -382,6 +382,19 @@ public interface EntityManager {
     EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
 
+    /**
+     * Allowed only for OneRecord Entities. Get the singleton record for the entity.
+     *
+     * @param entity                 target Entity (must be a one record entity)
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @param transaction            the transaction to be used to update the record
+     * @return the singleton record
+     * @throws GeminiException if persistence error occurs or called on non oneRecord entities
+     */
+    EntityRecord getRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+
+
     // TODO from here improve documentation and add entityOperationContext
 
     default EntityRecord get(EntityRecord record) throws GeminiException {
@@ -424,6 +437,4 @@ public interface EntityManager {
             return getRecord(entity, entityOperationContext, transaction);
         });
     }
-
-    EntityRecord getRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 }

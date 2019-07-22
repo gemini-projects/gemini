@@ -205,7 +205,6 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-
     @Override
     public EntityRecord getRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         if (!entity.isOneRecord()) {
