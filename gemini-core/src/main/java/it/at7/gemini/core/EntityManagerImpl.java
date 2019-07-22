@@ -56,6 +56,7 @@ public class EntityManagerImpl implements EntityManager {
     public EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
         checkDynamicSchema(record);
+        checkSingleRecordEntity(record.getEntity());
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
             // can insert the entity record
@@ -313,6 +314,11 @@ public class EntityManagerImpl implements EntityManager {
                     throw SchemaException.DYNAMIC_SCHEMA_NOT_ENABLED(name);
                 }
         }
+    }
+
+    private void checkSingleRecordEntity(Entity entity) throws EntityException {
+        if (entity.isOneRecord())
+            throw EntityException.API_ALLOWED_ONLY_ON_ONEREC(entity.getName());
     }
 
      /* // TODO dynamic entity record

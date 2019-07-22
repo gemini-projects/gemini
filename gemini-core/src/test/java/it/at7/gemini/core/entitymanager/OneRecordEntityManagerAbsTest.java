@@ -18,7 +18,7 @@ public abstract class OneRecordEntityManagerAbsTest extends UnitTestNoMockWeb {
     @Test
     public void n1_getSingleRecord() throws GeminiException {
         SchemaManager schemaManager = Services.getSchemaManager();
-        Entity e = schemaManager.getEntity("SingletonTest");
+        Entity e = schemaManager.getEntity(SINGLETON_ENTITY);
         EntityManager entityManager = Services.getEntityManager();
         EntityRecord record = entityManager.getRecord(e);
         assert record != null;
@@ -31,6 +31,16 @@ public abstract class OneRecordEntityManagerAbsTest extends UnitTestNoMockWeb {
         EntityRecord record = new EntityRecord(e);
         record.put("text", "IntegTest");
         entityManager.putIfAbsent(record);
+    }
+
+    @Test
+    public void n3_putSingleRecord() throws GeminiException {
+        // TODO putorupdate / update
+    }
+
+    @Test
+    public void n4_deleteSingleRecordShouldThrowException() throws GeminiException {
+        // TODO
     }
 
 }
