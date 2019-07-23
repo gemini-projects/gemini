@@ -9,15 +9,13 @@ import java.util.*;
 
 public interface EntityManager {
 
-    // === UTILITY METHODS === //
-
     /**
      * Get all the entities handled by Gemini
      */
     Collection<Entity> getAllEntities();
 
     /**
-     * Return the transaction manager to implement default interface methods
+     * Return the transaction manager (useful to implement default interface methods)
      */
     TransactionManager getTransactionManager();
 
@@ -29,9 +27,6 @@ public interface EntityManager {
      */
     @Nullable
     Entity getEntity(String entity);
-
-    // ===================== //
-
 
     /**
      * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
@@ -383,7 +378,7 @@ public interface EntityManager {
 
 
     /**
-     * Allowed only for OneRecord Entities. Get the singleton record for the entity.
+     * Allowed only for One Record Entities (Singleton). Get the singleton record for the entity.
      *
      * @param entity                 target Entity (must be a one record entity)
      * @param entityOperationContext the operationContext to retrieve information and custom logic
@@ -391,8 +386,7 @@ public interface EntityManager {
      * @return the singleton record
      * @throws GeminiException if persistence error occurs or called on non oneRecord entities
      */
-    EntityRecord getRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
-
+    EntityRecord getSingleEntityRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
 
     // TODO from here improve documentation and add entityOperationContext
@@ -428,13 +422,13 @@ public interface EntityManager {
 
     List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
-    default EntityRecord getRecord(Entity entity) throws GeminiException {
-        return getRecord(entity, EntityOperationContext.EMPTY);
+    default EntityRecord getSingleEntityRecord(Entity entity) throws GeminiException {
+        return getSingleEntityRecord(entity, EntityOperationContext.EMPTY);
     }
 
-    default EntityRecord getRecord(Entity entity, EntityOperationContext entityOperationContext) throws GeminiException {
+    default EntityRecord getSingleEntityRecord(Entity entity, EntityOperationContext entityOperationContext) throws GeminiException {
         return getTransactionManager().executeInSingleTrasaction(transaction -> {
-            return getRecord(entity, entityOperationContext, transaction);
+            return getSingleEntityRecord(entity, entityOperationContext, transaction);
         });
     }
 }

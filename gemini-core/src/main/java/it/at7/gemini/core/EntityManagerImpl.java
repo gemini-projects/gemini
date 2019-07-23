@@ -69,13 +69,18 @@ public class EntityManagerImpl implements EntityManager {
     public EntityRecord putOrUpdate(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
         checkDynamicSchema(record);
+        Entity entity = record.getEntity();
+
+        if (entity.isOneRecord())
+            return updateOneRecordEntity(record, entityOperationContext, transaction);
+
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
-            // can insert the entity record
+            // can insert the entity record and return it
             return createNewEntityRecord(record, entityOperationContext, transaction);
         } else {
-            EntityRecord persistedRecord = rec.get();
-            return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, persistedRecord);
+            EntityRecord recToUpdate = rec.get();
+            return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, recToUpdate);
         }
     }
 
@@ -86,6 +91,9 @@ public class EntityManagerImpl implements EntityManager {
         }
         if (record.hasUUID()) {
             return update(record.getUUID(), record, entityOperationContext, transaction);
+        }
+        if (record.getEntity().isOneRecord()) {
+            return updateOneRecordEntity(record, entityOperationContext, transaction);
         }
         return update(record.getLogicalKeyValue(), record, entityOperationContext, transaction);
     }
@@ -122,6 +130,12 @@ public class EntityManagerImpl implements EntityManager {
             return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, persistedRecord);
         }
         throw EntityRecordException.UUID_NOTFOUND(record.getEntity(), uuid);
+    }
+
+    private EntityRecord updateOneRecordEntity(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        assert record.getEntity().isOneRecord();
+        EntityRecord singleEntityRecord = getSingleEntityRecord(record.getEntity(), entityOperationContext, transaction);
+        return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, singleEntityRecord);
     }
 
     @Override
@@ -207,7 +221,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public EntityRecord getRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+    public EntityRecord getSingleEntityRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         if (!entity.isOneRecord()) {
             throw EntityException.API_ALLOWED_ONLY_ON_ONEREC(entity.getName());
         }

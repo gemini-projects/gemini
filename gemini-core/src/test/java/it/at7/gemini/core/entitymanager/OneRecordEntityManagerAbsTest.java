@@ -11,6 +11,8 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import static org.junit.Assert.assertEquals;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class OneRecordEntityManagerAbsTest extends UnitTestNoMockWeb {
     public static String SINGLETON_ENTITY = "SingletonTest";
@@ -20,7 +22,7 @@ public abstract class OneRecordEntityManagerAbsTest extends UnitTestNoMockWeb {
         SchemaManager schemaManager = Services.getSchemaManager();
         Entity e = schemaManager.getEntity(SINGLETON_ENTITY);
         EntityManager entityManager = Services.getEntityManager();
-        EntityRecord record = entityManager.getRecord(e);
+        EntityRecord record = entityManager.getSingleEntityRecord(e);
         assert record != null;
     }
 
@@ -35,7 +37,17 @@ public abstract class OneRecordEntityManagerAbsTest extends UnitTestNoMockWeb {
 
     @Test
     public void n3_putSingleRecord() throws GeminiException {
-        // TODO putorupdate / update
+        EntityManager entityManager = Services.getEntityManager();
+        Entity e = Services.getSchemaManager().getEntity(SINGLETON_ENTITY);
+        EntityRecord record = entityManager.getSingleEntityRecord(e);
+        record.put("text", "IntegTest");
+        EntityRecord rupdt = entityManager.putOrUpdate(record);
+        assertEquals(record.getID(), rupdt.getID());
+        assertEquals("IntegTest", rupdt.get("text"));
+        record.put("text", "IntegTest-update");
+        rupdt = entityManager.update(record);
+        assertEquals(record.getID(), rupdt.getID());
+        assertEquals("IntegTest-update", rupdt.get("text"));
     }
 
     @Test
