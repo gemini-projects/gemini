@@ -67,15 +67,15 @@ public class RestAPIController {
         throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
     }
 
-    private Object requestHandler(String entity, Object body, HttpServletRequest request, HttpServletResponse response) throws GeminiException {
-        Entity e = checkEntity(entity.toUpperCase());
+    private Object requestHandler(String entityString, Object body, HttpServletRequest request, HttpServletResponse response) throws GeminiException {
+        String method = request.getMethod();
+        Entity entity = checkEntity(entityString.toUpperCase(), method);
         UriComponents uriComponents = UriComponentsBuilder.fromUriString(request.getRequestURI()).build();
         List<String> paths = uriComponents.getPathSegments();
-        ensurePathsAreConsistent(paths, e);
-        String method = request.getMethod();
+        ensurePathsAreConsistent(paths, entity);
         Map<String, String[]> parameters = request.getParameterMap(); // query string params
         List<String> geminiHeader = getGeminiHeader(request);
-        EntityOperationContext entityOperationContext = createEntityOperationContext(entity, body, request);
+        EntityOperationContext entityOperationContext = createEntityOperationContext(entityString, body, request);
         if (paths.size() == 2) {
             // this is a root entity requet - METHOD ALLOWED POST AND GET (for list)
             switch (method) {
@@ -83,9 +83,17 @@ public class RestAPIController {
                     if (body == null) {
                         throw InvalidRequesException.BODY_REQUIRED();
                     }
-                    return handleInsertRecord(e, geminiHeader, body, entityOperationContext);
-                case "GET":
-                    return handleGetEntityList(e, parameters, entityOperationContext);
+                    return handleInsertRecord(entity, geminiHeader, body, entityOperationContext);
+                case "GET": {
+                    if (entity.isOneRecord())
+                        return handleGetEntityOneRecord(entity, parameters, entityOperationContext);
+                    return handleGetEntityList(entity, parameters, entityOperationContext);
+                }
+                case "PUT": {
+                    if (entity.isOneRecord()) {
+                        return handleUpdateEntityOneRecord(entity, body, entityOperationContext);
+                    }
+                }
                 default:
                     throw InvalidRequesException.INVALID_METHOD_FOR_REQUEST(method);
             }
@@ -93,7 +101,7 @@ public class RestAPIController {
 
         if (paths.size() > 2) {
             int requestLkLenght = paths.size() - 2;
-            Entity.LogicalKey logicalKey = e.getLogicalKey();
+            Entity.LogicalKey logicalKey = entity.getLogicalKey();
             List<EntityField> logicalKeyList = logicalKey.getLogicalKeyList();
             if (requestLkLenght != 1 && logicalKeyList.size() < requestLkLenght) {
                 // it is not a UUID and it is a multi lk entity request
@@ -104,11 +112,11 @@ public class RestAPIController {
                 String[] lkStringsArray = decodeLogicalKeyStrings(paths);
                 switch (method) {
                     case "GET":
-                        return handleGetRecord(e, entityOperationContext, lkStringsArray);
+                        return handleGetRecord(entity, entityOperationContext, lkStringsArray);
                     case "PUT":
-                        return handleUpdateRecord(e, body, entityOperationContext, lkStringsArray);
+                        return handleUpdateRecord(entity, body, entityOperationContext, lkStringsArray);
                     case "DELETE":
-                        return handleDeleteRecord(e, entityOperationContext, lkStringsArray);
+                        return handleDeleteRecord(entity, entityOperationContext, lkStringsArray);
                     default:
                         throw InvalidRequesException.INVALID_METHOD_FOR_REQUEST(method);
                 }
@@ -147,6 +155,9 @@ public class RestAPIController {
         return header == null ? Collections.emptyList() : Arrays.asList(header.split(","));
     }
 
+    private Object handleGetEntityOneRecord(Entity entity, Map<String, String[]> parameters, EntityOperationContext entityOperationContext) throws GeminiException {
+        return entityManager.getOneRecordEntity(entity, entityOperationContext);
+    }
 
     private GeminiWrappers.EntityRecordsList handleGetEntityList(Entity e, Map<String, String[]> parameters, EntityOperationContext entityOperationContext) throws GeminiException {
         FilterContext filterContext = new FilterContextBuilder(configurationService)
@@ -156,7 +167,6 @@ public class RestAPIController {
         // TODO add entity Operation Context ??
         return GeminiWrappers.EntityRecordsList.of(recordList, filterContext);
     }
-
 
     private Object handleInsertRecord(Entity e, List<String> geminiHeader, Object body, EntityOperationContext entityOperationContext) throws GeminiException {
         if (geminiDataType(geminiHeader)) {
@@ -193,6 +203,9 @@ public class RestAPIController {
         return GeminiWrappers.EntityRecordsList.of(entityRecords);
     }
 
+    private Object handleUpdateEntityOneRecord(Entity entity, Object body, EntityOperationContext entityOperationContext) throws GeminiException {
+        return handleUpdateRecord(entity, body, entityOperationContext);
+    }
 
     private Object handleUpdateRecord(Entity e, Object body, EntityOperationContext entityOperationContext, String... logicalKey) throws GeminiException {
         if (Map.class.isAssignableFrom(body.getClass()))
@@ -202,6 +215,9 @@ public class RestAPIController {
 
     private EntityRecord handleUpdateRecord(Entity e, Map<String, Object> body, EntityOperationContext entityOperationContext, String... logicalKey) throws GeminiException {
         EntityRecord rec = RecordConverters.entityRecordFromMap(e, body);
+        if (e.isOneRecord()) {
+            return entityManager.update(rec, entityOperationContext);
+        }
         try {
             UUID uuid = UUID.fromString(logicalKey[0]);
             return entityManager.update(uuid, rec, entityOperationContext);
@@ -232,12 +248,7 @@ public class RestAPIController {
         }
     }
 
-    /* private EntityRecord handleGetRecord(Entity e, String logicalKey) throws SQLException, GeminiException {
-        Set<DynamicRecord.FieldValue> logicalKeyValue = Set.of(Field.RecordConverters.logicalKeyFromStrings(e, logicalKey));
-        return entityManager.get(e, logicalKeyValue);
-    } */
-
-    private Entity checkEntity(String entityStr) throws EntityException {
+    private Entity checkEntity(String entityStr, String method) throws EntityException {
         Entity entity = entityManager.getEntity(entityStr);
         if (entity == null) {
             throw EntityException.ENTITY_NOT_FOUND(entityStr.toUpperCase());
@@ -245,7 +256,18 @@ public class RestAPIController {
         if (entity.isEmbedable()) {
             throw EntityException.API_NOT_ALLOWED_ON_EMBEDABLE(entityStr.toUpperCase());
         }
+        if (entity.isOneRecord()) {
+            if (method.equals("POST") || method.equals("DELETE")) {
+                throw EntityException.API_NOT_ALLOWED_ON_ONEREC(entityStr.toUpperCase());
+            }
+        }
         return entity;
+    }
+
+    private void ensureMethodsAreConsistent(String method, Entity entity) {
+        if (entity.isOneRecord()) {
+
+        }
     }
 
     private void ensurePathsAreConsistent(List<String> paths, Entity e) {

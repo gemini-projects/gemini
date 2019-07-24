@@ -22,7 +22,7 @@ public abstract class OneRecordEntityManagerAbsTest extends UnitTestNoMockWeb {
         SchemaManager schemaManager = Services.getSchemaManager();
         Entity e = schemaManager.getEntity(SINGLETON_ENTITY);
         EntityManager entityManager = Services.getEntityManager();
-        EntityRecord record = entityManager.getSingleEntityRecord(e);
+        EntityRecord record = entityManager.getOneRecordEntity(e);
         assert record != null;
     }
 
@@ -39,7 +39,7 @@ public abstract class OneRecordEntityManagerAbsTest extends UnitTestNoMockWeb {
     public void n3_putSingleRecord() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
         Entity e = Services.getSchemaManager().getEntity(SINGLETON_ENTITY);
-        EntityRecord record = entityManager.getSingleEntityRecord(e);
+        EntityRecord record = entityManager.getOneRecordEntity(e);
         record.put("text", "IntegTest");
         EntityRecord rupdt = entityManager.putOrUpdate(record);
         assertEquals(record.getID(), rupdt.getID());

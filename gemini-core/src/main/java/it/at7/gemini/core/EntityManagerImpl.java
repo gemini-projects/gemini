@@ -134,7 +134,7 @@ public class EntityManagerImpl implements EntityManager {
 
     private EntityRecord updateOneRecordEntity(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         assert record.getEntity().isOneRecord();
-        EntityRecord singleEntityRecord = getSingleEntityRecord(record.getEntity(), entityOperationContext, transaction);
+        EntityRecord singleEntityRecord = getOneRecordEntity(record.getEntity(), entityOperationContext, transaction);
         return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, singleEntityRecord);
     }
 
@@ -224,7 +224,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public EntityRecord getSingleEntityRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+    public EntityRecord getOneRecordEntity(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         if (!entity.isOneRecord()) {
             throw EntityException.API_NOT_ALLOWED_ON_ONEREC(entity.getName());
         }
