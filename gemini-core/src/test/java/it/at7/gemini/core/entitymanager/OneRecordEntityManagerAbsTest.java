@@ -50,9 +50,12 @@ public abstract class OneRecordEntityManagerAbsTest extends UnitTestNoMockWeb {
         assertEquals("IntegTest-update", rupdt.get("text"));
     }
 
-    @Test
+    @Test(expected = GeminiException.class)
     public void n4_deleteSingleRecordShouldThrowException() throws GeminiException {
-        // TODO
+        EntityManager entityManager = Services.getEntityManager();
+        Entity e = Services.getSchemaManager().getEntity(SINGLETON_ENTITY);
+        EntityRecord record = entityManager.getOneRecordEntity(e);
+        entityManager.delete(record);
     }
 
 }

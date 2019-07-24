@@ -56,7 +56,7 @@ public class EntityManagerImpl implements EntityManager {
     public EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
         checkDynamicSchema(record);
-        checkSingleRecordEntity(record.getEntity());
+        notAllowedyOnSingleRecordEntity(record.getEntity());
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
             // can insert the entity record
@@ -141,6 +141,7 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public EntityRecord delete(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkDynamicSchema(record.getEntity());
+        notAllowedyOnSingleRecordEntity(record.getEntity());
         if (record.hasID()) {
             return deleteRecordHandlingEvents(transaction, entityOperationContext, record);
         }
@@ -153,6 +154,7 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkDynamicSchema(entity);
+        notAllowedyOnSingleRecordEntity(entity);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             return deleteRecordHandlingEvents(transaction, entityOperationContext, persistedRecordOpt.get());
@@ -163,6 +165,7 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public EntityRecord delete(Entity entity, UUID uuid, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkDynamicSchema(entity);
+        notAllowedyOnSingleRecordEntity(entity);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(entity, uuid, transaction);
         if (persistedRecordOpt.isPresent()) {
             return deleteRecordHandlingEvents(transaction, entityOperationContext, persistedRecordOpt.get());
@@ -223,7 +226,7 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public EntityRecord getSingleEntityRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         if (!entity.isOneRecord()) {
-            throw EntityException.API_ALLOWED_ONLY_ON_ONEREC(entity.getName());
+            throw EntityException.API_NOT_ALLOWED_ON_ONEREC(entity.getName());
         }
         // TODO entityOperationContext
         return persistenceEntityManager.getEntityRecordSingleton(entity, transaction);
@@ -330,9 +333,9 @@ public class EntityManagerImpl implements EntityManager {
         }
     }
 
-    private void checkSingleRecordEntity(Entity entity) throws EntityException {
+    private void notAllowedyOnSingleRecordEntity(Entity entity) throws EntityException {
         if (entity.isOneRecord())
-            throw EntityException.API_ALLOWED_ONLY_ON_ONEREC(entity.getName());
+            throw EntityException.API_NOT_ALLOWED_ON_ONEREC(entity.getName());
     }
 
      /* // TODO dynamic entity record
