@@ -96,7 +96,13 @@ public class SchemaParser {
             if (entryBuilder.getEntityBuilder().getIsOneRec()) {
                 throw new SyntaxError(String.format("Entity %s has only one record - cannot have a logical key entry", entryBuilder.getEntityBuilder().getName()));
             }
-            entryBuilder.isLogicalKey();
+            String lkToken = lexer.getVal();
+            int lkOrder = 1;
+            if (!lkToken.equals("*")) {
+                String order = lkToken.substring(1);
+                lkOrder = Integer.parseInt(order);
+            }
+            entryBuilder.isLogicalKey(lkOrder);
             parseEntryQualifier(entryBuilder);
         }
     }

@@ -65,11 +65,14 @@ public class RawEntity {
         private final String type;
         private final String name;
         private final boolean isLogicalKey;
+        private final int lkOrder;
 
-        public Entry(String type, String name, boolean isLogicalKey) {
+        public Entry(String type, String name, boolean isLogicalKey, int lkOrder) {
             this.type = type;
             this.name = name;
             this.isLogicalKey = isLogicalKey;
+            this.lkOrder = lkOrder;
+            assert !isLogicalKey || lkOrder > 0;
         }
 
         public String getType() {
@@ -84,24 +87,29 @@ public class RawEntity {
             return isLogicalKey;
         }
 
+        public int getLkOrder() {
+            return lkOrder;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (!(o instanceof Entry)) return false;
             Entry entry = (Entry) o;
             return isLogicalKey == entry.isLogicalKey &&
-                    Objects.equals(type, entry.type) &&
-                    Objects.equals(name, entry.name);
+                    lkOrder == entry.lkOrder &&
+                    type.equals(entry.type) &&
+                    name.equals(entry.name);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(type, name, isLogicalKey);
+            return Objects.hash(type, name, isLogicalKey, lkOrder);
         }
 
         @Override
         public String toString() {
-            return type + "\t\t" + name + (isLogicalKey ? " *" : "");
+            return type + "\t\t" + name + (isLogicalKey ? (" *" + lkOrder) : "");
         }
     }
 }

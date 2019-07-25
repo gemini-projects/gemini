@@ -30,6 +30,7 @@ ENTITY Field {
     TEXT                scope
     Entity              refEntity
     BOOL                isLogicalKey
+    LONG                lkOrder
     TEXT		        displayName
     FieldCommonSettings commonSettings
     FieldGuiSettings    guiSettings

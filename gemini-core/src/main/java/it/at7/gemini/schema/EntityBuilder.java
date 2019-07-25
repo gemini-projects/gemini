@@ -35,7 +35,7 @@ public class EntityBuilder {
     }
 
     public EntityBuilder addField(FieldType fieldType, RawEntity.Entry entry, String refEntityName, String interfaceName, EntityField.Scope scope) {
-        fieldsBuilders.add(new EntityFieldBuilder(fieldType, entry.getName(), entry.isLogicalKey(), refEntityName, interfaceName, scope));
+        fieldsBuilders.add(new EntityFieldBuilder(fieldType, entry.getName(), entry.isLogicalKey(), entry.getLkOrder(), refEntityName, interfaceName, scope));
         return this;
     }
 

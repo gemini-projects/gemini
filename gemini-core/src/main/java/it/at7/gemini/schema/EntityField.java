@@ -18,16 +18,19 @@ public class EntityField extends Field {
     private final boolean isLogicalKey;
     private final Scope scope;
     private final String interfaceName;
+    private final int lkOrder;
     private Object idValue;
 
-    public EntityField(Entity entity, FieldType fieldType, String fieldName, boolean isLogicalKey, String entityRefName, String interfaceName, Scope scope) {
+    public EntityField(Entity entity, FieldType fieldType, String fieldName, boolean isLogicalKey, int lkOrder, String entityRefName, String interfaceName, Scope scope) {
         super(fieldType, fieldName, entityRefName);
         Assert.notNull(entity, "EntityField must have a not null entity");
         this.isLogicalKey = isLogicalKey;
+        this.lkOrder = lkOrder;
         this.entity = entity;
         Assert.notNull(scope, "EntityField must have a not null scope");
         this.scope = scope;
         this.interfaceName = interfaceName;
+        Assert.isTrue(!isLogicalKey || lkOrder > 0, "EntityField is a logical key and must have an order");
     }
 
     /**
@@ -40,6 +43,13 @@ public class EntityField extends Field {
 
     public boolean isLogicalKey() {
         return isLogicalKey;
+    }
+
+    /**
+     * Logical key order gives an order when the entity have more than one logical key
+     */
+    public int getLkOrder() {
+        return lkOrder;
     }
 
     /**
@@ -81,6 +91,7 @@ public class EntityField extends Field {
             values.put("refentity", EntityReferenceRecord.fromPKValue(entityRef, entityRef.getIDValue()));
         }
         values.put("islogicalkey", isLogicalKey());
+        values.put("lkOrder", getLkOrder());
         values.put("scope", scope.name());
         values.put("displayName", getName().substring(0, 1).toUpperCase() + getName().substring(1).toLowerCase());
         Entity FIELD_ENTITY = Services.getSchemaManager().getEntity("FIELD");

@@ -13,10 +13,10 @@ public class Lexer {
         EMBEDABLE("EMBEDABLE"),
         IMPLEMENTS("IMPLEMENTS"),
         ONEREC("ONEREC"),
-        L_BRACE("{"),
-        R_BRACE("}"),
-        ASTERISK("*"),
-        COMMA(","),
+        L_BRACE("\\{"),
+        R_BRACE("\\}"),
+        ASTERISK("\\*[0-9]*"),
+        COMMA("\\,"),
         WORD(""),
         EOF(""),
         EOL("");
@@ -29,9 +29,10 @@ public class Lexer {
 
         public static TokenType getTokenFromKeyword(int type, String keyword) {
             for (TokenType tokenType : values()) {
-                if (tokenType.keyword.equals(keyword)) {
-                    return tokenType;
-                }
+                if (!tokenType.keyword.isEmpty())
+                    if (keyword != null && keyword.matches(tokenType.keyword)) {
+                        return tokenType;
+                    }
             }
             if (type == StreamTokenizer.TT_WORD) {
                 return WORD;

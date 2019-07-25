@@ -58,6 +58,7 @@ public class RawEntityBuilder {
         private String type;
         private String name;
         private boolean isLogicalKey;
+        private int lkOrder;
 
         public EntryBuilder(RawEntityBuilder entityBuilder, String type, String name) {
             this.entityBuilder = entityBuilder;
@@ -67,18 +68,20 @@ public class RawEntityBuilder {
             }
             this.name = name;
             this.isLogicalKey = false;
+            this.lkOrder = 0;
         }
 
         public RawEntityBuilder getEntityBuilder() {
             return entityBuilder;
         }
 
-        public void isLogicalKey() {
+        public void isLogicalKey(int lkOrder) {
             this.isLogicalKey = true;
+            this.lkOrder = lkOrder;
         }
 
         public RawEntity.Entry build() {
-            return new RawEntity.Entry(type, name, isLogicalKey);
+            return new RawEntity.Entry(type, name, isLogicalKey, lkOrder);
         }
     }
 }
