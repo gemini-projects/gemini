@@ -76,7 +76,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         if (id == null) {
             throw IdFieldException.ID_FIELD_REQUIRED("update", record);
         }
-        record.setUUID(getUUIDforEntityRecord(record));
         QueryWithParams queryWithParams = makeModifyQueryFromID(record, transaction);
         transactionImpl.executeUpdate(queryWithParams.getSql(), queryWithParams.getParams());
         Optional<EntityRecord> recordById = getEntityRecordById(record.getEntity(), (long) id, transactionImpl);
@@ -716,9 +715,11 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         // uuid: EntityName + LogicalKey --> it should be unique
         StringBuilder uuidString = new StringBuilder(record.getEntity().getName());
         Set<EntityFieldValue> logicalKeyValues = record.getLogicalKeyValue();
-        List<EntityFieldValue> sortedLkValues = logicalKeyValues.stream().sorted(Comparator.comparing(e -> e.getField().getName())).collect(Collectors.toList());
-        for (EntityFieldValue lkValue : sortedLkValues) {
+        for (EntityFieldValue lkValue : logicalKeyValues) {
             uuidString.append(fromEntityFieldToUUID(lkValue));
+        }
+        if (logicalKeyValues.isEmpty() && !record.getEntity().isOneRecord()) {
+            uuidString.append(System.currentTimeMillis());
         }
         return UUID.nameUUIDFromBytes(uuidString.toString().getBytes(StandardCharsets.UTF_8));
     }
