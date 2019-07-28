@@ -223,10 +223,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         handleUniqueLogicalKeyConstraint(sqlBuilder, entity);
         sqlBuilder.append(" );");
         transaction.executeUpdate(sqlBuilder.toString());
-        // insert the single entity record once at table creation
-        if (entity.isOneRecord()) {
-            transaction.executeInsert(String.format("INSERT INTO %s default VALUES", getEntityNameForSQL(entity)));
-        }
 
         // TODO for runtime is better unique constrain or index ?? check later
         // checkOrCreteLogicalKeyUniqueIndex(entity.getName(), entity.getLogicalKey(), transaction);

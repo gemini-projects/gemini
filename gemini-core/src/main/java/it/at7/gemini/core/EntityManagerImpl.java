@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
-public class EntityManagerImpl implements EntityManager {
+public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
     private SchemaManager schemaManager;
     private TransactionManager transactionManager;
@@ -225,11 +225,15 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public EntityRecord getOneRecordEntity(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
-        if (!entity.isOneRecord()) {
-            throw EntityException.API_NOT_ALLOWED_ON_ONEREC(entity.getName());
-        }
+        notAllowedyOnNOTSingleRecordEntity(entity);
         // TODO entityOperationContext
         return persistenceEntityManager.getEntityRecordSingleton(entity, transaction);
+    }
+
+    @Override
+    public EntityRecord createOneRecordEntityRecord(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        notAllowedyOnNOTSingleRecordEntity(entity);
+        return createNewEntityRecord(new EntityRecord(entity), entityOperationContext, transaction);
     }
 
     private EntityRecord createNewEntityRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
@@ -336,6 +340,11 @@ public class EntityManagerImpl implements EntityManager {
     private void notAllowedyOnSingleRecordEntity(Entity entity) throws EntityException {
         if (entity.isOneRecord())
             throw EntityException.API_NOT_ALLOWED_ON_ONEREC(entity.getName());
+    }
+
+    private void notAllowedyOnNOTSingleRecordEntity(Entity entity) throws EntityException {
+        if (!entity.isOneRecord())
+            throw EntityException.API_NOT_ALLOWED_ON_NOT_ONEREC(entity.getName());
     }
 
      /* // TODO dynamic entity record

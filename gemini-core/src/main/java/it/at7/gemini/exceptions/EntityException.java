@@ -43,4 +43,8 @@ public class EntityException extends GeminiException {
     public static EntityException API_NOT_ALLOWED_ON_ONEREC(String entity) {
         return new EntityException(API_ALLOWED_ONLY_ON_ONEREC, String.format("Entity %s is a singleton (only one record) - API not allowed", entity), entity);
     }
+
+    public static EntityException API_NOT_ALLOWED_ON_NOT_ONEREC(String entity) {
+        return new EntityException(API_ALLOWED_ONLY_ON_ONEREC, String.format("Entity %s is NOT a singleton (only one record) - API not allowed", entity), entity);
+    }
 }

@@ -6,10 +6,7 @@ import it.at7.gemini.core.persistence.PersistenceSchemaManager;
 import it.at7.gemini.dsl.RecordParser;
 import it.at7.gemini.dsl.SchemaParser;
 import it.at7.gemini.dsl.entities.*;
-import it.at7.gemini.exceptions.FieldTypeNotKnown;
-import it.at7.gemini.exceptions.GeminiException;
-import it.at7.gemini.exceptions.GeminiGenericException;
-import it.at7.gemini.exceptions.TypeNotFoundException;
+import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +39,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private final StateManager stateManager;
     private final PersistenceSchemaManager persistenceSchemaManager;
     private final PersistenceEntityManager persistenceEntityManager;
-    private final EntityManager entityManager;
+    private final EntityManagerImpl entityManager;
 
     private Map<String, Module> modules;
     private Map<Module, RawSchema> schemas = new LinkedHashMap<>(); // maintain insertion order
@@ -52,13 +49,12 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap;
 
     @Autowired
-    public SchemaManagerImpl(ApplicationContext applicationContext, StateManager stateManager, PersistenceSchemaManager persistenceSchemaManager, PersistenceEntityManager persistenceEntityManager, @Lazy EntityManager entityManager) {
+    public SchemaManagerImpl(ApplicationContext applicationContext, StateManager stateManager, PersistenceSchemaManager persistenceSchemaManager, PersistenceEntityManager persistenceEntityManager, @Lazy EntityManagerImpl entityManager) {
         this.applicationContext = applicationContext;
         this.stateManager = stateManager;
         this.persistenceSchemaManager = persistenceSchemaManager;
         this.persistenceEntityManager = persistenceEntityManager;
         this.entityManager = entityManager;
-
     }
 
     @Override
@@ -87,7 +83,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, EntityRef.NAME);
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, FieldRef.NAME);
         */
-        handleSchemasEntityRecords(entities.values(), transaction); // add core entityRecord for ENTITY and FIELD
+        handleSchemasEntityRecords(entities.values(), transaction); // add core entityRecord i.e. ENTITY and FIELD
         createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
         stateManager.changeState(State.SCHEMA_RECORDS_INITIALIZED);
     }
@@ -128,8 +124,23 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         persistenceSchemaManager.deleteUnnecessaryEntites(entities, transaction);
         for (Entity entity : entities) {
             fieldsRecordByEntityName.put(entity.getName().toUpperCase(), updateEntityFieldsRecords(transaction, entityOperationContext, entity));
+            handleOneRecordEntity(transaction, entityOperationContext, entity);
         }
         return fieldsRecordByEntityName;
+    }
+
+    private void handleOneRecordEntity(Transaction transaction, EntityOperationContext entityOperationContext, Entity entity) throws GeminiException {
+        if (entity.isOneRecord()) {
+            try {
+                entityManager.getOneRecordEntity(entity, entityOperationContext, transaction);
+            } catch (EntityRecordException e) {
+                if (e.getErrorCodeName().equals(EntityRecordException.Code.ONERECORD_ENTITY_MUSTEXIST.name())) {
+                    entityManager.createOneRecordEntityRecord(entity, entityOperationContext, transaction);
+                } else {
+                    throw e;
+                }
+            }
+        }
     }
 
     private EntityOperationContext getOperationContextForInitSchema() {
