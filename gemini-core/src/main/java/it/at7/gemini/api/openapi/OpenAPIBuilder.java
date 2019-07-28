@@ -147,8 +147,12 @@ public class OpenAPIBuilder {
             // GET and POST on /entityname
             Path rootEntityPath = new Path();
             rootEntityPath.summary = String.format("%s resource route", entityName);
-            rootEntityPath.get = getEntityListMethod(entity);
-            rootEntityPath.post = postNewEntityMethod(entity);
+            rootEntityPath.get = getEntityRootMethod(entity);
+            if (!entity.isOneRecord())
+                rootEntityPath.post = postNewEntityMethod(entity);
+            if (entity.isOneRecord())
+                rootEntityPath.put = putEntityOneRecord(entity);
+
             // rootEntityPath.parameters = List.of(Map.of("$ref", "#/components/parameters/GeminiHeader"));
             this.pathsByName.put("/" + entityPathName, rootEntityPath);
             this.RESTentitiesPaths.add(rootEntityPath);
@@ -158,7 +162,8 @@ public class OpenAPIBuilder {
             uuidEntityPath.summary = String.format("%s resource by UUID root", entityName);
             uuidEntityPath.get = getEntityUUIDandLKMethod(entity, "Get the %s resource by its uuid");
             uuidEntityPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its uuid");
-            uuidEntityPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its uuid");
+            if (!entity.isOneRecord())
+                uuidEntityPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its uuid");
             uuidEntityPath.parameters = List.of(
                     Map.of("$ref", "#/components/parameters/uuid")
                     // Map.of("$ref", "#/components/parameters/GeminiHeader")
@@ -168,7 +173,7 @@ public class OpenAPIBuilder {
 
             // GET / PUT and DELETE on /entityname/{logicalKey/...}
             Entity.LogicalKey logicalKey = entity.getLogicalKey();
-            // NOT Embedable with a LK can be used as reference
+            // NOT Embedable with a LK can be used as reference - we are removing also oneRecord
             if (!logicalKey.isEmpty()) {
                 String lkPathString = getEntityLKPath(entity, true);
                 Path lkPath = new Path();
@@ -230,9 +235,10 @@ public class OpenAPIBuilder {
         return isLevel0 ? fieldName : (entity.getName().toLowerCase() + "_" + fieldName);
     }
 
-    private Method getEntityListMethod(Entity entity) {
+    private Method getEntityRootMethod(Entity entity) {
         Method method = new Method();
-        method.summary = String.format("Get the list from %s resources", entity.getName());
+        String summary = entity.isOneRecord() ? "Get the unique resource for %s (single record entity)" : "Get the list from %s resources";
+        method.summary = String.format(summary, entity.getName());
         method.tags = getTagsForEntityMethod(entity);
 
         // 200 response has not components default
@@ -240,18 +246,24 @@ public class OpenAPIBuilder {
         response200.description = "Successful operation";
         response200.content = new LinkedHashMap<>();
 
-
-        response200.content.put(String.format("application/json; %s=%s", ApiUtility.GEMINI_CONTENT_TYPE, ApiUtility.GEMINI_API_META_TYPE),
-                Map.of("schema",
-                        Map.of("type", "array",
-                                "items",
-                                Map.of("$ref", entityWithMetaSchemaName(entity)))));
-        response200.content.put("application/json",
-                Map.of("schema",
-                        Map.of("type", "array",
-                                "items",
-                                Map.of("$ref", String.format("#/components/schemas/%s", entity.getName())))));
+        if (entity.isOneRecord()) {
+            // response single record entity
+            response200JsonEntityRecord(entity, response200);
+        } else {
+            // response list
+            response200.content.put(String.format("application/json; %s=%s", ApiUtility.GEMINI_CONTENT_TYPE, ApiUtility.GEMINI_API_META_TYPE),
+                    Map.of("schema",
+                            Map.of("type", "array",
+                                    "items",
+                                    Map.of("$ref", String.format("#/components/schemas/%s", entityWithMetaSchemaName(entity))))));
+            response200.content.put("application/json",
+                    Map.of("schema",
+                            Map.of("type", "array",
+                                    "items",
+                                    Map.of("$ref", String.format("#/components/schemas/%s", entity.getName())))));
+        }
         method.responses.put("200", response200);
+
 
         method.responses.put("401", UNAUTHORIZED_REF);
         method.responses.put("default", DEFAULTERR_REF);
@@ -276,6 +288,14 @@ public class OpenAPIBuilder {
     private Method putEntityUUIDandLKMethod(Entity entity, String summary) {
         Method method = new Method();
         method.summary = String.format(summary, entity.getName());
+        uuidLkCommonMethodDesc(entity, method, "Successfull UPDATE operation - return the modified resource");
+        requestBodyEntitySchema(entity, method);
+        return method;
+    }
+
+    private Method putEntityOneRecord(Entity entity) {
+        Method method = new Method();
+        method.summary = String.format("Update the unique %s resource (one record entity)", entity.getName());
         uuidLkCommonMethodDesc(entity, method, "Successfull UPDATE operation - return the modified resource");
         requestBodyEntitySchema(entity, method);
         return method;
