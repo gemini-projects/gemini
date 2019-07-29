@@ -14,8 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 public class Entity {
     public static final String ENTITY = "ENTITY";
@@ -171,8 +170,8 @@ public class Entity {
     }
 
     private LogicalKey extractLogicalKeyFrom(Set<EntityField> fields) {
-        return new LogicalKey(fields.stream().filter(EntityField::isLogicalKey).sorted(comparing(EntityField::getName))
-                .collect(collectingAndThen(toSet(), Collections::unmodifiableSet)));
+        return new LogicalKey(fields.stream().filter(EntityField::isLogicalKey).sorted(comparing(EntityField::getLkOrder))
+                .collect(collectingAndThen(toList(), Collections::unmodifiableList)));
     }
 
     @Nullable
@@ -212,23 +211,23 @@ public class Entity {
 
     public class LogicalKey {
 
-        private final Set<EntityField> logicalKeySet;
+        private final List<EntityField> logicalKeyList;
 
-        LogicalKey(Set<EntityField> logicalKeySet) {
-            Assert.notNull(logicalKeySet, String.format("%s: logical Key Must be not NULL", name));
-            this.logicalKeySet = logicalKeySet;
+        LogicalKey(List<EntityField> logicalKeyList) {
+            Assert.notNull(logicalKeyList, String.format("%s: logical Key Must be not NULL", name));
+            this.logicalKeyList = logicalKeyList;
         }
 
         public Set<EntityField> getLogicalKeySet() {
-            return logicalKeySet;
+            return Collections.unmodifiableSet(new HashSet<>(logicalKeyList));
         }
 
         public List<EntityField> getLogicalKeyList() {
-            return new ArrayList<>(logicalKeySet);
+            return logicalKeyList;
         }
 
         public boolean isEmpty() {
-            return logicalKeySet.isEmpty();
+            return logicalKeyList.isEmpty();
         }
     }
 }
