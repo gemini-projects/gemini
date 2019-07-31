@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Gemini - Docker",
+      "Group": "Servers",
+      "Port": 5432,
+      "Username": "gemini",
+      "Host": "postgres",
+      "SSLMode": "prefer",
+      "MaintenanceDB": "postgres"
+    }
+  }
+}

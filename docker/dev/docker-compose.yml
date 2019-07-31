@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+  postgres:
+    image: postgres
+    hostname: postgres
+    restart: always
+    volumes:
+      - ./wd/pgdata:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=gemini
+      - POSTGRES_PASSWORD=gemini
+    ports:
+      - "5432:5432"
+  pgadmin:
+    depends_on:
+      - postgres
+    image: dpage/pgadmin4
+    ports:
+      - "8081:80"
+    volumes:
+      - ./config/pg-admin-servers.json:/pgadmin4/servers.json
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=gemini
+      - PGADMIN_DEFAULT_PASSWORD=gemini
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    environment:
+      - FILTER=
+      - DEEP_LINKING=false
+      - DISPLAY_REQUEST_DURATION=true
+      - URLS=[{"url":"/schema/all.json","name":"ALL"}, {"url":"/schema/runtime.json","name":"RUNTIME MODULE"}]
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./wd/openapi/schema:/usr/share/nginx/html/schema

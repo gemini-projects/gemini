@@ -1,5 +1,6 @@
 # Specific for Gemini
 wd/
+!docker/dev/wd/application.properties
 
 
 # Created by https://www.gitignore.io/api/osx,node,java,gradle,angular,windows,intellij+all
