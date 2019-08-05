@@ -128,6 +128,8 @@ $ cd docker/dev
 $ docker-compose up -d
 ```
 
+You can find a video tutorial [here](https://vimeo.com/352005400).
+
 ### Start Gemini
 
 When all services are up (only postgresql is required, but use docker is suggested to consume API with swagger) you can
