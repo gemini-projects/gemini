@@ -140,8 +140,9 @@ crafted ``wd/application.properties``.
 ##### From IDE
 First of all open/load the Gemini root gradle configuration. Gemini is made of modules that may have different main
 or entry points. ``gemini-postgresql`` for example provides two main:
-* *it.at7.gemini.boot.PostgresqlGeminiGUIMain* to start Gemini with only core and postgresql (without authentican module)
-* *it.at7.gemini.boot.PostgresqlGeminiAuthGUIMain* to start Gemini with all APIs protected by OAuth2
+* *it.at7.gemini.boot.PostgresqlGeminiMain* to start Gemini with Core and Auth Module
+
+You can disable authentication with ``gemini.auth = false`` in ``application.properties``.
 
 **NB:** you can also develop you modules and you Gemini only as a dependency. Contact me if you need it now. I will made
 a dedicated documentation section to custom module development (it is a big part of Gemini). Custom modules are required
@@ -161,11 +162,11 @@ cd gemini-postgresql/dist
 Now you can run the jar. 
 ```
 # for standalone (bootJar) you need to use java -jar 
-./java -jar gemini-postgresql-0.1-SNAPSHOT-standalone.jar
+./gemini-postgresql-0.2.x-standalone.jar
 
 # while for executable (executableJar) you can run it
 # works on linux based machines - only some platform supported - take a look at Spring documentation
-./gemini-postgresql-0.1-SNAPSHOT-executable.jar
+./gemini-postgresql-0.2.x-executable.jar
 ```
 
 ### Once Started

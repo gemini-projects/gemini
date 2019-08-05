@@ -9,6 +9,7 @@ import it.at7.gemini.schema.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import static it.at7.gemini.conf.State.SCHEMA_STORAGE_INITIALIZED;
         dependencies = {"CORE"},
         order = -607)
 @ComponentScan("it.at7.gemini.auth.core")
+@ConditionalOnProperty(name = "gemini.auth", matchIfMissing = true)
 public class AuthModule implements Module {
     private static final Logger logger = LoggerFactory.getLogger(AuthModule.class);
 

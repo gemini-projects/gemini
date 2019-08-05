@@ -7,6 +7,7 @@ import it.at7.gemini.core.StateManager;
 import it.at7.gemini.core.Transaction;
 import it.at7.gemini.exceptions.GeminiException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import static it.at7.gemini.conf.State.API_INITIALIZATION;
 
 @Service
 @ComponentScan("it.at7.gemini.auth.api")
+@ConditionalOnProperty(name = "gemini.auth", matchIfMissing = true)
 public class AuthModuleAPI implements StateListener {
 
     private final OpenApiService openApiService;

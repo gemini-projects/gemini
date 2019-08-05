@@ -24,17 +24,13 @@ jar {
 }
 
 bootJar {
-    if (project.hasProperty("noAuth")) {
-        mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiGUIMain'
-        archiveAppendix = 'noAuth'
-    } else
-        mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiAuthGUIMain'
+    mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiMain'
     archiveClassifier = 'standalone'
     destinationDirectory = file('dist')
 }
 
 task executableJar(type: BootJar) {
-    mainClassName = "it.at7.gemini.boot.PostgresqlGeminiGUIMain"
+    mainClassName = "it.at7.gemini.boot.PostgresqlGeminiMain"
     archiveClassifier = 'executable'
     destinationDirectory = file('dist')
     launchScript()
