@@ -14,7 +14,7 @@ before_install:
 before_script:
   - psql --version
   - psql -c 'CREATE DATABASE "test-gem";' -U postgres
-  - psql -c 'CREATE ROLE gem SUPERUSER LOGIN CREATEDB PASSWORD "gem";' -U postgres
+  - psql -c "CREATE ROLE gem SUPERUSER LOGIN CREATEDB PASSWORD 'gem';" -U postgres
 services:
   - postgresql
 addons:
