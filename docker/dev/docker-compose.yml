@@ -6,6 +6,7 @@ services:
     restart: always
     volumes:
       - ./wd/pgdata:/var/lib/postgresql/data/
+      - ./config/entrypoint-initdb:/docker-entrypoint-initdb.d/
     environment:
       - POSTGRES_USER=gemini
       - POSTGRES_PASSWORD=gemini
