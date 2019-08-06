@@ -10,7 +10,8 @@ ___
 [![Gitter](https://img.shields.io/gitter/room/gemini-framework/general)](https://gitter.im/gemini-framework/general)
 ![Last Commit](https://img.shields.io/github/last-commit/h4t0n/gemini.svg)
 
-Gemini make it easy to create full backends for modern web/mobile application, microservice and MVP.
+Gemini make it easy to create full backends for modern web/mobile application, microservice and MVP. Gemini is built on
+top of Spring Boot, so you can integrate it in you enterprise environment.
 
 Gemini is a backend REST framework to automatically create CRUD REST APIs from scratch starting from a simple Schema
  definition called Gemini DSL. Briefly Gemini automatically handles for you:
