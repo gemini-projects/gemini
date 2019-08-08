@@ -14,7 +14,7 @@ dependencies {
 }
 
 jar {
-    enabled false
+    enabled true
     doLast {
         copy {
             from outputs
