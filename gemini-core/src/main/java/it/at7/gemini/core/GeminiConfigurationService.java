@@ -34,4 +34,11 @@ public class GeminiConfigurationService {
     public String getOpenApiDir() {
         return openApiDir;
     }
+
+    @Value("${gemini.core.serviceInfoPath:./service/info.yml}")
+    private String serviceInfoResource;
+
+    public String getServiceInfoResource() {
+        return serviceInfoResource;
+    }
 }

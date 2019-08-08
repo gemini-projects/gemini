@@ -2,6 +2,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile("cz.jirutka.rsql:rsql-parser:2.1.0")
+    compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.6")
 
     compile project(':gemini-dsl')
 }

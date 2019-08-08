@@ -1,5 +1,7 @@
 package it.at7.gemini.api.openapi;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.Module;
 import it.at7.gemini.core.*;
@@ -7,7 +9,9 @@ import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -15,16 +19,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class OpenApiServiceImpl implements OpenApiService, StateListener {
+    private static final String SERVICE_INFO_DEFAULT_RESOURCE = "classpath:/service/default-info.yml";
 
     private final GeminiConfigurationService configurationService;
     private final StateManager stateManager;
     private final SchemaManager schemaManager;
     private final Environment environment;
+    private final ApplicationContext context;
 
     private OpenAPIBuilder openAPIAllBuilder;
     private OpenAPIBuilder runtimeAPIBuilder;
@@ -32,11 +39,15 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
     private List<Runnable> API_INITIALIZER_LISTENER = new ArrayList<>();
 
     @Autowired
-    public OpenApiServiceImpl(GeminiConfigurationService configurationService, StateManager stateManager, SchemaManager schemaManager, Environment environment) {
+    public OpenApiServiceImpl(GeminiConfigurationService configurationService, StateManager stateManager,
+                              SchemaManager schemaManager, Environment environment,
+                              ApplicationContext context
+    ) {
         this.configurationService = configurationService;
         this.stateManager = stateManager;
         this.schemaManager = schemaManager;
         this.environment = environment;
+        this.context = context;
         if (configurationService.isOpenapiSchema()) {
             this.stateManager.register(this);
             openAPIAllBuilder = new OpenAPIBuilder();
@@ -44,11 +55,18 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
         }
     }
 
+    private void createDefaultServiceInfoResource(File serviceInfoResource) throws IOException {
+        Resource defaultInfoService = context.getResource(SERVICE_INFO_DEFAULT_RESOURCE);
+        serviceInfoResource.getParentFile().mkdirs();
+        Files.copy(defaultInfoService.getInputStream(), serviceInfoResource.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    }
+
     @Override
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
         if (configurationService.isOpenapiSchema()) {
             switch (actual) {
                 case API_INITIALIZATION:
+                    loadServiceInfo();
                     makeOpenAPISchema();
                     break;
                 case API_INITIALIZED:
@@ -62,6 +80,21 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
                 default:
                     break;
             }
+        }
+    }
+
+    private void loadServiceInfo() {
+        try {
+            File serviceInfoFile = new File(configurationService.getServiceInfoResource());
+            if (!serviceInfoFile.exists()) {
+                createDefaultServiceInfoResource(serviceInfoFile);
+            }
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            GeminiServiceInfoWrapper geminiService = mapper.readValue(serviceInfoFile, GeminiServiceInfoWrapper.class);
+            openAPIAllBuilder.addInfo(geminiService.info);
+            runtimeAPIBuilder.addInfo(geminiService.info);
+        } catch (IOException e) {
+            throw new GeminiRuntimeException(e);
         }
     }
 
@@ -133,4 +166,8 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
             });
         }
     } */
+
+    static class GeminiServiceInfoWrapper {
+        public OpenAPIBuilder.Info info;
+    }
 }

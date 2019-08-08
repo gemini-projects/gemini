@@ -26,11 +26,12 @@ public class Gemini {
     private final SchemaManagerInit schemaManagerInit;
     private final EventManagerInit eventManagerInit;
     private final TransactionManager transactionManager;
-
     private List<Module> modules;
 
     @Autowired
-    public Gemini(StateManagerImpl stateManager, SchemaManagerInit schemaManagerInit, ApplicationContext applicationContext, EventManagerInit eventManagerInit, TransactionManager transactionManager) {
+    public Gemini(StateManagerImpl stateManager, SchemaManagerInit schemaManagerInit,
+                  ApplicationContext applicationContext, EventManagerInit eventManagerInit,
+                  TransactionManager transactionManager) {
         this.stateManager = stateManager;
         this.schemaManagerInit = schemaManagerInit;
         this.context = applicationContext;
@@ -43,11 +44,7 @@ public class Gemini {
             loadCoreServices();
             loadModules();
             start();
-            try (Transaction transaction = transactionManager.openTransaction()) {
-                // schemas are initialized in a single transaction
-                initializeSchemaAndEvents(transaction);
-                transaction.commit();
-            }
+            transactionManager.executeInSingleTrasaction(this::initializeSchemaAndEvents);
             initialize();
         } catch (Exception e) {
             logger.error("Error During start of Gemini", e);
@@ -76,7 +73,7 @@ public class Gemini {
     }
 
 
-    private void initializeSchemaAndEvents(Transaction transaction) throws Exception {
+    private void initializeSchemaAndEvents(Transaction transaction) throws GeminiException {
         logger.info("SCHEMAS/EVENTS INITIALIZATION");
         schemaManagerInit.initializeSchemasStorage(modules, transaction);
         eventManagerInit.loadEvents(modules);
