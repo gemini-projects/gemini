@@ -11,8 +11,8 @@ ___
 ![Last Commit](https://img.shields.io/github/last-commit/h4t0n/gemini.svg)
 ![Version](https://img.shields.io/github/release/h4t0n/gemini)
 
-Gemini makes REST API development faster. You can create a full backend application in minutes (with no code) and
-It is suitable both for enterprise environments and for modern web/mobile application, microservice and MVP.
+> Gemini makes REST API development faster. You can create microservices, full backend web/mobile applications and 
+MVPs in minutes with no code. Gemini uses Java and Spring, ready for agile enterprise environments.
 
 Gemini is a backend REST framework to automatically create CRUD REST APIs from scratch starting from a simple Schema
  definition called Gemini DSL. Briefly Gemini automatically handles for you:
