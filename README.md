@@ -175,7 +175,8 @@ working directory. Now you can customize this file with all your entities, by us
 Then restart the application to see your APIs in action.
 
 If you want to easily navigate APIs you can use the Swagger openapi tools. Gemini automatically generate the openapi 3
-json file `openapi/schema/runtime.json`
+json file `openapi/schema/runtime.json`. If you want customize openapi info you can change default properties of
+`service/info.yml` and restart Gemini.
 
 If you are using Docker all the services are already configured to see all the generated files and specifications, enjoy.
 
