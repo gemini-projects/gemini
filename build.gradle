@@ -6,7 +6,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}";
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+"
     }
 }
 
@@ -34,12 +35,14 @@ subprojects {
     }
 
     group 'it.at7.gemini'
-    version '0.2.0'
+    version '0.2.1'
 
     apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'org.springframework.boot'
+    apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'maven-publish'
 
     sourceCompatibility = 1.9
     targetCompatibility = 1.9
@@ -57,6 +60,43 @@ subprojects {
             xml.enabled = true
         }
         executionData.setFrom(jacocoExecutionDataFiles)
+    }
+
+    task sourceJar(type: Jar) {
+        from sourceSets.main.allJava
+        classifier "sources"
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        from javadoc.destinationDir
+        classifier 'javadoc'
+    }
+
+    bintray {
+        user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+        key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+        publish = true
+        pkg {
+            repo = 'Gemini'
+            name = project.archivesBaseName
+            userOrg = user
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/h4t0n/gemini'
+        }
+        publications = ['geminiModule']
+    }
+
+    publishing {
+        publications {
+            geminiModule(MavenPublication) {
+                from components.java
+                artifact sourceJar
+                artifact javadocJar
+                groupId = project.group
+                artifactId = project.archivesBaseName
+                version = project.version
+            }
+        }
     }
 
 }

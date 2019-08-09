@@ -21,7 +21,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     @Autowired
     public JwtTokenServiceImpl(
-            @Value("${gemini.jwt.secret}") String secret,
+            @Value("${gemini.jwt.secret:gemini}") String secret,
             @Value("${gemini.jwt.defaultExp:3600}") int expiration) {
         this.algorithm = Algorithm.HMAC512(secret);
         this.expiration = expiration;
