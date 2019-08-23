@@ -1,12 +1,13 @@
-package it.at7.gemini.gui;
+package it.at7.gemini.gui.api;
 
 import it.at7.gemini.exceptions.GeminiException;
+import it.at7.gemini.gui.core.GUIError;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice("it.at7.gemini.gui")
+@RestControllerAdvice("it.at7.gemini.api")
 public class GUIExceptionHandlerController {
 
 

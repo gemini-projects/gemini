@@ -5,16 +5,16 @@ import it.at7.gemini.core.StateManager;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
-@DependsOn("API")
-@ComponentScan({"it.at7.gemini.gui"})
-@Service("GUI")
-public class Gui implements ApplicationListener<ApplicationReadyEvent> {
+@Service
+@ComponentScan({"it.at7.gemini.gui.api"})
+@ConditionalOnProperty(name = "gemini.gui", matchIfMissing = false)
+public class GuiAPI implements ApplicationListener<ApplicationReadyEvent> {
 
     @Autowired
     private StateManager stateManager;
@@ -26,7 +26,7 @@ public class Gui implements ApplicationListener<ApplicationReadyEvent> {
     @Override
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         try {
-            stateManager.changeState(State.WEB_APP_INITIALIZED);
+            stateManager.changeState(State.GUI_INITIALIZED);
         } catch (GeminiException e) {
             throw new GeminiRuntimeException(e);
         }

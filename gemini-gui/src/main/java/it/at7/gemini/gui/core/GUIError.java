@@ -1,4 +1,4 @@
-package it.at7.gemini.gui;
+package it.at7.gemini.gui.core;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import it.at7.gemini.core.DynamicRecord;
@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
-class GUIError {
+public class GUIError {
     HttpStatus status;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss")
     LocalDateTime timestamp;
@@ -19,23 +19,23 @@ class GUIError {
         timestamp = LocalDateTime.now();
     }
 
-    GUIError(HttpStatus status) {
+    public GUIError(HttpStatus status) {
         this();
         this.status = status;
     }
 
-    GUIError(HttpStatus status, String errorCode, String message) {
+    public GUIError(HttpStatus status, String errorCode, String message) {
         this(status);
         this.errorcode = errorCode;
         this.message = message;
     }
 
-    GUIError(HttpStatus status, DynamicRecord record) {
+    public GUIError(HttpStatus status, DynamicRecord record) {
         this(status);
         this.records = List.of(record);
     }
 
-    GUIError(HttpStatus status, List<? extends DynamicRecord> records) {
+    public GUIError(HttpStatus status, List<? extends DynamicRecord> records) {
         this(status);
         this.records = records;
     }

@@ -282,7 +282,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                 Resource resource = applicationContext.getResource(location);
                 Map<String, EntityRawRecords> allRecords = new HashMap<>();
                 if (resource.exists()) {
-                    logger.info("Found module records definition found for module {}: location {}", module.getName(), location);
+                    logger.info("Records definition found for module {}: location {}", module.getName(), location);
                     InputStream schemaRecordStream = resource.getInputStream();
                     allRecords = RecordParser.parse(new InputStreamReader(schemaRecordStream));
                 } else {

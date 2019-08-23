@@ -1,0 +1,6 @@
+dependencies {
+    implementation project(':gemini-core')
+    implementation project(':gemini-auth')
+}
+bootJar.enabled = false
+jar.enabled = true

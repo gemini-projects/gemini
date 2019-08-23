@@ -9,7 +9,6 @@ public enum State implements Comparable<State> {
     INITIALIZED,
     API_INITIALIZATION,
     API_INITIALIZED,
-    WEB_APP_INITIALIZATION,
-    WEB_APP_INITIALIZED,
-    READY
+    GUI_INITIALIZATION,
+    GUI_INITIALIZED
 }

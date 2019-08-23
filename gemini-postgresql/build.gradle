@@ -5,6 +5,7 @@ dependencies {
     compile 'org.postgresql:postgresql:42.2.5'
     compile project(':gemini-core')
     compile project(':gemini-auth')
+    compile project(':gemini-gui')
 
     compileTestJava.dependsOn tasks.getByPath(':gemini-core:testClasses')
     testCompile files(project(':gemini-core').sourceSets.test.output)

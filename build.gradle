@@ -35,7 +35,7 @@ subprojects {
     }
 
     group 'it.at7.gemini'
-    version '0.2.1'
+    version '0.2.2-SNAPSHOT'
 
     apply plugin: 'java'
     apply plugin: 'idea'

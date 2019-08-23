@@ -4,7 +4,8 @@ import it.at7.gemini.api.Api;
 import it.at7.gemini.auth.api.AuthModuleAPI;
 import it.at7.gemini.auth.core.AuthModule;
 import it.at7.gemini.core.Gemini;
-import it.at7.gemini.gui.Gui;
+import it.at7.gemini.gui.GuiAPI;
+import it.at7.gemini.gui.GuiModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.Banner;
@@ -28,9 +29,9 @@ public class GeminiPostgresql {
     public static void start(String[] args, Set<Class> coreBean, Set<Class> apiBean) {
         logger.info("***** STARTING GEMINI POSTRESQL MAIN *****");
 
-        logger.info("STARTING - GEMINI-ROOT APP CONTEXT ");
+        logger.info("STARTING - GEMINI-ROOT CONTEXT ");
         SpringApplicationBuilder appBuilder = new SpringApplicationBuilder()
-                .parent(AutoConfiguration.class, Gemini.class, AuthModule.class);
+                .parent(AutoConfiguration.class, Gemini.class, AuthModule.class, GuiModule.class);
         if (coreBean.size() != 0) {
             appBuilder.sources(coreBean.toArray(new Class[0]));
         }
@@ -41,19 +42,18 @@ public class GeminiPostgresql {
         root.setId("GEMINI-ROOT");
         Gemini gemini = root.getBean(Gemini.class);
         gemini.init();
-        logger.info("STARTED - GEMINI-ROOT APP CONTEXT");
+        logger.info("STARTED - GEMINI-ROOT CONTEXT");
 
-
-        logger.info("STARTING - GEMINI-GUI APP CONTEXT ");
+        logger.info("STARTING - GEMINI-WEBAPP CONTEXT ");
         SpringApplicationBuilder webAppBuilder = new SpringApplicationBuilder()
-                .parent(root).sources(Api.class).sources(Gui.class, AuthModuleAPI.class, AutoConfiguration.class).web(WebApplicationType.SERVLET);
+                .parent(root).sources(Api.class).sources(GuiAPI.class, AuthModuleAPI.class, AutoConfiguration.class).web(WebApplicationType.SERVLET);
         if (apiBean.size() != 0) {
             webAppBuilder.sources(apiBean.toArray(new Class[0]));
         }
         ConfigurableApplicationContext gui = webAppBuilder.bannerMode(Banner.Mode.OFF)
                 .run(args);
-        gui.setId("GEMINI-GUI");
-        logger.info("STARTED - GEMINI-GUI APP CONTEXT");
+        gui.setId("GEMINI-WAPP");
+        logger.info("STARTED - GEMINI-WEBAPP CONTEXT");
     }
 
     @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class})
