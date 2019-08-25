@@ -114,14 +114,9 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
     private void handleEventForFields(EntityRecord record, Transaction transaction, EntityOperationContext entityOperationContext, Map<String, Map<String, List<BeanWithMethod>>> methods) throws GeminiException {
         Entity entity = record.getEntity();
         String entityName = entity.getName();
-        Map<String, List<BeanWithMethod>> entityMethods = methods.get(entityName);
 
-        Set<EntityField> metaEntityFields = entity.getMetaEntityFields();
+        Set<EntityField> metaEntityFields = entity.getALLEntityFields();
         for (EntityField field : metaEntityFields) {
-            if (entityMethods != null) {
-                invokeEventMethodForField(record, entityOperationContext, entityMethods, field, transaction);
-                continue;
-            }
 
             // interface methods have low priority that entity events
             String interfaceName = field.getInterfaceName();
@@ -131,6 +126,11 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
                     invokeEventMethodForField(record, entityOperationContext, interfaceMethods, field, transaction);
                 }
             }
+
+            Map<String, List<BeanWithMethod>> entityMethods = methods.get(entityName);
+            if (entityMethods != null) {
+                invokeEventMethodForField(record, entityOperationContext, entityMethods, field, transaction);
+            }
         }
     }
 
@@ -138,10 +138,10 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         String fieldName = field.getName();
         List<BeanWithMethod> beanWithMethods = entityMethods.get(fieldName.toLowerCase());
         if (beanWithMethods != null && !beanWithMethods.isEmpty()) {
-            // events precedence
+            // TODO events precedence
             for (BeanWithMethod bm : beanWithMethods) {
                 try {
-                    EventContext eventContext = getEventContext(transaction, entityOperationContext);
+                    EventContext eventContext = getEventContext(transaction, entityOperationContext, record);
                     Object res = bm.method.invoke(bm.bean, eventContext);
                     if (res != null) {
                         record.put(field, res);
@@ -153,10 +153,11 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         }
     }
 
-    private EventContext getEventContext(Transaction transaction, EntityOperationContext entityOperationContext) {
+    private EventContext getEventContext(Transaction transaction, EntityOperationContext entityOperationContext, EntityRecord record) {
         return new EventContextBuilder()
                 .with(transaction)
                 .with(entityOperationContext)
+                .with(record)
                 .build();
     }
 
