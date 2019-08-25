@@ -22,4 +22,7 @@ public class GeminiException extends Exception {
         return errorCodeName;
     }
 
+    public boolean is(Enum code) {
+        return errorCodeName.equalsIgnoreCase(code.name());
+    }
 }

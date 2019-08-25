@@ -1,5 +1,7 @@
 package it.at7.gemini.core;
 
+import it.at7.gemini.core.persistence.PersistenceEntityManager;
+import it.at7.gemini.exceptions.EntityRecordException;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
@@ -18,6 +20,11 @@ public interface EntityManager {
      * Return the transaction manager (useful to implement default interface methods)
      */
     TransactionManager getTransactionManager();
+
+    /**
+     * Return the persistence entity manager (useful to implement default interface methods)
+     */
+    PersistenceEntityManager getPersistenceEntityManager();
 
     /**
      * Get the entity by its name or return null
@@ -420,7 +427,28 @@ public interface EntityManager {
         return get(record.getEntity(), record.getLogicalKeyValue());
     }
 
-    EntityRecord get(Entity e, Collection<? extends FieldValue> logicalKey) throws GeminiException;
+    default EntityRecord get(Entity entity, EntityReferenceRecord entityReferenceRecord, Transaction transaction) throws GeminiException {
+        return get(entity, entityReferenceRecord.getLogicalKeyRecord().getFieldValues(), transaction);
+    }
+
+    default Optional<EntityRecord> getOptional(Entity entity, EntityReferenceRecord entityReferenceRecord, Transaction transaction) throws GeminiException {
+        try {
+            EntityRecord entityRecord = get(entity, entityReferenceRecord, transaction);
+            return Optional.of(entityRecord);
+        } catch (GeminiException e) {
+            if (e.is(EntityRecordException.Code.LK_NOTFOUND))
+                return Optional.empty();
+            throw e;
+        }
+    }
+
+    default EntityRecord get(Entity entity, Collection<? extends FieldValue> logicalKey) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return get(entity, logicalKey, transaction);
+        });
+    }
+
+    EntityRecord get(Entity entity, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException;
 
     EntityRecord get(Entity e, UUID uuid) throws GeminiException;
 
@@ -446,6 +474,5 @@ public interface EntityManager {
     List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext) throws GeminiException;
 
     List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
-
 
 }

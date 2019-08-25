@@ -1,8 +1,8 @@
 package it.at7.gemini.boot;
 
 import it.at7.gemini.api.Api;
-import it.at7.gemini.auth.api.AuthModuleAPI;
-import it.at7.gemini.auth.core.AuthModule;
+import it.at7.gemini.auth.AuthModuleAPI;
+import it.at7.gemini.auth.AuthModule;
 import it.at7.gemini.core.Gemini;
 import it.at7.gemini.gui.GuiAPI;
 import it.at7.gemini.gui.GuiModule;

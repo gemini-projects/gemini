@@ -11,6 +11,7 @@ INTERFACE CoreMeta {
 
 ENTITY User {
     TEXT        username    *
+    TEXT        displayName
     TEXT        description
     PASSWORD    password
     BOOL        framework

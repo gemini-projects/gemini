@@ -1,7 +1,10 @@
-package it.at7.gemini.auth.core;
+package it.at7.gemini.auth.events;
 
 import it.at7.gemini.api.ApiListenerManagerInit;
 import it.at7.gemini.api.RestAPIControllerListener;
+import it.at7.gemini.auth.core.AuthEntityOperationContext;
+import it.at7.gemini.auth.AuthModule;
+import it.at7.gemini.auth.core.AuthModuleRef;
 import it.at7.gemini.core.ApiListenerManagerImpl;
 import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityOperationContext;

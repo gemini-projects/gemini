@@ -1,4 +1,4 @@
-package it.at7.gemini.auth.api;
+package it.at7.gemini.auth;
 
 import it.at7.gemini.api.openapi.OpenApiService;
 import it.at7.gemini.conf.State;

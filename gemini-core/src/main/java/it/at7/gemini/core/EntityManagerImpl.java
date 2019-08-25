@@ -41,6 +41,11 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     }
 
     @Override
+    public PersistenceEntityManager getPersistenceEntityManager() {
+        return persistenceEntityManager;
+    }
+
+    @Override
     public Collection<Entity> getAllEntities() {
         return schemaManager.getAllEntities();
     }
@@ -182,14 +187,6 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     }
 
     @Override
-    public EntityRecord get(Entity entity, Collection<? extends FieldValue> logicalKey) throws GeminiException {
-        checkEnabledState();
-        return transactionManager.executeInSingleTrasaction(transaction -> {
-            return get(entity, logicalKey, transaction);
-        });
-    }
-
-    @Override
     public EntityRecord get(Entity entity, UUID uuid) throws GeminiException {
         checkEnabledState();
         return transactionManager.executeInSingleTrasaction(transaction -> {
@@ -295,8 +292,8 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         resolutionExecutor.run();
     }
 
-
-    private EntityRecord get(Entity entity, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException {
+    @Override
+    public EntityRecord get(Entity entity, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException {
         Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (recordByLogicalKey.isPresent()) {
             return recordByLogicalKey.get();
@@ -304,7 +301,9 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         throw EntityRecordException.LK_NOTFOUND(entity, logicalKey);
     }
 
+
     private EntityRecord get(Entity entity, UUID uuid, Transaction transaction) throws GeminiException {
+        checkEnabledState();
         Optional<EntityRecord> uuidPersisted = persistenceEntityManager.getEntityRecordByUUID(entity, uuid, transaction);
         if (uuidPersisted.isPresent()) {
             return uuidPersisted.get();

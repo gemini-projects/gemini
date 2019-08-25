@@ -1,5 +1,7 @@
-package it.at7.gemini.auth.core;
+package it.at7.gemini.auth;
 
+import it.at7.gemini.auth.core.AuthModuleRef;
+import it.at7.gemini.auth.core.UserRef;
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.Module;
 import it.at7.gemini.core.*;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static it.at7.gemini.conf.State.SCHEMA_EVENTS_LOADED;
 import static it.at7.gemini.conf.State.SCHEMA_STORAGE_INITIALIZED;
 
 @Service
@@ -24,30 +27,31 @@ import static it.at7.gemini.conf.State.SCHEMA_STORAGE_INITIALIZED;
         dependencies = {"CORE"},
         order = -607)
 @ComponentScan("it.at7.gemini.auth.core")
+@ComponentScan("it.at7.gemini.auth.events")
 @ConditionalOnProperty(name = "gemini.auth", matchIfMissing = true)
 public class AuthModule implements Module {
     private static final Logger logger = LoggerFactory.getLogger(AuthModule.class);
 
     private final SchemaManager schemaManager;
     private final TransactionManager transactionManager;
-    private final PersistenceEntityManager persistenceEntityManager;
+    private final EntityManager entityManager;
     private final ApplicationContext applicationContext;
 
     @Autowired
     public AuthModule(SchemaManager schemaManager,
                       TransactionManager transactionManager,
-                      PersistenceEntityManager persistenceEntityManager,
+                      EntityManager entityManager,
                       ApplicationContext applicationContext
     ) {
         this.schemaManager = schemaManager;
         this.transactionManager = transactionManager;
-        this.persistenceEntityManager = persistenceEntityManager;
+        this.entityManager = entityManager;
         this.applicationContext = applicationContext;
     }
 
     @Override
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
-        if (actual == SCHEMA_STORAGE_INITIALIZED) {
+        if (actual == SCHEMA_EVENTS_LOADED) {
             checkOrcreatePredefinedUsers(transaction);
         }
     }
@@ -61,20 +65,20 @@ public class AuthModule implements Module {
         // GEMINI Core User
         String username = AuthModuleRef.USERS.GEMINI;
         EntityReferenceRecord entityReferenceRecord = FieldConverters.logicalKeyFromObject(userEntity, username);
-        Optional<EntityRecord> userRec = persistenceEntityManager.getEntityRecordByLogicalKey(userEntity, entityReferenceRecord, t);
+        Optional<EntityRecord> userRec = entityManager.getOptional(userEntity, entityReferenceRecord, t);
         if (!userRec.isPresent()) {
             String description = "Auto generated user for " + username;
             EntityRecord geminiFrameworkUser = new EntityRecord(userEntity);
             geminiFrameworkUser.put(UserRef.FIELDS.USERNAME, username);
             geminiFrameworkUser.put(UserRef.FIELDS.DESCRIPTION, description);
             geminiFrameworkUser.put(UserRef.FIELDS.FRAMEWORK, true);
-            persistenceEntityManager.createOrUpdateEntityRecord(geminiFrameworkUser, t);
+            entityManager.putIfAbsent(geminiFrameworkUser, t);
         }
 
         // Admin
         String adminUsername = AuthModuleRef.USERS.ADMINISTRATOR;
         entityReferenceRecord = FieldConverters.logicalKeyFromObject(userEntity, adminUsername);
-        Optional<EntityRecord> adminRec = persistenceEntityManager.getEntityRecordByLogicalKey(userEntity, entityReferenceRecord, t);
+        Optional<EntityRecord> adminRec = entityManager.getOptional(userEntity, entityReferenceRecord, t);
         if (!adminRec.isPresent()) {
             String adminiDescription = "Auto generated user for " + adminUsername;
             EntityRecord adminUer = new EntityRecord(userEntity);
@@ -82,7 +86,7 @@ public class AuthModule implements Module {
             adminUer.put(UserRef.FIELDS.DESCRIPTION, adminiDescription);
             adminUer.put(UserRef.FIELDS.FRAMEWORK, false);
             adminUer.put(UserRef.FIELDS.PASSWORD, adminUsername);
-            persistenceEntityManager.createOrUpdateEntityRecord(adminUer, t);
+            entityManager.putIfAbsent(adminUer, t);
         }
     }
 

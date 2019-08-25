@@ -1,8 +1,6 @@
 package it.at7.gemini.auth;
 
 import it.at7.gemini.api.LoginAndBearerAbstTest;
-import it.at7.gemini.auth.api.AuthModuleAPI;
-import it.at7.gemini.auth.core.AuthModule;
 import it.at7.gemini.boot.IntegrationTestMain;
 import it.at7.gemini.exceptions.GeminiException;
 import org.springframework.context.ConfigurableApplicationContext;
