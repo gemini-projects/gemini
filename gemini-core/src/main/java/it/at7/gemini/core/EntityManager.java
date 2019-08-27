@@ -36,6 +36,14 @@ public interface EntityManager {
     Entity getEntity(String entity);
 
     /**
+     * Create a new empty Entity Record
+     * @param entity target entity
+     */
+    default EntityRecord getNewEntityRecord(String entity) {
+        return new EntityRecord(getEntity(entity));
+    }
+
+    /**
      * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
      * Record is inserted is a new fresh Transaction returned by getTransactionManager() and using a default empty
      * {@link EntityResolutionContext}

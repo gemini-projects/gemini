@@ -5,7 +5,7 @@ import it.at7.gemini.core.FilterContext;
 
 import java.util.Collection;
 
-class GeminiWrappers {
+public class GeminiWrappers {
     public static class EntityRecordsList {
         private Collection<EntityRecord> records;
         private final FilterContext filterContext;
