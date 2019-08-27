@@ -242,7 +242,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             Entity.LogicalKey logicalKey = entity.getLogicalKey();
             StringJoiner sj = new StringJoiner(", ");
             for (EntityField field : logicalKey.getLogicalKeyList()) {
-                sj.add(wrapDoubleQuotes(field.getName()));
+                sj.add(wrapDoubleQuotes(field.getName().toLowerCase()));
             }
             if (sj.length() > 0) {
                 query.addToSql(" ORDER BY " + sj.toString());
