@@ -1,0 +1,11 @@
+
+# Extended from CORE
+ENTITY Field {
+    FieldGuiSettings    guiSettings
+}
+
+
+ENTITY EMBEDABLE FieldGuiSettings   {
+    BOOL         useAsDesc
+    LONG         sortKey
+}
