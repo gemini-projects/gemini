@@ -19,6 +19,7 @@ public class RecordConverters {
     public static final String GEMINI_DATA_FIELD = "data";
     public static final String GEMINI_META_FIELD = "meta";
     public static final String GEMINI_UUID_FIELD = "uuid";
+    public static final String GEMINI_META_ENTITY_FIELD = "entity";
 
     // TODO handle dates
 
@@ -89,6 +90,7 @@ public class RecordConverters {
 
     public static Map<String, Object> metaToJSONMap(EntityRecord record) {
         Map<String, Object> convertedMap = new HashMap<>();
+        convertedMap.put(GEMINI_META_ENTITY_FIELD, record.getEntity().getName());
         if (!record.getEntity().isEmbedable()) {
             convertedMap.put(GEMINI_UUID_FIELD, record.getUUID());
         }

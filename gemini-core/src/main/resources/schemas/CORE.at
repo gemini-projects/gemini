@@ -33,9 +33,7 @@ ENTITY Field {
     LONG                lkOrder
     TEXT		        displayName
     FieldCommonSettings commonSettings
-    FieldGuiSettings    guiSettings
 }
-
 
 ENTITY ValueStrategy IMPLEMENTS Domain
 
@@ -52,11 +50,6 @@ ENTITY EMBEDABLE FieldCommonSettings   {
     ValueStrategy         choiceDataStrategy
 }
 
-ENTITY EMBEDABLE FieldGuiSettings   {
-    BOOL         useAsDesc
-    LONG         sortKey
-}
-
 ENTITY InitRecord {
     TEXT    entity          *
     TEXT    versionName     *
@@ -69,12 +62,4 @@ ENTITY FieldResolution {
     Field   field *
     TEXT    code *
     TEXT    value
-}
-
-ENTITY ONEREC APIConfig {
-    TEXT    title
-    TEXT    description
-    TEXT    termsOfService
-    // contact
-    TEXT    version
 }
