@@ -28,8 +28,6 @@ public class GuiComponentsController {
                              @RequestBody(required = false) Object body,
                              HttpServletRequest request,
                              HttpServletResponse response) throws GeminiException {
-        serResponseHeaders(response);
-
         Optional<GeminiGuiComponentHook> optHook = guiComponentsManager.getHook(component);
         if (optHook.isPresent()) {
             GeminiGuiComponentHook hook = optHook.get();
@@ -41,10 +39,6 @@ public class GuiComponentsController {
         }
 
         throw ComponentException.COMPONENT_NOT_FOUND(component, event);
-    }
-
-    private void serResponseHeaders(HttpServletResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*"); // cors
     }
 
     enum EventMapping {

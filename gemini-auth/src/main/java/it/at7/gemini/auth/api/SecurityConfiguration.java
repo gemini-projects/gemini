@@ -78,8 +78,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .logout().disable();
     }
 
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
+    // @Bean
+    /* CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"));
@@ -88,7 +88,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
+    }*/
 
     @Bean
     TokenAuthenticationFilter restAuthenticationFilter() throws Exception {
