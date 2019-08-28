@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class RestAPIControllerListTest extends UnitTestBase {
+public abstract class RestAPIControllerAbstListTest extends UnitTestBase {
 
     @Test
     public void n1_getList() throws Exception {

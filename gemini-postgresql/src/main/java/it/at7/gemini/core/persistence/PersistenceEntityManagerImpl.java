@@ -745,7 +745,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             if (refRecord.hasLogicalKey()) {
                 DynamicRecord logicalKeyRecord = refRecord.getLogicalKeyRecord();
                 List<EntityField> lkv = entityRef.getLogicalKey().getLogicalKeyList();
-                lkv.sort(Comparator.comparing(Field::getName));
                 StringBuilder res = new StringBuilder();
                 for (EntityField lkPieceField : lkv) {
                     EntityFieldValue entityFieldValue = EntityFieldValue.create(lkPieceField, logicalKeyRecord.getFieldValue(lkPieceField));

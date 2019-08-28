@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
+public abstract class RestAPIControllerBaseEntityAbstTest extends UnitTestBase {
 
     @Test
     public void n1_saveEntity() throws Exception {
@@ -58,7 +58,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                 .andExpect(content().json("{'errorcode':'MULTIPLE_LK_FOUND'}"));
 
 
-        //==== basic object -- withGeminiSearchString all basic types value
+        //==== basic object --  all basic types value
         Map<String, Object> jsonAllBasicTypes = new HashMap<>();
         jsonAllBasicTypes.put("text", "lk-allBasicTypes");
         jsonAllBasicTypes.put("numberlong", 10);
@@ -81,7 +81,7 @@ public abstract class RestAPIControllerSingleEntityTest extends UnitTestBase {
                         .json("{'bool':false,'text':'lk-allBasicTypes','domain1':{},'numberDouble':11.1, 'double': 111.11, 'numberLong':10, 'long': 100, 'date':'1989-09-06', 'time': '02:10:00Z', 'datetime':'1989-09-06T01:01:00Z','textArray': ['abc','def'], 'domain1Array':[]}", true));
 
 
-        //==== object withGeminiSearchString entity reference (FK) - single logical key
+        //==== object entity reference (FK) - single logical key
         Map<String, Object> domainJson = new HashMap<>();
         domainJson.put("code", "dm1");
         String domainJsonString = objectMapper.writeValueAsString(domainJson);

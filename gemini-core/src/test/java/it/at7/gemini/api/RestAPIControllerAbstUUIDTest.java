@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class RestAPIControllerUUIDTest extends UnitTestBase {
+public abstract class RestAPIControllerAbstUUIDTest extends UnitTestBase {
 
     private static UUID lkUUID;
 

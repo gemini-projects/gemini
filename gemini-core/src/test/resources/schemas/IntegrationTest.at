@@ -79,3 +79,8 @@ ENTITY ONEREC SingletonTest {
     TEXT    text
     NUMBER  number
 }
+
+ENTITY MultipleLKOrdered {
+    TEXT    lk1 *1
+    TEXT    lk2 *2
+}
