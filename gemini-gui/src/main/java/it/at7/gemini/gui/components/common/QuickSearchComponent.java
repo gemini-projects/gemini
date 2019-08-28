@@ -25,6 +25,7 @@ public class QuickSearchComponent implements GeminiGuiComponentHook {
 
         List<SearchElement> elements = entityManager.getAllEntities().stream()
                 // todo add a filter for the entity based on some flag ??s
+                .filter(entity -> !entity.isEmbedable())
                 .map(e -> SearchElement.of(SearchType.ENTITY, e.getName()))
                 .collect(Collectors.toList());
 
