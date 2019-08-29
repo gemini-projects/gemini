@@ -1,9 +1,15 @@
+#  ====  Gemini GUI Module =====
+
+# Extended from CORE
+ENTITY Entity {
+    TEXT    displayName
+}
 
 # Extended from CORE
 ENTITY Field {
     FieldGuiSettings    guiSettings
+    TEXT    displayName
 }
-
 
 ENTITY EMBEDABLE FieldGuiSettings   {
     BOOL         useAsDesc

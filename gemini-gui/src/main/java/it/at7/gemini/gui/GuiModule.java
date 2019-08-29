@@ -27,6 +27,7 @@ import static it.at7.gemini.conf.State.SCHEMA_STORAGE_INITIALIZED;
         order = -507)
 @ComponentScan("it.at7.gemini.gui.components")
 @ComponentScan("it.at7.gemini.gui.core")
+@ComponentScan("it.at7.gemini.gui.events")
 @ConditionalOnProperty(name = "gemini.gui", matchIfMissing = false)
 public class GuiModule implements Module {
 }

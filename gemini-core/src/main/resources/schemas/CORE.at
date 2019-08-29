@@ -18,7 +18,6 @@ ENTITY Entity {
     TEXT            module
     BOOL            embedable
     BOOL            onerecord
-    TEXT		    displayName
 }
 
 # ENTITY FieldScope IMPLEMENTS Domain
@@ -31,7 +30,6 @@ ENTITY Field {
     Entity              refEntity
     BOOL                isLogicalKey
     LONG                lkOrder
-    TEXT		        displayName
     FieldCommonSettings commonSettings
 }
 
