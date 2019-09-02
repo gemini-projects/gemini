@@ -84,3 +84,8 @@ ENTITY MultipleLKOrdered {
     TEXT    lk1 *1
     TEXT    lk2 *2
 }
+
+ENTITY WithGenericEntityRef {
+    TEXT    logKey *
+    GENERIC_ENTITY_REF  genericRef
+}

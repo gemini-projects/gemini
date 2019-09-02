@@ -341,7 +341,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         }
     }
 
-    private void checkSchemaAndCreateEntities(Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap) {
+    private void checkSchemaAndCreateEntities(Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap) throws FieldException {
         /* TODO entità estendibii per modulo
             caricare ogni modulo a se stante.. con le entità.. poi fare il merge delle
             entries (ognuna contenente il modulo da dove viene)
@@ -413,11 +413,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
             entities.put(entityBuilder.getName(), entity);
         }
 
-        // TODO CHECK embeded fields should not be logicalKey
         this.entities = entities;
     }
 
-    private void addALLImplementingInterfaceToEntityBuilder(Map<String, EntityBuilder> allEntityBuilders, EntityBuilder currentEntityBuilder, RawEntity rawEntityWIthInterfaces, Map<String, EntityBuilder> interfaceBuilders) {
+    private void addALLImplementingInterfaceToEntityBuilder(Map<String, EntityBuilder> allEntityBuilders, EntityBuilder currentEntityBuilder, RawEntity rawEntityWIthInterfaces, Map<String, EntityBuilder> interfaceBuilders) throws FieldException {
         // merging Gemini interface if found
         for (String implementsInteface : rawEntityWIthInterfaces.getImplementsIntefaces()) {
             // entity implements a common specification
@@ -431,13 +430,13 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         }
     }
 
-    private void addAllEntriesToEntityBuilder(Map<String, EntityBuilder> allEntityBuilders, RawEntity entity, EntityBuilder currentEntityBuilder, String interfaceName, EntityField.Scope entityFieldScopes) {
+    private void addAllEntriesToEntityBuilder(Map<String, EntityBuilder> allEntityBuilders, RawEntity entity, EntityBuilder currentEntityBuilder, String interfaceName, EntityField.Scope entityFieldScopes) throws FieldException {
         for (RawEntity.Entry currentEntry : entity.getEntries()) {
             checkAndCreateField(allEntityBuilders, currentEntityBuilder, currentEntry, interfaceName, entityFieldScopes);
         }
     }
 
-    private void checkAndCreateField(Map<String, EntityBuilder> entityBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry, String interfaceName, EntityField.Scope scope) throws TypeNotFoundException {
+    private void checkAndCreateField(Map<String, EntityBuilder> entityBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry, String interfaceName, EntityField.Scope scope) throws TypeNotFoundException, FieldException {
         String type = entry.getType().toUpperCase();
 
         Optional<FieldType> fieldType = FieldType.of(type);
@@ -475,7 +474,13 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
             throw new FieldTypeNotKnown(entityBuilder.getName(), type, entry);
         } else {
-            entityBuilder.addField(fieldType.get(), entry, interfaceName, scope);
+            // check field type before entering in the entiybuilder
+            FieldType ft = fieldType.get();
+            if (ft.equals(GENERIC_ENTITY_REF) || ft.equals(ENTITY_EMBEDED)) {
+                if (entry.isLogicalKey())
+                    throw FieldException.CANNOT_BE_LOGICAL_KEY(ft);
+            }
+            entityBuilder.addField(ft, entry, interfaceName, scope);
         }
     }
 

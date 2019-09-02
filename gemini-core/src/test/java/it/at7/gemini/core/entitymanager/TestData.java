@@ -50,4 +50,13 @@ public class TestData {
         return entityRecord;
     }
 
+    public static EntityRecord getEntityRef_EntityRecord(String lk){
+        SchemaManager schemaManager = Services.getSchemaManager();
+        Entity et = schemaManager.getEntity("WithGenericEntityRef");
+        EntityRecord entityRecord = new EntityRecord(et);
+        entityRecord.put("logKey", lk);
+        return entityRecord;
+    }
+
+
 }

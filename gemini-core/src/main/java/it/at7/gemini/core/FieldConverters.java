@@ -6,6 +6,7 @@ import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.Field;
 import it.at7.gemini.schema.FieldType;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +94,7 @@ public class FieldConverters {
                     EntityRecord entityRecord = (EntityRecord) objValue;
                     Entity fieldEntity = field.getEntityRef();
                     Entity objValueEntity = entityRecord.getEntity();
-                    assert fieldEntity.equals(objValueEntity);
+                    assert fieldEntity != null && fieldEntity.equals(objValueEntity);
                     pkValue = logicalKeyFromEntityRecord(entityRecord);
                     // TODO BOO sbagliato qua misa... meglio create il ref anche con l'oggetto di partenza
                 } else {
@@ -140,6 +141,19 @@ public class FieldConverters {
                 }
                 throw new RuntimeException(String.format("Field %s must have an EntityRecord|EntityReferenceRecord collection", field.toString()));
             case GENERIC_ENTITY_REF:
+                if (EntityReferenceRecord.class.isAssignableFrom(objValue.getClass())) {
+                    // no need to convert
+                    return objValue;
+                }
+                if (EntityRecord.class.isAssignableFrom(objValue.getClass())) {
+                    EntityRecord entityRecord = (EntityRecord) objValue;
+                    pkValue = createEntityReferenceRecordFromER(entityRecord);
+                    // TODO BOO sbagliato qua misa... meglio create il ref anche con l'oggetto di partenza
+                } else {
+                    throw new RuntimeException(String.format("Field %s must have an EntityRecord|EntityReferenceRecord object to identify the right entity reference", field.toString()));
+                }
+                assert pkValue != null;
+                return pkValue;
             case RECORD:
                 break; // Unsupported OPE
         }
@@ -189,6 +203,22 @@ public class FieldConverters {
         }
         return record;
     }
+    
+    @NotNull
+    public static EntityReferenceRecord createEntityReferenceRecordFromER(EntityRecord entityRecord) {
+        return createEntityReferenceRecordFromER(entityRecord.getEntity(), entityRecord.getID(), entityRecord);
+    }
 
+    @NotNull
+    public static EntityReferenceRecord createEntityReferenceRecordFromER(Entity entity, Object pkValue, EntityRecord lkEntityRecord) {
+        EntityReferenceRecord entityReferenceRecord;
+        entityReferenceRecord = new EntityReferenceRecord(entity);
+        entityReferenceRecord.addPKValue(pkValue);
 
+        // TODO put the entity instead of the entityreference ??
+        for (Field entityLkField : entity.getLogicalKey().getLogicalKeyList()) {
+            entityReferenceRecord.addLogicalKeyValue(entityLkField, lkEntityRecord.get(entityLkField));
+        }
+        return entityReferenceRecord;
+    }
 }

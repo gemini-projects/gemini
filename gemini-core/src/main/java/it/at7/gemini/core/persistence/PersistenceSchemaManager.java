@@ -19,6 +19,14 @@ public interface PersistenceSchemaManager {
         handleSchemaStorage(transaction, List.of(entity));
     }
 
+    /**
+     * Create the storage containers for entities. For example if the persistence manager is a relational database
+     * driver it creates tables and fields.
+     *
+     * @param transaction Gemini Transaction that atomically create the storage containers
+     * @param entities  Target entities
+     * @throws GeminiException
+     */
     void handleSchemaStorage(Transaction transaction, Collection<Entity> entities) throws GeminiException;
 
     void deleteUnnecessaryEntites(Collection<Entity> entities, Transaction transaction) throws GeminiException;

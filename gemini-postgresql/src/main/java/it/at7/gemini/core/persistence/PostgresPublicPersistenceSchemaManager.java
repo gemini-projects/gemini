@@ -6,10 +6,7 @@ import it.at7.gemini.core.TransactionImpl;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
 import it.at7.gemini.exceptions.SingleRecordEntityException;
-import it.at7.gemini.schema.Entity;
-import it.at7.gemini.schema.EntityField;
-import it.at7.gemini.schema.Field;
-import it.at7.gemini.schema.FieldType;
+import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,7 +20,6 @@ import static java.util.stream.Collectors.toList;
 
 @Service
 public class PostgresPublicPersistenceSchemaManager implements PersistenceSchemaManager {
-    private static final String META_PREFIX = "_meta_";
     private static final Logger logger = LoggerFactory.getLogger(PostgresPublicPersistenceSchemaManager.class);
 
     @Override
@@ -445,7 +441,12 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             // return fieldName(field, true) + (isAlterColumn ? " TYPE " : " ") + getSqlPrimitiveType(field);
             return fieldName(field, true) + " " + getSqlPrimitiveType(field);
         }
-        throw new RuntimeException(String.format("%s - Field of type %s Not Implemented", field.getName(), field.getType())); // TODO
+        if (genericEntityRefType(type)) {
+            // generate column for entity ref and one the actual record
+            return genericRefEntityFieldName(field, true) + " " + pkForeignKeyDomainFromEntity(EntityRef.NAME) + ", " +
+                    genericRefActualRefFieldName(field, true) + " BIGSERIAL";
+        }
+        throw new RuntimeException(String.format("%s - Field of type %s Not Implemented", field.getName(), field.getType()));
     }
 
     private String fieldUnique(Field field) {
@@ -501,11 +502,5 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         DELETE
     }
 
-    public static String fieldName(EntityField field, boolean wrap) {
-        String prefix = field.getScope().equals(EntityField.Scope.META) ? META_PREFIX : "";
-        String name = prefix + field.getName().toLowerCase();
-        if (wrap)
-            return wrapDoubleQuotes(name);
-        return name;
-    }
+
 }
