@@ -229,7 +229,7 @@ public abstract class RestAPIControllerBaseEntityAbstTest extends UnitTestBase {
                         // stric because new data type must fail
                         .json("{'bool':false,'text':'lk','domain1':{},'numberDouble':0,'numberLong':100, 'date':''}", false));
 
-        //==== basic object --  default value
+        //==== basic object --  meta fields - default value
         json = new HashMap<>();
         json.put("numberlong", 150);
         jsonString = objectMapper.writeValueAsString(json);

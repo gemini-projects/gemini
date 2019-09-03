@@ -22,6 +22,9 @@ import static it.at7.gemini.core.utils.DateTimeUtility.*;
 public class FieldConverters {
     private static Logger logger = LoggerFactory.getLogger(FieldConverters.class);
 
+    public static String GENERIC_ENTITY_RECORD_ENTITY_FIELD = "entity";
+    public static String GENERIC_ENTITY_RECORD_REF_FIELD = "ref";
+
 
     public static Object getConvertedFieldValue(Field field, Object objValue) {
         if (objValue == null) {
@@ -147,13 +150,28 @@ public class FieldConverters {
                 }
                 if (EntityRecord.class.isAssignableFrom(objValue.getClass())) {
                     EntityRecord entityRecord = (EntityRecord) objValue;
-                    pkValue = createEntityReferenceRecordFromER(entityRecord);
+                    return createEntityReferenceRecordFromER(entityRecord);
                     // TODO BOO sbagliato qua misa... meglio create il ref anche con l'oggetto di partenza
-                } else {
-                    throw new RuntimeException(String.format("Field %s must have an EntityRecord|EntityReferenceRecord object to identify the right entity reference", field.toString()));
                 }
-                assert pkValue != null;
-                return pkValue;
+                if (Map.class.isAssignableFrom(objValue.getClass())) {
+                    Map<String, Object> mapValue = (Map<String, Object>) objValue;
+                    Object entityO = mapValue.get(GENERIC_ENTITY_RECORD_ENTITY_FIELD);
+                    if (String.class.isAssignableFrom(entityO.getClass())) {
+                        String entity = ((String) entityO).toUpperCase();
+                        EntityManager entityManager = Services.getEntityManager();
+                        Entity refEntity = entityManager.getEntity(entity);
+                        if (refEntity == null) {
+                            throw new RuntimeException(String.format("Field %s must have fields '%s:STRING' with a valid entity - %s not found", field.toString(), GENERIC_ENTITY_RECORD_ENTITY_FIELD, entity));
+                        }
+                        Object ref = mapValue.get(GENERIC_ENTITY_RECORD_REF_FIELD);
+                        if (ref == null) {
+                            throw new RuntimeException(String.format("Field %s must have fields '%s:OBJECT' inside the Map object", field.toString(), GENERIC_ENTITY_RECORD_REF_FIELD));
+                        }
+                        return logicalKeyFromObject(refEntity, ref);
+                    }
+                    throw new RuntimeException(String.format("Field %s must have fields '%s:STRING' and '%s:OBJECT' inside the Map object", field.toString(), GENERIC_ENTITY_RECORD_ENTITY_FIELD, GENERIC_ENTITY_RECORD_REF_FIELD));
+                }
+                throw new RuntimeException(String.format("Field %s must have an EntityRecord|EntityReferenceRecord|Map object to identify the right entity reference", field.toString()));
             case RECORD:
                 break; // Unsupported OPE
         }
@@ -203,7 +221,7 @@ public class FieldConverters {
         }
         return record;
     }
-    
+
     @NotNull
     public static EntityReferenceRecord createEntityReferenceRecordFromER(EntityRecord entityRecord) {
         return createEntityReferenceRecordFromER(entityRecord.getEntity(), entityRecord.getID(), entityRecord);

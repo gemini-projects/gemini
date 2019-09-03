@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import static it.at7.gemini.core.FieldConverters.createEntityReferenceRecordFromER;
 import static it.at7.gemini.core.FieldConverters.logicalKeyFromObject;
 import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.*;
-import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.genericRefEntityFieldName;
 
 @Service
 public class PersistenceEntityManagerImpl implements PersistenceEntityManager, StateListener {
@@ -469,8 +468,14 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                     if (entityIdValue != null && (Number.class.isAssignableFrom(entityIdValue.getClass()) && ((Long) entityIdValue) != 0)) {
                         Entity targetEntity = getEntityByID((Long) entityIdValue);
                         Object refId = rs.getObject(genericRefActualRefFieldName(field, false));
-                        EntityRecord lkEntityRecord = getEntityRecordByPersistedID(transaction, targetEntity, refId);
-                        entityReferenceRecord = createEntityReferenceRecordFromER(targetEntity, refId, lkEntityRecord);
+                        Optional<EntityRecord> entityRecordByPersistedID = getEntityRecordByPersistedID(transaction, targetEntity, refId);
+                        // TODO resolutions -- if the entityrecord is not found probably the target record was deleted
+                        // TODO             but the field was generic and we cannot statically resolve deletion at delete time
+                        if (entityRecordByPersistedID.isPresent()) {
+                            entityReferenceRecord = createEntityReferenceRecordFromER(targetEntity, refId, entityRecordByPersistedID.get());
+                        } else {
+                            entityReferenceRecord = null;
+                        }
                     }
                     er.put(field, entityReferenceRecord);
                 }
@@ -493,11 +498,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         return recordsMatching.get(0);
     }
 
-    private EntityRecord getEntityRecordByPersistedID(Transaction transaction, Entity entity, Object pkValue) throws
+    private Optional<EntityRecord> getEntityRecordByPersistedID(Transaction transaction, Entity entity, Object pkValue) throws
             GeminiException {
-        Optional<EntityRecord> entityRecordById = getEntityRecordById(entity, (Long) pkValue, transaction);
-        assert entityRecordById.isPresent();
-        return entityRecordById.get();
+        return getEntityRecordById(entity, (Long) pkValue, transaction);
     }
 
     private QueryWithParams makeInsertQuery(EntityRecord record, Transaction transaction) throws GeminiException {

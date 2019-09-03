@@ -20,8 +20,8 @@ public class RecordConverters {
     public static final String GEMINI_META_FIELD = "meta";
     public static final String GEMINI_UUID_FIELD = "uuid";
     public static final String GEMINI_META_ENTITY_FIELD = "entity";
-
-    // TODO handle dates
+    public static final String GEMINI_GENERIC_EREF_ENTITY_FIELD = "entity";
+    public static final String GEMINI_GENERIC_EREF_REF_FIELD = "ref";
 
     public static boolean containGeminiDataTypeFields(Map<String, Object> rawFields) {
         return rawFields.containsKey(GEMINI_DATA_FIELD) && rawFields.containsKey(GEMINI_META_FIELD);
@@ -196,6 +196,9 @@ public class RecordConverters {
                 break;
             case PASSWORD:
                 break; // ignore password in API
+            case GENERIC_ENTITY_REF:
+                convertGenericEntityRefToJSONValue(convertedMap, field, value);
+                break;
             default:
                 throw new RuntimeException(String.format("No conversion found for fieldtype %s", fieldType));
         }
@@ -234,6 +237,21 @@ public class RecordConverters {
             // we have the full reference record here -- we add a map of its fields
             EntityRecord eRValue = (EntityRecord) value;
             convertedMap.put(fieldNameLC, toMap(eRValue));
+        }
+    }
+
+    private static void convertGenericEntityRefToJSONValue(Map<String, Object> convertedMap, Field field, Object value) {
+        String fieldNameLC = toFieldName(field);
+        if (value == null) {
+            convertedMap.put(fieldNameLC, new HashMap<>());
+            return;
+        }
+        if (EntityReferenceRecord.class.isAssignableFrom(value.getClass())) {
+            EntityReferenceRecord pkRefRec = (EntityReferenceRecord) value;
+            Map<String, Object> refMap = new HashMap<>();
+            refMap.put(GEMINI_GENERIC_EREF_ENTITY_FIELD, pkRefRec.getEntity().getName().toUpperCase());
+            refMap.put(GEMINI_GENERIC_EREF_REF_FIELD, toLogicalKey(pkRefRec));
+            convertedMap.put(fieldNameLC, refMap);
         }
     }
 
@@ -313,6 +331,7 @@ public class RecordConverters {
                 return false;
             case ENTITY_REF:
             case PASSWORD:
+            case GENERIC_ENTITY_REF:
                 return null;
             case RECORD:
                 return new Object();
