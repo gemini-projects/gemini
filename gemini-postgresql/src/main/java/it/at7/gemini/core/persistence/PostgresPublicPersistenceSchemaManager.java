@@ -5,8 +5,10 @@ import it.at7.gemini.core.Transaction;
 import it.at7.gemini.core.TransactionImpl;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
+import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.exceptions.SingleRecordEntityException;
 import it.at7.gemini.schema.*;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.*;
+import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.genericRefEntityFieldName;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -117,14 +120,21 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
             List<Long> fieldsID = fields.stream().map(EntityField::getIDValue).map(Long.class::cast).collect(toList());
             if (!fieldsID.isEmpty()) {
-                String sql = String.format("SELECT name FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
+                String sql = String.format("SELECT name, type FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
                 HashMap<String, Object> parameters = new HashMap<>();
                 parameters.put("ids", fieldsID);
                 parameters.put("entityId", entity.getIDValue());
                 transactionImpl.executeQuery(sql, parameters, rs -> {
                     while (rs.next()) {
                         String columnName = rs.getString(1).toLowerCase();
-                        transactionImpl.executeUpdate(String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s", wrapDoubleQuotes(entity.getName().toLowerCase()), wrapDoubleQuotes(columnName)));
+                        String typeName = rs.getString(2);
+                        String drop;
+                        if(typeName.equals(FieldType.GENERIC_ENTITY_REF.name())){
+                            drop = String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s, DROP COLUMN IF EXISTS %s", wrapDoubleQuotes(entity.getName().toLowerCase()), ENTITY_PREFIX + columnName, REF_PREFIX + columnName);
+                        } else {
+                            drop = String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s", wrapDoubleQuotes(entity.getName().toLowerCase()), wrapDoubleQuotes(columnName));
+                        }
+                        transactionImpl.executeUpdate(drop);
                     }
                 });
                 String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
@@ -235,13 +245,19 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         updateSet.addAll(entity.getDataEntityFields());
 
         for (EntityField field : updateSet) {
-            if (field.getType() == FieldType.ENTITY_REF) {
+            FieldType type = field.getType();
+            if (type == FieldType.ENTITY_REF) {
                 // to be sure we have
                 Entity refEntity = field.getEntityRef();
                 assert refEntity != null;
                 checkOrCreatePKDomainForModel(refEntity.getName(), transaction);
             }
-            checkOrUpdateColumn(entity, field, transaction);
+            if (genericEntityRefType(type)) {
+                // we have two column
+                checkOrUpdateGenericEntityRef(entity, field, transaction);
+            } else {
+                checkOrUpdateOneColumnField(entity, field, transaction);
+            }
         }
         // TODO update logical key constraint -- use the following query to get columns for logical key constraint
         /* SELECT
@@ -288,52 +304,6 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         });
     }
 
-    /*
-    private void checkOrCreteLogicalKeyUniqueIndex(String name, Entity.LogicalKey logicalKey, TransactionImpl transaction) throws SQLException, GeminiException {
-        String indexName = "LK_Unique_" + name.toLowerCase();
-        String sdlIndexExist = "select" +
-                "    t.relname as table_name," +
-                "    i.relname as index_name," +
-                "    a.attname as column_name" +
-                " from " +
-                "    pg_class t," +
-                "    pg_class i," +
-                "    pg_index ix," +
-                "    pg_attribute a" +
-                "  where " +
-                "    t.oid = ix.indrelid" +
-                "    and i.oid = ix.indexrelid" +
-                "    and a.attrelid = t.oid" +
-                "    and a.attnum = ANY(ix.indkey)" +
-                "    and t.relkind = 'r'" +
-                "    and t.relname = :table_name" +
-                "    and i.relname = :index_name" +
-                "  order by" +
-                "    t.relname," +
-                "    i.relname;";
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("table_name", name.toLowerCase());
-        parameters.put("index_name", indexName);
-        transaction.executeQuery(sdlIndexExist, parameters, resultSet -> {
-            if (resultSet.next()) {
-                // TODO handle existing indexes (check or change)
-            } else {
-                String createUniqueLk = "CREATE UNIQUE INDEX " + indexName + " ON " + name.toLowerCase() + "(";
-                List<EntityField> logicalKeyList = logicalKey.getLogicalKeyList();
-                for (int i = 0; i < logicalKeyList.size(); i++) {
-                    Field field = logicalKeyList.get(i);
-                    createUniqueLk += field.getName().toLowerCase();
-                    if (i < logicalKeyList.size() - 1) {
-                        createUniqueLk += ", ";
-                    }
-                }
-                createUniqueLk += ")";
-                transaction.executeUpdate(createUniqueLk);
-            }
-        });
-
-    } */
-
     private boolean exists(ResultSet resultSet) throws SQLException {
         resultSet.next();
         return resultSet.getBoolean(1);
@@ -345,8 +315,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         transaction.executeUpdate(domainSql);
     }
 
-
-    private void checkOrUpdateColumn(Entity entity, EntityField field, TransactionImpl transaction) throws SQLException, GeminiException {
+    private void checkOrUpdateOneColumnField(Entity entity, EntityField field, TransactionImpl transaction) throws SQLException, GeminiException {
         String sqlColumnsCheck = "" +
                 "   SELECT *" +
                 "   FROM information_schema.columns" +
@@ -385,6 +354,55 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             }
 
         });
+    }
+
+    private void checkOrUpdateGenericEntityRef(Entity entity, EntityField field, TransactionImpl transaction) throws GeminiException, SQLException {
+        String sqlColumnsCheck = "" +
+                "   SELECT *" +
+                "   FROM information_schema.columns" +
+                "   WHERE table_schema = :schema" +
+                "   AND table_name   = :table_name" +
+                "   AND column_name LIKE :col_name" +
+                "   ORDER BY column_name";
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("schema", "public");
+        parameters.put("table_name", entity.getName().toLowerCase());
+        parameters.put("col_name", "%" + fieldName(field, false));
+
+        transaction.executeQuery(sqlColumnsCheck, parameters, resultSet -> {
+            boolean exists = resultSet.next();
+            String entityRef = genericRefEntityFieldName(field, false);
+            String actualRef = genericRefActualRefFieldName(field, false);
+            if (!exists) {
+                // need to create the two column
+                logger.info("Table {}: adding columns {} {} for {}", entity.getName(), field.getName(), entityRef, actualRef);
+                String sqlAlterTable =
+                        "ALTER TABLE " + wrapDoubleQuotes(entity.getName().toLowerCase()) +
+                                " ADD COLUMN " + fieldGenericEntityRef(field, true);
+                transaction.executeUpdate(sqlAlterTable);
+            } else {
+                String data_type = resultSet.getString("data_type");
+                String domain_name = resultSet.getString("domain_name");
+                String column_name = resultSet.getString("column_name");
+                if (column_name.equals(entityRef)
+                        && domain_name.equals(pkForeignKeyDomainFromEntity(EntityRef.NAME))
+                        && data_type.equals("bigint")) {
+                    exists = resultSet.next();
+                    if (exists) {
+                        data_type = resultSet.getString("data_type");
+                        column_name = resultSet.getString("column_name");
+                        if (column_name.equals(actualRef)
+                                && data_type.equals("bigint")) {
+                            return;
+                        }
+                    } else {
+                        throw new GeminiRuntimeException(String.format("Field %s cannot be added - Column %s already exists without the required %s", field.getName(), entityRef, actualRef));
+                    }
+                }
+                throw new GeminiRuntimeException(String.format("Field %s cannot be added - Column %s and/or %s already exists and are not suitable", field.getName(), entityRef, actualRef));
+            }
+        });
+
     }
 
     private boolean checkSqlType(Field field, String data_type, String domain_name) {
@@ -443,10 +461,16 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         }
         if (genericEntityRefType(type)) {
             // generate column for entity ref and one the actual record
-            return genericRefEntityFieldName(field, true) + " " + pkForeignKeyDomainFromEntity(EntityRef.NAME) + ", " +
-                    genericRefActualRefFieldName(field, true) + " BIGSERIAL";
+            return fieldGenericEntityRef(field, false);
         }
         throw new RuntimeException(String.format("%s - Field of type %s Not Implemented", field.getName(), field.getType()));
+    }
+
+    @NotNull
+    private String fieldGenericEntityRef(EntityField field, boolean addcolum) {
+        return genericRefEntityFieldName(field, true) + " " + pkForeignKeyDomainFromEntity(EntityRef.NAME) + ", " +
+                (addcolum ? "ADD COLUMN" : "") +
+                genericRefActualRefFieldName(field, true) + " BIGINT";
     }
 
     private String fieldUnique(Field field) {

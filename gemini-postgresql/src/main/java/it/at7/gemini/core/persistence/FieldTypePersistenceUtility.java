@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toMap;
 
 public class FieldTypePersistenceUtility {
-    private static final String META_PREFIX = "_meta_";
-    private static final String ENTITY_PREFIX = "_entity_";
-    private static final String REF_PREFIX = "_ref_";
+    public static final String META_PREFIX = "_meta_";
+    public static final String ENTITY_PREFIX = "_entity_";
+    public static final String REF_PREFIX = "_ref_";
 
     private static Map<Long, Entity> entities;
 
