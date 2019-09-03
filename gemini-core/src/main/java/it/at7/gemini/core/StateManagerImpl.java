@@ -20,12 +20,12 @@ public class StateManagerImpl implements StateManager {
 
     @Override
     public synchronized void changeState(State newState, Optional<Transaction> transaction) throws GeminiException {
-        this.state = newState;
         for (StateListener listener : listeners) {
             logger.info("Changing state for {} : {} -> {}", getListenerName(listener), state.name(), newState.name());
             listener.onChange(this.state, newState, transaction);
         }
         logger.info("State Changed: {} -> {}", state.name(), newState.name());
+        this.state = newState;
     }
 
     @Override

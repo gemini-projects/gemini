@@ -53,7 +53,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
     @Override
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
         switch (actual) {
-            case SCHEMA_RECORDS_INITIALIZED:
+            case FRAMEWORK_SCHEMA_RECORDS_INITIALIZED:
                 // we have Entity Recors initialized with ID values so we can initialize entities here
                 FieldTypePersistenceUtility.initEntities(this.schemaManager.getAllEntities());
                 break;

@@ -84,8 +84,9 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, FieldRef.NAME);
         */
         handleSchemasEntityRecords(entities.values(), transaction); // add core entityRecord i.e. ENTITY and FIELD
-        createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided
-        stateManager.changeState(State.SCHEMA_RECORDS_INITIALIZED);
+        stateManager.changeState(State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED);
+        createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided as resources
+        stateManager.changeState(State.PROVIDED_CLASSPATH_RECORDS_HANDLED);
     }
 
     @Override
@@ -221,6 +222,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
     private void createProvidedEntityRecords(Map<String, List<EntityRawRecords>> recordsByEntity, Transaction transaction) throws GeminiException {
         // TODO topological order
+        EntityOperationContext operationContextForInitSchema = getOperationContextForInitSchema();
         for (Map.Entry<String, List<EntityRawRecords>> e : recordsByEntity.entrySet()) {
             String key = e.getKey();
             Entity entity = entities.get(key);
@@ -232,15 +234,15 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                     initVersionRec.set(InitRecordDef.FIELDS.ENTITY, entity.getName());
                     initVersionRec.set(InitRecordDef.FIELDS.VERSION_NAME, version.getVersionName());
                     initVersionRec.set(InitRecordDef.FIELDS.VERSION_NUMBER, version.getVersionProgressive());
-                    Optional<EntityRecord> optRecord = persistenceEntityManager.getEntityRecordByLogicalKey(initVersionRec, transaction);
+                    Optional<EntityRecord> optRecord = entityManager.getOptional(initVersionRec, transaction);
 
                     if (!optRecord.isPresent()) {
                         logger.info(String.format("Handling records for entity %s and version %s - %d", entity.getName(), version.getVersionName(), version.getVersionProgressive()));
                         for (Object record : version.getRecords()) {
                             EntityRecord entityRecord = RecordConverters.entityRecordFromMap(entity, (Map<String, Object>) record);
-                            persistenceEntityManager.createOrUpdateEntityRecord(entityRecord, transaction);
+                            entityManager.putOrUpdate(entityRecord, operationContextForInitSchema, transaction);
                         }
-                        persistenceEntityManager.createNewEntityRecord(initVersionRec, transaction);
+                        entityManager.putIfAbsent(initVersionRec, operationContextForInitSchema, transaction);
                     }
                 }
             }
@@ -296,7 +298,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                         String entityLocation = module.getEntityRecordResourceLocation(capitalizedEntityName);
                         Resource entityResource = applicationContext.getResource(entityLocation);
                         if (entityResource.exists()) {
-                            logger.info("Found entity records definition found for module/entity {}/{}: location {}", module.getName(), capitalizedEntityName, entityLocation);
+                            logger.info("Found entity records definition for module/entity {}/{}: location {}", module.getName(), capitalizedEntityName, entityLocation);
                             InputStream entityRecordStream = entityResource.getInputStream();
                             Map<String, EntityRawRecords> records = RecordParser.parse(new InputStreamReader(entityRecordStream));
                             mergeModuleRecordsWithSpecificEntityRecords(allRecords, records);

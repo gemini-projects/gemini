@@ -37,6 +37,7 @@ public interface EntityManager {
 
     /**
      * Create a new empty Entity Record
+     *
      * @param entity target entity
      */
     default EntityRecord getNewEntityRecord(String entity) {
@@ -433,6 +434,17 @@ public interface EntityManager {
 
     default EntityRecord get(EntityRecord record) throws GeminiException {
         return get(record.getEntity(), record.getLogicalKeyValue());
+    }
+
+    default Optional<EntityRecord> getOptional(EntityRecord record, Transaction transaction) throws GeminiException {
+        try {
+            EntityRecord entityRecord = get(record.getEntity(), record.getLogicalKeyValue(), transaction);
+            return Optional.of(entityRecord);
+        } catch (GeminiException e) {
+            if (e.is(EntityRecordException.Code.LK_NOTFOUND))
+                return Optional.empty();
+            throw e;
+        }
     }
 
     default EntityRecord get(Entity entity, EntityReferenceRecord entityReferenceRecord, Transaction transaction) throws GeminiException {

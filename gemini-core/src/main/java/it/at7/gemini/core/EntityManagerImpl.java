@@ -15,8 +15,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+import static it.at7.gemini.conf.State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED;
+import static it.at7.gemini.conf.State.INITIALIZED;
+
 @Service
 public class EntityManagerImpl implements EntityManager, EntityManagerInit {
+    private static final Set<String> CORE_ENTITIES = Set.of(EntityRef.NAME, FieldRef.NAME);
 
     private SchemaManager schemaManager;
     private TransactionManager transactionManager;
@@ -234,6 +238,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     }
 
     private EntityRecord createNewEntityRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        this.checkFrameworkEntitiesCreation(record);
         this.eventManager.beforeInsertFields(record, entityOperationContext, transaction);
         return persistenceEntityManager.createNewEntityRecord(record, transaction);
     }
@@ -258,7 +263,6 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         }
         return persistedRecord;
     }
-
 
 
     /* TODO on dynamic schema
@@ -286,7 +290,6 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         return new EntityBuilder(name, runtimeModule).build();
     }
     */
-
     private void handleDeleteResolution(EntityRecord entityRecord, Transaction transaction) throws GeminiException {
         ResolutionExecutor resolutionExecutor = ResolutionExecutor.forDelete(entityRecord, persistenceEntityManager, schemaManager, transaction);
         resolutionExecutor.run();
@@ -329,10 +332,19 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
                 break;
             case DISABLED:
                 String name = entity.getName();
-                Set<String> core_entities = Set.of(EntityRef.NAME, FieldRef.NAME);
-                if (stateManager.getActualState().compareTo(State.INITIALIZED) >= 0 && core_entities.contains(name)) {
+                if (stateManager.getActualState().compareTo(State.INITIALIZED) >= 0 && CORE_ENTITIES.contains(name)) {
                     throw SchemaException.DYNAMIC_SCHEMA_NOT_ENABLED(name);
                 }
+        }
+    }
+
+    private void checkFrameworkEntitiesCreation(EntityRecord record) throws SchemaException {
+        String entityName = record.getEntity().getName();
+        State actualState = stateManager.getActualState();
+        if (FRAMEWORK_SCHEMA_RECORDS_INITIALIZED.compareTo(actualState) <= 0 && actualState.compareTo(INITIALIZED) < 0) {
+            // cannot create core entity there
+            if (CORE_ENTITIES.contains(entityName))
+                throw SchemaException.FRAMEWORK_SCHEMA_RECORDS_NOT_MODIFIABLE_THERE(actualState.name());
         }
     }
 
