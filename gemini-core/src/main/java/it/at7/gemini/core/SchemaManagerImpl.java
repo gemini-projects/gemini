@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import static it.at7.gemini.core.FilterContext.ALL;
 import static it.at7.gemini.schema.FieldType.*;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
@@ -86,6 +87,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         handleSchemasEntityRecords(entities.values(), transaction); // add core entityRecord i.e. ENTITY and FIELD
         stateManager.changeState(State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED);
         createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided as resources
+        loadEntityRecordsForFrameworkEntities(transaction);
         stateManager.changeState(State.PROVIDED_CLASSPATH_RECORDS_HANDLED);
     }
 
@@ -142,6 +144,15 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                 }
             }
         }
+    }
+
+    private void loadEntityRecordsForFrameworkEntities(Transaction transaction) throws GeminiException {
+        List<EntityRecord> allEntities = entityManager.getRecordsMatching(getEntity(EntityRef.NAME), ALL, getOperationContextForInitSchema(), transaction);
+        allEntities.forEach(e -> {
+            Entity entity = entityManager.getEntity(e.get(EntityRef.FIELDS.NAME));
+            assert entity != null;
+            entity.actualEntityRecord(e);
+        });
     }
 
     private EntityOperationContext getOperationContextForInitSchema() {
@@ -226,6 +237,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         for (Map.Entry<String, List<EntityRawRecords>> e : recordsByEntity.entrySet()) {
             String key = e.getKey();
             Entity entity = entities.get(key);
+            if (entity == null) {
+                logger.warn(String.format("Found Entity Records For Inexistent Entity with key %s", key));
+                return;
+            }
             List<EntityRawRecords> rawRecords = e.getValue();
             for (EntityRawRecords rr : rawRecords) {
                 Map<String, EntityRawRecords.VersionedRecords> versionedRecords = rr.getVersionedRecords();

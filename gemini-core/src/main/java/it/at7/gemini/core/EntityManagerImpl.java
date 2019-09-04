@@ -65,7 +65,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     public EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
         checkDynamicSchema(record);
-        notAllowedyOnSingleRecordEntity(record.getEntity());
+        checkEntity(record.getEntity());
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
             // can insert the entity record
@@ -79,7 +79,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         checkEnabledState();
         checkDynamicSchema(record);
         Entity entity = record.getEntity();
-
+        notAllowedOnClosedDomainEntity(entity);
         if (entity.isOneRecord())
             return updateOneRecordEntity(record, entityOperationContext, transaction);
 
@@ -96,7 +96,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     public EntityRecord update(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         if (record.hasID()) {
-            return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, record);
+            return updateRecordByUsingID(record, entityOperationContext, transaction);
         }
         if (record.hasUUID()) {
             return update(record.getUUID(), record, entityOperationContext, transaction);
@@ -111,6 +111,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     public EntityRecord update(Collection<? extends FieldValue> logicalKey, EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
         checkDynamicSchema(record);
+        notAllowedOnClosedDomainEntity(record.getEntity());
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(record.getEntity(), logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             // can update
@@ -122,7 +123,9 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
     @Override
     public EntityRecord update(UUID uuid, EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        checkEnabledState();
         checkDynamicSchema(record);
+        notAllowedOnClosedDomainEntity(record.getEntity());
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(record.getEntity(), uuid, transaction);
         if (persistedRecordOpt.isPresent()) {
             EntityRecord persistedRecord = persistedRecordOpt.get();
@@ -141,6 +144,13 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         throw EntityRecordException.UUID_NOTFOUND(record.getEntity(), uuid);
     }
 
+    private EntityRecord updateRecordByUsingID(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        checkEnabledState();
+        checkDynamicSchema(record);
+        notAllowedOnClosedDomainEntity(record.getEntity());
+        return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, record);
+    }
+
     private EntityRecord updateOneRecordEntity(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         assert record.getEntity().isOneRecord();
         EntityRecord singleEntityRecord = getOneRecordEntity(record.getEntity(), entityOperationContext, transaction);
@@ -150,7 +160,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     public EntityRecord delete(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkDynamicSchema(record.getEntity());
-        notAllowedyOnSingleRecordEntity(record.getEntity());
+        checkEntity(record.getEntity());
         if (record.hasID()) {
             return deleteRecordHandlingEvents(transaction, entityOperationContext, record);
         }
@@ -163,7 +173,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     public EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkDynamicSchema(entity);
-        notAllowedyOnSingleRecordEntity(entity);
+        checkEntity(entity);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             return deleteRecordHandlingEvents(transaction, entityOperationContext, persistedRecordOpt.get());
@@ -174,7 +184,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     public EntityRecord delete(Entity entity, UUID uuid, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkDynamicSchema(entity);
-        notAllowedyOnSingleRecordEntity(entity);
+        checkEntity(entity);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(entity, uuid, transaction);
         if (persistedRecordOpt.isPresent()) {
             return deleteRecordHandlingEvents(transaction, entityOperationContext, persistedRecordOpt.get());
@@ -220,6 +230,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
     @Override
     public List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        // TODO add entityoperation context
         return persistenceEntityManager.getEntityRecordsMatching(entity, filterContext, transaction);
     }
 
@@ -345,6 +356,17 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
             // cannot create core entity there
             if (CORE_ENTITIES.contains(entityName))
                 throw SchemaException.FRAMEWORK_SCHEMA_RECORDS_NOT_MODIFIABLE_THERE(actualState.name());
+        }
+    }
+
+    private void checkEntity(Entity entity) throws EntityException {
+        notAllowedyOnSingleRecordEntity(entity);
+        notAllowedOnClosedDomainEntity(entity);
+    }
+
+    private void notAllowedOnClosedDomainEntity(Entity entity) throws EntityException {
+        if (entity.isClosedDomain()) {
+            throw EntityException.API_NOT_ALLOWED_ON_CLOSED_DOMAIN(entity.getName());
         }
     }
 

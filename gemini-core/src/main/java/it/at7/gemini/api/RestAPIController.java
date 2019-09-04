@@ -6,6 +6,7 @@ import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.InvalidRequesException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
+import it.at7.gemini.schema.EntityRef;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -261,11 +262,18 @@ public class RestAPIController {
                 throw EntityException.API_NOT_ALLOWED_ON_ONEREC(entityStr.toUpperCase());
             }
         }
+        if (entity.isClosedDomain()) {
+            if (!method.equals("GET")) {
+                throw EntityException.API_NOT_ALLOWED_ON_CLOSED_DOMAIN(entityStr.toUpperCase());
+            }
+        }
         return entity;
     }
 
     private void ensureMethodsAreConsistent(String method, Entity entity) {
-        if (entity.isOneRecord()) {
+        EntityRecord actualEntityRecord = entity.getActualEntityRecord();
+        assert actualEntityRecord != null;
+        if (actualEntityRecord.getFieldOrDefault(EntityRef.FIELDS.CLOSED_DOMAIN, false)) {
 
         }
     }

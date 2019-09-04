@@ -13,7 +13,8 @@ public class EntityException extends GeminiException {
         ENTITY_NOT_FOUND,
         ENTITY_FIELD_FOUND,
         API_NOT_ALLOWED_ON_EMBEDABLE,
-        API_ALLOWED_ONLY_ON_ONEREC
+        API_ALLOWED_ONLY_ON_ONEREC,
+        API_NOT_ALLOWED_ON_CLOSED_DOMAIN;
     }
 
     public EntityException(EntityException.Code errorCode, String message, Entity entity) {
@@ -46,5 +47,9 @@ public class EntityException extends GeminiException {
 
     public static EntityException API_NOT_ALLOWED_ON_NOT_ONEREC(String entity) {
         return new EntityException(API_ALLOWED_ONLY_ON_ONEREC, String.format("Entity %s is NOT a singleton (only one record) - API not allowed", entity), entity);
+    }
+
+    public static EntityException API_NOT_ALLOWED_ON_CLOSED_DOMAIN(String entity) {
+        return new EntityException(API_NOT_ALLOWED_ON_CLOSED_DOMAIN, String.format("Entity %s cannot be modified - API not allowed", entity), entity);
     }
 }

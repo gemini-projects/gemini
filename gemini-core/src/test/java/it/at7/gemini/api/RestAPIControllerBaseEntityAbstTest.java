@@ -27,7 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class RestAPIControllerBaseEntityAbstTest extends UnitTestBase {
 

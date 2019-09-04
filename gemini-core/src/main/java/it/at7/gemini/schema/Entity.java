@@ -35,6 +35,9 @@ public class Entity {
     private final boolean embedable;
     private final boolean oneRecord;
     private Object idValue;
+    private EntityRecord actualEntityRecord;
+
+    private boolean isClosedDomain = false;
 
     public Entity(Module module, String name, boolean embedable, boolean oneRecord, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
         this.oneRecord = oneRecord;
@@ -81,6 +84,10 @@ public class Entity {
      */
     public boolean isOneRecord() {
         return oneRecord;
+    }
+
+    public boolean isClosedDomain() {
+        return isClosedDomain;
     }
 
     public EntityField getField(String fieldName) throws EntityFieldException {
@@ -207,6 +214,23 @@ public class Entity {
         }
         return ret;
     }
+
+    public void actualEntityRecord(EntityRecord e) {
+        this.actualEntityRecord = e;
+        this.isClosedDomain = e.getFieldOrDefault(EntityRef.FIELDS.CLOSED_DOMAIN, false);
+    }
+
+    /**
+     * The entity record of this Entity.
+     *
+     * @return
+     */
+    @Nullable
+    public EntityRecord getActualEntityRecord() {
+        return actualEntityRecord;
+    }
+
+
 
     public class LogicalKey {
 

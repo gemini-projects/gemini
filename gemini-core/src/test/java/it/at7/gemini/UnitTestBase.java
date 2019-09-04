@@ -14,6 +14,9 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+/**
+ * UnitTestBase provides the entry point to full Gemini Wapp Test.
+ */
 public abstract class UnitTestBase {
     private static boolean contextInitialized = false;
 

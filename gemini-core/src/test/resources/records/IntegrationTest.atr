@@ -1,0 +1,15 @@
+ENTITY-RECORD Entity ClosedDomain_Entity_IT 1
+{
+     "name" : "CLOSED_DOMAIN",
+     "closedDomain": true
+}
+
+ENTITY-RECORD Closed_Domain ClosedDomain_Values 1
+[{
+     "code" : "VALUE_1",
+     "description": "First Value"
+},
+{
+     "code" : "VALUE_2",
+     "description": "Second Value"
+}]

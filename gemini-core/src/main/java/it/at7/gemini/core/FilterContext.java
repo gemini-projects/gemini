@@ -41,6 +41,8 @@ public class FilterContext {
         return new FilterContextBuilder().withGeminiSearchString(searchString).build();
     }
 
+    public static FilterContext ALL = new FilterContextBuilder().build();
+
     public enum FilterType {
         GEMINI,
         PERSISTENCE

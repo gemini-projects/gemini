@@ -89,3 +89,5 @@ ENTITY WithGenericEntityRef {
     TEXT    logKey *
     GENERIC_ENTITY_REF  genericRef
 }
+
+ENTITY Closed_Domain IMPLEMENTS Domain
