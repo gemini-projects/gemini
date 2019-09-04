@@ -1,5 +1,10 @@
 package it.at7.gemini.core;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 public interface Module extends StateListener {
 
     default String getName() {
@@ -52,5 +57,21 @@ public interface Module extends StateListener {
 
     default String getSchemaLocation() {
         return getSchemaResourceLocation().replace("classpath: ", "");
+    }
+
+    static Collection<Module> getDependenciesClosure(Map<String, Module> modules, Module targetModule) {
+        if (targetModule == null) {
+            return List.of();
+        }
+
+        ArrayList<Module> res = new ArrayList<>();
+        res.add(targetModule);
+
+        String[] dependencies = targetModule.getDependencies();
+        for (String dep : dependencies) {
+            Module module = modules.get(dep);
+            res.addAll(getDependenciesClosure(modules, module));
+        }
+        return res;
     }
 }

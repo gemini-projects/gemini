@@ -26,4 +26,16 @@ public class RuntimeModule implements Module {
         String pattern = "./schema/%s.at";
         return String.format(pattern, getName());
     }
+
+    @Override
+    public String getEntityRecordResourceLocation(String entityName) {
+        String pattern = "file:./records/%s.atr";
+        return String.format(pattern, getName());
+    }
+
+    @Override
+    public String getSchemaRecordResourceLocation() {
+        String pattern = "./records/%s.atr";
+        return String.format(pattern, getName());
+    }
 }

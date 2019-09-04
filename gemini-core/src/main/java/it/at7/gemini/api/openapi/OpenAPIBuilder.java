@@ -152,21 +152,26 @@ public class OpenAPIBuilder {
             Path rootEntityPath = new Path();
             rootEntityPath.summary = String.format("%s resource route", entityName);
             rootEntityPath.get = getEntityRootMethod(entity);
-            if (!entity.isOneRecord())
+            if (!entity.isOneRecord() && !entity.isClosedDomain())
                 rootEntityPath.post = postNewEntityMethod(entity);
-            if (entity.isOneRecord())
+            if (entity.isOneRecord() && !entity.isClosedDomain())
                 rootEntityPath.put = putEntityOneRecord(entity);
 
             // rootEntityPath.parameters = List.of(Map.of("$ref", "#/components/parameters/GeminiHeader"));
             this.pathsByName.put("/" + entityPathName, rootEntityPath);
             this.RESTentitiesPaths.add(rootEntityPath);
 
-            // GET / PUT and DELETE on /entityname/{uuid} -- always available
+            // GET / on entityname/{uuid} -- always available
             Path uuidEntityPath = new Path();
             uuidEntityPath.summary = String.format("%s resource by UUID root", entityName);
             uuidEntityPath.get = getEntityUUIDandLKMethod(entity, "Get the %s resource by its uuid");
-            uuidEntityPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its uuid");
-            if (!entity.isOneRecord())
+
+            // PUT not enabled on CLOSED Domains
+            if (!entity.isClosedDomain())
+                uuidEntityPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its uuid");
+
+            // DELETE not enabled with oneRecordEntity or ClosedDomain
+            if (!entity.isOneRecord() && !entity.isClosedDomain())
                 uuidEntityPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its uuid");
             uuidEntityPath.parameters = List.of(
                     Map.of("$ref", "#/components/parameters/uuid")
@@ -186,18 +191,23 @@ public class OpenAPIBuilder {
                 // lkPath.parameters.add(Map.of("$ref", "#/components/parameters/GeminiHeader"));
 
                 lkPath.get = getEntityUUIDandLKMethod(entity, "Get the %s resource by its Logical Key");
-                lkPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its Logical Key");
-                lkPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its Logical Key");
+
+                if (!entity.isClosedDomain()) {
+                    lkPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its Logical Key");
+                    lkPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its Logical Key");
+                }
 
                 this.pathsByName.put("/" + entityPathName + "/" + lkPathString, lkPath);
                 this.RESTentitiesPaths.add(lkPath);
                 addComponentSchema(entity, ENTITY_LK);
             }
+
+            // SCHEMA with META only if it is not embedable
+            addComponentSchema(entity, ENTITY_WITH_META);
         }
 
-        // SCHEMAS
+        // SCHEMA all the times... even it is embedable
         addComponentSchema(entity, ENTITY);
-        addComponentSchema(entity, ENTITY_WITH_META);
     }
 
     private String getEntityLKPath(Entity entity, boolean isLevel0) {

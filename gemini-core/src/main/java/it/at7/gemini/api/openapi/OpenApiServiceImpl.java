@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,10 +34,9 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
     private final Environment environment;
     private final ApplicationContext context;
 
-    private OpenAPIBuilder openAPIAllBuilder;
-    private OpenAPIBuilder runtimeAPIBuilder;
-
     private List<Runnable> API_INITIALIZER_LISTENER = new ArrayList<>();
+
+    private Map<String, OpenAPIFile> builders = new HashMap<>();
 
     @Autowired
     public OpenApiServiceImpl(GeminiConfigurationService configurationService, StateManager stateManager,
@@ -50,8 +50,15 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
         this.context = context;
         if (configurationService.isOpenapiSchema()) {
             this.stateManager.register(this);
-            openAPIAllBuilder = new OpenAPIBuilder();
-            runtimeAPIBuilder = new OpenAPIBuilder(false);
+
+            // openapi spec with all entities
+            builders.put("ALL", OpenAPIFile.from(new OpenAPIBuilder(), "ALL", "all.json"));
+
+            // entities by module... in each dedicated file
+            schemaManager.getModules().forEach(m -> {
+                String moduleName = m.getName().toUpperCase();
+                builders.put(moduleName, OpenAPIFile.from(new OpenAPIBuilder(false), moduleName, moduleName.toLowerCase() + ".json"));
+            });
         }
     }
 
@@ -72,10 +79,8 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
                 case API_INITIALIZED:
                     API_INITIALIZER_LISTENER.forEach(Runnable::run);
                     String localPort = environment.getProperty("local.server.port");
-                    openAPIAllBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
-                    runtimeAPIBuilder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server");
-                    storeOpenAPISchema(openAPIAllBuilder, "all.json");
-                    storeOpenAPISchema(runtimeAPIBuilder, "runtime.json");
+                    iterateOverBuilders(b -> b.builder.addServer("http://127.0.0.1:" + localPort + "/api", "Local Server"));
+                    iterateOverBuilders(b -> storeOpenAPISchema(b.builder, b.fileName));
                     break;
                 default:
                     break;
@@ -91,8 +96,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
             }
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             GeminiServiceInfoWrapper geminiService = mapper.readValue(serviceInfoFile, GeminiServiceInfoWrapper.class);
-            openAPIAllBuilder.addInfo(geminiService.info);
-            runtimeAPIBuilder.addInfo(geminiService.info);
+            iterateOverBuilders(b -> b.builder.addInfo(geminiService.info));
         } catch (IOException e) {
             throw new GeminiRuntimeException(e);
         }
@@ -102,16 +106,25 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
         Collection<Entity> allEntities = this.schemaManager.getAllEntities();
         Map<Module, List<Entity>> entitiesByModule = allEntities.stream().collect(Collectors.groupingBy(Entity::getModule));
         List<Module> orderedModules = entitiesByModule.keySet().stream().sorted(Comparator.comparingInt(Module::order)).collect(Collectors.toList());
-        openAPIAllBuilder.addModulesToTags(orderedModules);
+        OpenAPIBuilder allEntityBuilder = this.builders.get("ALL").builder;
+        allEntityBuilder.addModulesToTags(orderedModules);
         for (Module module : orderedModules) {
             List<Entity> entities = entitiesByModule.get(module);
-            entities.forEach(e -> openAPIAllBuilder.handleEntity(e));
+            entities.forEach(allEntityBuilder::handleEntity);
+            String moduleName = module.getName().toUpperCase();
+            OpenAPIFile openAPIFile = this.builders.get(moduleName);
+            assert openAPIFile != null;
 
-            if (module.getName().equals("RUNTIME")) {
-                entities.forEach(e -> runtimeAPIBuilder.handleEntity(e));
-            } else {
-                entities.forEach(e -> runtimeAPIBuilder.addComponentSchema(e, OpenAPIBuilder.SchemaType.ENTITY_LK));
-            }
+            List<OpenAPIFile> otherOpenApiFiles = this.builders.values().stream().filter(f -> !f.key.equals(openAPIFile.key) && !f.key.equals("ALL")).collect(Collectors.toList());
+
+            entities.forEach(e -> {
+                openAPIFile.builder.handleEntity(e);
+
+                otherOpenApiFiles.forEach(b -> b.builder.addComponentSchema(e, OpenAPIBuilder.SchemaType.ENTITY));
+                if (!e.isEmbedable()) {
+                    otherOpenApiFiles.forEach(b -> b.builder.addComponentSchema(e, OpenAPIBuilder.SchemaType.ENTITY_LK));
+                }
+            });
         }
 
     }
@@ -143,8 +156,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
                     Map.of("tokenUrl", tokenUrl,
                             "refreshUrl", flowParameters.get("refreshUrl"))
             );
-            this.openAPIAllBuilder.addSecurityComponent(name, securitySchema);
-            this.runtimeAPIBuilder.addSecurityComponent(name, securitySchema);
+            iterateOverBuilders(b -> b.builder.addSecurityComponent(name, securitySchema));
         }
     }
 
@@ -152,22 +164,32 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
     public void secureAllEntities(String securitySchemaName) {
         if (configurationService.isOpenapiSchema()) {
             API_INITIALIZER_LISTENER.add(() -> {
-                this.openAPIAllBuilder.secureAllEntityPaths(securitySchemaName);
-                this.runtimeAPIBuilder.secureAllEntityPaths(securitySchemaName);
+                iterateOverBuilders(b -> b.builder.secureAllEntityPaths(securitySchemaName));
             });
         }
     }
 
-    /* @Override
-    public void addPath(OpenAPIBuilder.Path path) {
-        if (configurationService.isOpenapiSchema()) {
-            API_INITIALIZER_LISTENER.add(() -> {
-                this.openAPIAllBuilder.addPath(path);
-            });
-        }
-    } */
+    private void iterateOverBuilders(Consumer<OpenAPIFile> c) {
+        this.builders.values().forEach(c);
+    }
 
     static class GeminiServiceInfoWrapper {
         public OpenAPIBuilder.Info info;
+    }
+
+    static class OpenAPIFile {
+        OpenAPIBuilder builder;
+        String key;
+        String fileName;
+
+        public OpenAPIFile(OpenAPIBuilder builder, String key, String fileName) {
+            this.builder = builder;
+            this.key = key;
+            this.fileName = fileName;
+        }
+
+        static OpenAPIFile from(OpenAPIBuilder builder, String key, String fileName) {
+            return new OpenAPIFile(builder, key, fileName);
+        }
     }
 }
