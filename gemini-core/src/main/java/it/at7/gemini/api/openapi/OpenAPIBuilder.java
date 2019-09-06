@@ -48,7 +48,6 @@ public class OpenAPIBuilder {
     }
 
     private void initComponents() {
-        addServer("/", "Root Server");
         components.put("responses", initResponseComponent());
         components.put("schemas", initSchemasComponent());
         components.put("parameters", initParametersComponent());

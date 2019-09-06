@@ -15,12 +15,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static it.at7.gemini.conf.State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED;
-import static it.at7.gemini.conf.State.INITIALIZED;
+import static it.at7.gemini.conf.State.PROVIDED_CLASSPATH_RECORDS_HANDLED;
 
 @Service
 public class EntityManagerImpl implements EntityManager, EntityManagerInit {
-    private static final Set<String> CORE_ENTITIES = Set.of(EntityRef.NAME, FieldRef.NAME);
+    public static final Set<String> CORE_ENTITIES = Set.of(EntityRef.NAME, FieldRef.NAME);
 
     private SchemaManager schemaManager;
     private TransactionManager transactionManager;
@@ -352,7 +351,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     private void checkFrameworkEntitiesCreation(EntityRecord record) throws SchemaException {
         String entityName = record.getEntity().getName();
         State actualState = stateManager.getActualState();
-        if (FRAMEWORK_SCHEMA_RECORDS_INITIALIZED.compareTo(actualState) <= 0 && actualState.compareTo(INITIALIZED) < 0) {
+        if (actualState.compareTo(PROVIDED_CLASSPATH_RECORDS_HANDLED) >= 0) {
             // cannot create core entity there
             if (CORE_ENTITIES.contains(entityName))
                 throw SchemaException.FRAMEWORK_SCHEMA_RECORDS_NOT_MODIFIABLE_THERE(actualState.name());

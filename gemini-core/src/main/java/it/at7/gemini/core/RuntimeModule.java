@@ -30,12 +30,12 @@ public class RuntimeModule implements Module {
     @Override
     public String getEntityRecordResourceLocation(String entityName) {
         String pattern = "file:./records/%s.atr";
-        return String.format(pattern, getName());
+        return String.format(pattern, entityName);
     }
 
     @Override
     public String getSchemaRecordResourceLocation() {
-        String pattern = "./records/%s.atr";
+        String pattern = "file:./records/%s.atr";
         return String.format(pattern, getName());
     }
 }

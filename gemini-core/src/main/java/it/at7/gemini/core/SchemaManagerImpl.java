@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import static it.at7.gemini.core.EntityManagerImpl.CORE_ENTITIES;
 import static it.at7.gemini.core.FilterContext.ALL;
 import static it.at7.gemini.schema.FieldType.*;
 import static java.util.stream.Collectors.mapping;
@@ -255,7 +256,11 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                         logger.info(String.format("Handling records for entity %s and version %s - %d", entity.getName(), version.getVersionName(), version.getVersionProgressive()));
                         for (Object record : version.getRecords()) {
                             EntityRecord entityRecord = RecordConverters.entityRecordFromMap(entity, (Map<String, Object>) record);
-                            entityManager.putOrUpdate(entityRecord, operationContextForInitSchema, transaction);
+                            if (CORE_ENTITIES.contains(entity.getName().toUpperCase())) {
+                                entityManager.update(entityRecord, operationContextForInitSchema, transaction);
+                            } else {
+                                entityManager.putOrUpdate(entityRecord, operationContextForInitSchema, transaction);
+                            }
                         }
                         entityManager.putIfAbsent(initVersionRec, operationContextForInitSchema, transaction);
                     }
