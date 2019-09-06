@@ -5,7 +5,6 @@ import it.at7.gemini.auth.core.UserRef;
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.Module;
 import it.at7.gemini.core.*;
-import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
 import org.slf4j.Logger;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 import static it.at7.gemini.conf.State.SCHEMA_EVENTS_LOADED;
-import static it.at7.gemini.conf.State.SCHEMA_STORAGE_INITIALIZED;
 
 @Service
 @ModuleDescription(
@@ -28,7 +26,7 @@ import static it.at7.gemini.conf.State.SCHEMA_STORAGE_INITIALIZED;
         order = -607)
 @ComponentScan("it.at7.gemini.auth.core")
 @ComponentScan("it.at7.gemini.auth.events")
-@ConditionalOnProperty(name = "gemini.auth", matchIfMissing = true)
+@ConditionalOnProperty(name = "gemini.auth", havingValue = "true", matchIfMissing = true)
 public class AuthModule implements Module {
     private static final Logger logger = LoggerFactory.getLogger(AuthModule.class);
 

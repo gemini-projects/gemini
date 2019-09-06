@@ -20,7 +20,7 @@ import static it.at7.gemini.conf.State.API_INITIALIZATION;
 
 @Service
 @ComponentScan("it.at7.gemini.auth.api")
-@ConditionalOnProperty(name = "gemini.auth", matchIfMissing = true)
+@ConditionalOnProperty(name = "gemini.auth", havingValue = "true", matchIfMissing = true)
 public class AuthModuleAPI implements StateListener {
 
     private final OpenApiService openApiService;
