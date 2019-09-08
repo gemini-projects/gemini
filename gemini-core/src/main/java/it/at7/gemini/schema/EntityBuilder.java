@@ -49,7 +49,7 @@ public class EntityBuilder {
     }
 
     public Entity build() {
-        return new Entity(mainModule, entityName, rawEntity.isEmbedable(), rawEntity.isOneRecord(), fieldsBuilders, defaultRecord);
+        return new Entity(mainModule, entityName, rawEntity.isEmbedable(), rawEntity.isOneRecord(), rawEntity.getImplementsIntefaces(), fieldsBuilders, defaultRecord);
     }
 
     public List<ExtraEntity> getExternalEntities() {

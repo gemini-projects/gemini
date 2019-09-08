@@ -22,7 +22,7 @@ public class ErrorService implements InitializingBean {
         Set<BeanDefinition> components = provider.findCandidateComponents("it.at7.gemini");
         for (BeanDefinition component : components) {
             Class<?> gemException = Class.forName(component.getBeanClassName());
-            Class<?>[] innerClasses = gemException.getClasses();
+            Class<?>[] innerClasses = gemException.getDeclaredClasses();
             for (Class<?> innerClass : innerClasses) {
                 String simpleName = innerClass.getSimpleName();
                 if (simpleName.equals("Code")) {

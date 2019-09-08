@@ -250,7 +250,9 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     private EntityRecord createNewEntityRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         this.checkFrameworkEntitiesCreation(record);
         this.eventManager.beforeInsertFields(record, entityOperationContext, transaction);
-        return persistenceEntityManager.createNewEntityRecord(record, transaction);
+        EntityRecord newEntityRecord = persistenceEntityManager.createNewEntityRecord(record, transaction);
+        this.eventManager.onInsertedRecord(record, entityOperationContext, transaction);
+        return newEntityRecord;
     }
 
     private boolean someRealUpdatedNeeded(EntityRecord record, EntityRecord persistedRecord) {

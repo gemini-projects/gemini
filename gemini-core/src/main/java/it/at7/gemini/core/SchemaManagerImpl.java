@@ -86,10 +86,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, FieldRef.NAME);
         */
         handleSchemasEntityRecords(entities.values(), transaction); // add core entityRecord i.e. ENTITY and FIELD
-        stateManager.changeState(State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED);
+        stateManager.changeState(State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED, Optional.of(transaction));
         createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided as resources
         loadEntityRecordsForFrameworkEntities(transaction);
-        stateManager.changeState(State.PROVIDED_CLASSPATH_RECORDS_HANDLED);
+        stateManager.changeState(State.PROVIDED_CLASSPATH_RECORDS_HANDLED, Optional.of(transaction));
     }
 
     @Override
@@ -156,7 +156,8 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         });
     }
 
-    private EntityOperationContext getOperationContextForInitSchema() {
+    @Override
+    public EntityOperationContext getOperationContextForInitSchema() {
         EntityOperationContext entityOperationContext = new EntityOperationContext();
 
         Map<String, SchemaManagerInitListener> listenerMap = applicationContext.getBeansOfType(SchemaManagerInitListener.class);
@@ -278,6 +279,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                 RawSchema rawSchema;
                 if (resource.exists()) {
                     InputStream schemaStream = resource.getInputStream();
+                    logger.info("Schema definition found for module {}: location {}", module.getName(), location);
                     rawSchema = SchemaParser.parse(new InputStreamReader(schemaStream));
                 } else {
                     logger.info("No schema definition found for module {}: location {}", module.getName(), location);

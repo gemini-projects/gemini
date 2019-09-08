@@ -1,0 +1,5 @@
+ENTITY-RECORD Entity GUI 1
+{
+     "name" : "SIDEBARELEMTYPE",
+     "closedDomain": true
+}

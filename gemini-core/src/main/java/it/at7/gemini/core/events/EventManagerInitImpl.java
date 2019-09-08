@@ -1,7 +1,7 @@
 package it.at7.gemini.core.events;
 
-import it.at7.gemini.core.*;
 import it.at7.gemini.core.Module;
+import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
 import it.at7.gemini.schema.Entity;
@@ -21,8 +21,16 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
     private final SchemaManager schemaManager;
 
 
+    /**
+     * Maps contains method to invoke for each Entity -> Field accordingly to the event type
+     */
     private final Map<String, Map<String, List<BeanWithMethod>>> beforeInsertField = new HashMap<>();
     private final Map<String, Map<String, List<BeanWithMethod>>> onUpdateField = new HashMap<>();
+
+    /**
+     * Maps contains method to invoke for each Entity accordingly to the event type
+     */
+    private final Map<String, List<BeanWithMethod>> onRecordInserted = new HashMap<>();
 
 
     Map<String, List<Object>> entityEventsBeans;
@@ -55,7 +63,7 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
             String entityName = ev.getKey();
             List<Object> orderedEventBeansForEntity = ev.getValue();
             for (Object eventBean : orderedEventBeansForEntity) {
-                for (Method method : eventBean.getClass().getMethods()) {
+                for (Method method : eventBean.getClass().getDeclaredMethods()) {
                     Annotation[] declaredAnnotations = method.getDeclaredAnnotations();
                     for (Annotation annotation : declaredAnnotations) {
                         resolveAnnotation(entityName, annotation, eventBean, method);
@@ -93,11 +101,19 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
                 resolveAnnotationField(entityName, insertField.field(), onUpdateField, bean, targetMethod);
             }
         }
+        if (annotation instanceof OnRecordInserted) {
+            resolveAnnotationEntity(entityName, onRecordInserted, bean, targetMethod);
+        }
     }
 
     private void resolveAnnotationField(String entityName, String fieldName, Map<String, Map<String, List<BeanWithMethod>>> mapByEntNameAndField, Object bean, Method targetMethod) {
         Map<String, List<BeanWithMethod>> beforeFieldByFieldName = mapByEntNameAndField.computeIfAbsent(entityName, e -> new HashMap<>());
         List<BeanWithMethod> methodList = beforeFieldByFieldName.computeIfAbsent(fieldName, f -> new ArrayList<>());
+        methodList.add(BeanWithMethod.of(bean, targetMethod));
+    }
+
+    private void resolveAnnotationEntity(String entityName, Map<String, List<BeanWithMethod>> mapByEntityName, Object bean, Method targetMethod) {
+        List<BeanWithMethod> methodList = mapByEntityName.computeIfAbsent(entityName, e -> new ArrayList<>());
         methodList.add(BeanWithMethod.of(bean, targetMethod));
     }
 
@@ -138,7 +154,7 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         String fieldName = field.getName();
         List<BeanWithMethod> beanWithMethods = entityMethods.get(fieldName.toLowerCase());
         if (beanWithMethods != null && !beanWithMethods.isEmpty()) {
-            // TODO events precedence
+            // TODO events sorting and priority
             for (BeanWithMethod bm : beanWithMethods) {
                 try {
                     EventContext eventContext = getEventContext(transaction, entityOperationContext, record);
@@ -146,6 +162,39 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
                     if (res != null) {
                         record.put(field, res);
                     }
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw GeminiGenericException.wrap(e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onInsertedRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
+        handleEventForEntity(record, transaction, entityOperationContext, this.onRecordInserted);
+    }
+
+    private void handleEventForEntity(EntityRecord record, Transaction transaction, EntityOperationContext entityOperationContext, Map<String, List<BeanWithMethod>> methods) throws GeminiGenericException {
+        Entity entity = record.getEntity();
+        String entityName = entity.getName();
+
+        List<String> implementsIntefaces = entity.getImplementsIntefaces();
+        for (String intf : implementsIntefaces) {
+            List<BeanWithMethod> interfaceMethods = methods.get(intf);
+            ivokeMethodForEntity(record, entityOperationContext, interfaceMethods, transaction);
+        }
+
+        List<BeanWithMethod> entityMethods = methods.get(entityName);
+        ivokeMethodForEntity(record, entityOperationContext, entityMethods, transaction);
+    }
+
+    private void ivokeMethodForEntity(EntityRecord record, EntityOperationContext entityOperationContext, List<BeanWithMethod> beanWithMethods, Transaction transaction) throws GeminiGenericException {
+        if (beanWithMethods != null && !beanWithMethods.isEmpty()) {
+            // TODO events sorting and priority
+            for (BeanWithMethod bm : beanWithMethods) {
+                try {
+                    EventContext eventContext = getEventContext(transaction, entityOperationContext, record);
+                    bm.method.invoke(bm.bean, eventContext);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw GeminiGenericException.wrap(e);
                 }
@@ -161,6 +210,9 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
                 .build();
     }
 
+    /**
+     * Utility class to bind a Method and its definition bean object
+     */
     static class BeanWithMethod {
         Object bean;
         Method method;

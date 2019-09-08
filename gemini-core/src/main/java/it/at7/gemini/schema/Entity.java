@@ -5,6 +5,8 @@ import it.at7.gemini.core.Module;
 import it.at7.gemini.core.RecordConverters;
 import it.at7.gemini.core.Services;
 import it.at7.gemini.exceptions.EntityFieldException;
+import it.at7.gemini.exceptions.EntityFieldNotFoundException;
+import it.at7.gemini.exceptions.EntityMetaFieldNotFoundException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -34,12 +36,13 @@ public class Entity {
     private final EntityField idField;
     private final boolean embedable;
     private final boolean oneRecord;
+    private final List<String> implementsIntefaces;
     private Object idValue;
     private EntityRecord actualEntityRecord;
 
     private boolean isClosedDomain = false;
 
-    public Entity(Module module, String name, boolean embedable, boolean oneRecord, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
+    public Entity(Module module, String name, boolean embedable, boolean oneRecord, List<String> implementsIntefaces, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
         this.oneRecord = oneRecord;
         Assert.notNull(module, "Module must be not null");
         Assert.notNull(name, "Entity name must be not null");
@@ -55,6 +58,7 @@ public class Entity {
         Assert.isTrue(uniqueMetaAndDataField(dataFieldsByName.keySet(), metaFieldsByName.keySet()), "Data/Meta Fields names are not unique");
         this.logicalKey = extractLogicalKeyFrom(dataFields);
         this.idField = EntityFieldBuilder.ID(this);
+        this.implementsIntefaces = List.copyOf(implementsIntefaces);
         idValue = null;
     }
 
@@ -90,7 +94,7 @@ public class Entity {
         return isClosedDomain;
     }
 
-    public EntityField getField(String fieldName) throws EntityFieldException {
+    public EntityField getField(String fieldName) throws EntityFieldNotFoundException {
         fieldName = fieldName.toLowerCase();
         EntityField idField = getIdEntityField();
         if (idField.getName().toLowerCase().equals(fieldName)) {
@@ -103,11 +107,11 @@ public class Entity {
         return entityField;
     }
 
-    public EntityField getMetaField(String fieldName) throws EntityFieldException {
+    public EntityField getMetaField(String fieldName) throws EntityMetaFieldNotFoundException {
         fieldName = fieldName.toLowerCase();
         EntityField entityField = metaFieldsByName.get(fieldName);
         if (entityField == null) {
-            throw EntityFieldException.ENTITYMETAFIELD_NOT_FOUND(entityField);
+            throw EntityFieldException.ENTITYMETAFIELD_NOT_FOUND(this, fieldName);
         }
         return entityField;
     }
@@ -139,6 +143,9 @@ public class Entity {
         return idField;
     }
 
+    public List<String> getImplementsIntefaces() {
+        return implementsIntefaces;
+    }
 
     /* TODO runtime entities ?
     public void addField(EntityField entityField) throws EntityFieldException {

@@ -1,7 +1,9 @@
 package it.at7.gemini.core.persistence;
 
+import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
+import cz.jirutka.rsql.parser.ast.Node;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
@@ -9,10 +11,9 @@ import it.at7.gemini.schema.FieldType;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static cz.jirutka.rsql.parser.ast.RSQLOperators.*;
-import static cz.jirutka.rsql.parser.ast.RSQLOperators.NOT_IN;
+import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.wrapDoubleQuotes;
 
 public class EntityRefTypeFilterVisitor implements GeminiTypeFilterVisitor {
 
@@ -30,34 +31,60 @@ public class EntityRefTypeFilterVisitor implements GeminiTypeFilterVisitor {
             FieldType type = field.getType();
             assert type.equals(FieldType.ENTITY_REF);
             String sqlOperator = supportedOperators.get(operator);
-            Optional<String> singleLKsql = handleSingleLogicalKeyEntity(field, node, sqlOperator);
-            if (singleLKsql.isPresent())
-                return field.getName().toLowerCase() + " " + sqlOperator + " ( " + singleLKsql.get() + " ) ";
-            throw new GeminiRuntimeException(String.format("EntityRefTypeFilterVisitor TODO multiple field logical key", node.getOperator().getSymbol()));
+
+            Entity entityRef = field.getEntityRef();
+            Entity.LogicalKey refLogicalKey = entityRef.getLogicalKey();
+            assert refLogicalKey != null;
+            String innerINQuery;
+            if (refLogicalKey.getLogicalKeyList().size() == 1) {
+                innerINQuery = handleSingleLogicalKeyEntity(field, node, sqlOperator);
+            } else {
+                innerINQuery = handleMultipleLogicalKeyEntities(field, node, sqlOperator);
+            }
+
+            if (innerINQuery == null) {
+                throw new GeminiRuntimeException(String.format("EntityRefTypeFilterVisitor TODO multiple field logical key", node.getOperator().getSymbol()));
+            }
+            return wrapDoubleQuotes(field.getEntity().getName().toLowerCase()) + "." +
+                    wrapDoubleQuotes(field.getName().toLowerCase())
+                    + " " + sqlOperator + " ( " + innerINQuery + " ) ";
         }
         throw new GeminiRuntimeException(String.format("EntityRefTypeFilterVisitor unsupported operator %s", node.getOperator().getSymbol()));
     }
 
-    private Optional<String> handleSingleLogicalKeyEntity(EntityField field, ComparisonNode node, String sqlOperator) {
+    private String handleMultipleLogicalKeyEntities(EntityField field, ComparisonNode node, String sqlOperator) {
+        String selector = node.getSelector();
+        List<String> arguments = node.getArguments();
+        if (arguments.size() == 1) {
+            Entity entityRef = field.getEntityRef();
+            String argument = arguments.get(0);
+            // parse again the argument
+            Node rootNode = new RSQLParser().parse(argument);
+            String innerQuery = rootNode.accept(new FilterVisitor(), entityRef);
+            return String.format("SELECT %1$s.%2$s" +
+                    "  FROM %1$s WHERE ", wrapDoubleQuotes(entityRef.getName().toLowerCase()), wrapDoubleQuotes(entityRef.getIdEntityField().getName().toLowerCase()))
+                    + innerQuery;
+        }
+        throw new GeminiRuntimeException(String.format("EntityRefTypeFilterVisitor unsupported operator %s with for that one argument", node.getOperator().getSymbol()));
+    }
+
+    private String handleSingleLogicalKeyEntity(EntityField field, ComparisonNode node, String sqlOperator) {
         Entity entityRef = field.getEntityRef();
         Entity.LogicalKey logicalKey = entityRef.getLogicalKey();
-        if (logicalKey.getLogicalKeyList().size() == 1) {
-            EntityField lkField = logicalKey.getLogicalKeyList().get(0);
-            String sqlFilter = String.format("" +
-                    "SELECT %1$s.%2$s" +
-                    "  FROM %1$s " +
-                    " WHERE %1$s.%3$s IN ( ", entityRef.getName().toLowerCase(), entityRef.getIdEntityField().getName().toLowerCase(), lkField.getName().toLowerCase());
-            List<String> arguments = node.getArguments();
-            for (int i = 0; i < arguments.size(); i++) {
-                sqlFilter += resolveArgumentValue(lkField, arguments.get(i));
-                if (i != arguments.size() - 1) {
-                    sqlFilter += " , ";
-                }
+        EntityField lkField = logicalKey.getLogicalKeyList().get(0);
+        String sqlFilter = String.format("" +
+                "SELECT %1$s.%2$s" +
+                "  FROM %1$s " +
+                " WHERE %1$s.%3$s IN ( ", wrapDoubleQuotes(entityRef.getName().toLowerCase()), wrapDoubleQuotes(entityRef.getIdEntityField().getName().toLowerCase()), wrapDoubleQuotes(lkField.getName().toLowerCase()));
+        List<String> arguments = node.getArguments();
+        for (int i = 0; i < arguments.size(); i++) {
+            sqlFilter += resolveArgumentValue(lkField, arguments.get(i));
+            if (i != arguments.size() - 1) {
+                sqlFilter += " , ";
             }
-            sqlFilter += " )";
-            return Optional.of(sqlFilter);
         }
-        return Optional.empty();
+        sqlFilter += " )";
+        return sqlFilter;
     }
 
     private String resolveArgumentValue(EntityField lkField, String argument) {

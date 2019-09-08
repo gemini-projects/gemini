@@ -11,7 +11,41 @@ ENTITY Field {
     TEXT    displayName
 }
 
-ENTITY EMBEDABLE FieldGuiSettings   {
+ENTITY EntityGUI {
+    Entity  entity  *
+    TEXT    displayName
+}
+
+# Extended from CORE
+ENTITY FieldGUI {
+    Field               field   *
+    FieldGuiSettings    guiSettings
+    TEXT                displayName
+}
+
+ENTITY EMBEDABLE FieldGuiSettings  {
     BOOL         useAsDesc
     LONG         sortKey
+}
+
+ENTITY GuiSettingsType IMPLEMENTS Domain
+
+ENTITY GUISettings {
+    TEXT                code *
+    TEXT                displayName
+    GuiSettingsType     type
+    GENERIC_ENTITY_REF  extRef
+
+}
+
+ENTITY ONEREC SideBarSettings {
+    BOOL     active
+}
+
+ENTITY SideBarElemType IMPLEMENTS Domain
+
+ENTITY SideBarElem {
+    TEXT            code *
+    TEXT            displayName
+    SideBarElemType type
 }

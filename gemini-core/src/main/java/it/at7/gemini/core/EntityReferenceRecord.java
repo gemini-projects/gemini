@@ -1,6 +1,8 @@
 package it.at7.gemini.core;
 
+import it.at7.gemini.exceptions.EntityFieldException;
 import it.at7.gemini.schema.Entity;
+import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.Field;
 
 import java.util.HashSet;
@@ -45,6 +47,11 @@ public class EntityReferenceRecord {
 
     public DynamicRecord getLogicalKeyRecord() {
         return logicalKeyValue;
+    }
+
+    public void addLogicalKeyValue(String fieldName, Object value) throws EntityFieldException {
+        EntityField field = entity.getField(fieldName);
+        addLogicalKeyValue(field, value);
     }
 
     public void addLogicalKeyValue(Field field, Object value) {

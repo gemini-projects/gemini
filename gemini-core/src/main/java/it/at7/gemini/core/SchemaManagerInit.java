@@ -10,4 +10,5 @@ public interface SchemaManagerInit {
 
     void initializeSchemaEntityRecords(List<Module> modulesInOrder, Transaction transaction) throws GeminiException;
 
+    EntityOperationContext getOperationContextForInitSchema();
 }

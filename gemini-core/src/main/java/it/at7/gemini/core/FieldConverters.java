@@ -196,7 +196,10 @@ public class FieldConverters {
             if (RecordBase.class.isAssignableFrom(value.getClass())) {
                 RecordBase rval = (RecordBase) value;
                 value = rval.get(field);
+            } else {
+                value = getConvertedFieldValue(field, value);
             }
+            // TODO be careful here, we are re-converting the passed objec
             record.addLogicalKeyValue(field, value);
         } else {
             if (RecordBase.class.isAssignableFrom(value.getClass())) {
