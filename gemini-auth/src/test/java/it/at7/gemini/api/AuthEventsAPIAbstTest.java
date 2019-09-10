@@ -2,7 +2,6 @@ package it.at7.gemini.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.at7.gemini.UnitTestBase;
 import it.at7.gemini.auth.core.AuthMetaRef;
 import it.at7.gemini.auth.core.AuthModuleRef;
 import org.junit.Assert;
@@ -16,6 +15,8 @@ import java.util.Map;
 
 import static it.at7.gemini.api.ApiUtility.GEMINI_API_META_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
+import static it.at7.gemini.api.MockMVCUtils.API_PATH;
+import static it.at7.gemini.api.MockMVCUtils.mockMvc;
 import static it.at7.gemini.auth.api.LoginController.LOGIN_PATH;
 import static it.at7.gemini.core.RecordConverters.GEMINI_META_FIELD;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -26,12 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class AuthEventsAPIAbstTest extends UnitTestBase {
-
-    @Override
-    public boolean initializeSecurity() {
-        return true;
-    }
+public class AuthEventsAPIAbstTest {
 
     @Test
     public void n1_testAuthEventBefore_onEntityOperationContextCreate() throws Exception {
@@ -56,7 +52,7 @@ public abstract class AuthEventsAPIAbstTest extends UnitTestBase {
 
         //==== basic object -- withGeminiSearchString default value
         json = new HashMap<>();
-        json.put("text", "lk");
+        json.put("text", "lk_auth");
         json.put("numberLong", 10);
         jsonString = objectMapper.writeValueAsString(json);
         result = mockMvc.perform(post(API_PATH + "/TestDataType")

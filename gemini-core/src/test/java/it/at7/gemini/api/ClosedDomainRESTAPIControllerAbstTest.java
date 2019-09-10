@@ -2,7 +2,6 @@ package it.at7.gemini.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.at7.gemini.UnitTestBase;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -13,6 +12,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 import java.util.Map;
 
+import static it.at7.gemini.api.MockMVCUtils.API_PATH;
+import static it.at7.gemini.api.MockMVCUtils.mockMvc;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -20,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class ClosedDomainRESTAPIControllerAbstTest extends UnitTestBase {
+public class ClosedDomainRESTAPIControllerAbstTest {
 
     @Test
     public void n1_postIsNotAllowed() throws Exception {

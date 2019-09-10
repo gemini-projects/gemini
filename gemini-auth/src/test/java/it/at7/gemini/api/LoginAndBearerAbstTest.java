@@ -2,7 +2,6 @@ package it.at7.gemini.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.at7.gemini.UnitTestBase;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -12,6 +11,8 @@ import org.springframework.util.Assert;
 import java.util.HashMap;
 import java.util.Map;
 
+import static it.at7.gemini.api.MockMVCUtils.API_PATH;
+import static it.at7.gemini.api.MockMVCUtils.mockMvc;
 import static it.at7.gemini.auth.api.LoginController.LOGIN_PATH;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -22,14 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class LoginAndBearerAbstTest extends UnitTestBase {
+public class LoginAndBearerAbstTest {
 
     static String access_token;
-
-    @Override
-    public boolean initializeSecurity() {
-        return true;
-    }
 
     @Test
     public void n1_401login() throws Exception {

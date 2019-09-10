@@ -2,7 +2,6 @@ package it.at7.gemini.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.at7.gemini.UnitTestBase;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -15,6 +14,8 @@ import java.util.UUID;
 
 import static it.at7.gemini.api.ApiUtility.GEMINI_API_META_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
+import static it.at7.gemini.api.MockMVCUtils.API_PATH;
+import static it.at7.gemini.api.MockMVCUtils.mockMvc;
 import static it.at7.gemini.core.RecordConverters.GEMINI_META_FIELD;
 import static it.at7.gemini.core.RecordConverters.GEMINI_UUID_FIELD;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -23,9 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class RestAPIControllerAbstUUIDTest extends UnitTestBase {
+public class RestAPIControllerUUIDAbstTest {
 
     private static UUID lkUUID;
 

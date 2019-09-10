@@ -1,6 +1,5 @@
 package it.at7.gemini.auth;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.auth.core.AuthModuleRef;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
@@ -13,7 +12,7 @@ import org.junit.runners.MethodSorters;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class AuthMetaEventsAbstTest extends UnitTestNoMockWeb {
+public class AuthMetaEventsAbstTest {
 
     @Test
     public void n1_testAuthEventBefore_onSchemasEntityRecords() throws GeminiException {
@@ -26,7 +25,4 @@ public abstract class AuthMetaEventsAbstTest extends UnitTestNoMockWeb {
         Assert.assertEquals(AuthModuleRef.USERS.GEMINI, createdUserRec.getLogicalKeyRecord().get("username"));
         Assert.assertEquals(AuthModuleRef.USERS.GEMINI, modifiedUserRec.getLogicalKeyRecord().get("username"));
     }
-
-
-
 }

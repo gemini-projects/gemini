@@ -2,7 +2,6 @@ package it.at7.gemini.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.at7.gemini.UnitTestBase;
 import it.at7.gemini.schema.CoreMetaRef;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -17,6 +16,8 @@ import java.util.Map;
 
 import static it.at7.gemini.api.ApiUtility.GEMINI_API_META_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
+import static it.at7.gemini.api.MockMVCUtils.API_PATH;
+import static it.at7.gemini.api.MockMVCUtils.mockMvc;
 import static it.at7.gemini.core.RecordConverters.GEMINI_META_FIELD;
 import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -27,15 +28,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class RestApiControllerMultipleFieldLKAbstTest extends UnitTestBase {
+public class RestApiControllerMultipleFieldLKAbstTest {
 
     @Test
     public void n1_saveEntity() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper(); // for json conversion
 
         Map<String, Object> json = new HashMap<>();
-        json.put("lk1", "one");
-        json.put("lk2", "two");
+        json.put("lk1", "one_mlk");
+        json.put("lk2", "two_mlk");
         String jsonString = objectMapper.writeValueAsString(json);
         mockMvc.perform(post(API_PATH + "/MultipleLKOrdered")
                 .contentType(APPLICATION_JSON)
@@ -45,7 +46,7 @@ public abstract class RestApiControllerMultipleFieldLKAbstTest extends UnitTestB
                 .andExpect(status().isOk())
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'lk1': 'one'; 'lk2':'two'}", true));
+                        .json("{'lk1': 'one_mlk'; 'lk2':'two_mlk'}", true));
         // no duplicated keys
         mockMvc.perform(post(API_PATH + "/MultipleLKOrdered")
                 .contentType(APPLICATION_JSON)
@@ -58,19 +59,19 @@ public abstract class RestApiControllerMultipleFieldLKAbstTest extends UnitTestB
     @Test
     public void n2_testGetLk() throws Exception {
 
-        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one/two")
+        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one_mlk/two_mlk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'lk1': 'one'; 'lk2':'two'}", true));
+                        .json("{'lk1': 'one_mlk'; 'lk2':'two_mlk'}", true));
 
-        MvcResult result = mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one/two")
+        MvcResult result = mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one_mlk/two_mlk")
                 .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .accept(APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'data': {'lk1': 'one'; 'lk2':'two'}}"))
+                        .json("{'data': {'lk1': 'one_mlk'; 'lk2':'two_mlk'}}"))
                 .andExpect(jsonPath("$.meta").exists())
                 .andReturn();
         ObjectMapper mapper = new ObjectMapper();
@@ -86,7 +87,7 @@ public abstract class RestApiControllerMultipleFieldLKAbstTest extends UnitTestB
         String inexistent = (String) meta.get("inexistent");
         Assert.assertNull(inexistent);
 
-        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/two/one")
+        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/two_mlk/one_mlk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -96,36 +97,36 @@ public abstract class RestApiControllerMultipleFieldLKAbstTest extends UnitTestB
         ObjectMapper objectMapper = new ObjectMapper(); // for json conversion
 
         Map<String, Object> json = new HashMap<>();
-        json.put("lk2", "one"); // change the lk field -- lk is then one/one
+        json.put("lk2", "one_mlk"); // change the lk field -- lk is then one/one
         String jsonString = objectMapper.writeValueAsString(json);
-        mockMvc.perform(put(API_PATH + "/MultipleLKOrdered/one/two")
+        mockMvc.perform(put(API_PATH + "/MultipleLKOrdered/one_mlk/two_mlk")
                 .contentType(APPLICATION_JSON)
                 .content(jsonString)
                 .accept(APPLICATION_JSON))
                 .andExpect(content()
                         // stric because new data type must fail
-                        .json("{'lk1': 'one'; 'lk2':'one'}", true));
+                        .json("{'lk1': 'one_mlk'; 'lk2':'one_mlk'}", true));
 
-        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one/two")
+        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one_mlk/two_mlk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one/one")
+        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one_mlk/one_mlk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'lk1': 'one'; 'lk2':'one'}", true));
+                        .json("{'lk1': 'one_mlk'; 'lk2':'one_mlk'}", true));
     }
 
     @Test
     public void n4_testDelete() throws Exception {
-        mockMvc.perform(delete(API_PATH + "/MultipleLKOrdered/one/one")
+        mockMvc.perform(delete(API_PATH + "/MultipleLKOrdered/one_mlk/one_mlk")
                 .accept(APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content()
-                        .json("{'lk1': 'one'; 'lk2':'one'}", true));
-        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one/one")
+                        .json("{'lk1': 'one_mlk'; 'lk2':'one_mlk'}", true));
+        mockMvc.perform(get(API_PATH + "/MultipleLKOrdered/one_mlk/one_mlk")
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }

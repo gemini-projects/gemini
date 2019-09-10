@@ -1,6 +1,5 @@
 package it.at7.gemini.core.schemamanager;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.Module;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
@@ -8,7 +7,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public abstract class SchemaManagerInitAbstTest extends UnitTestNoMockWeb {
+public class SchemaManagerInitAbstTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testMetaAndDataNotUnique() throws GeminiException {

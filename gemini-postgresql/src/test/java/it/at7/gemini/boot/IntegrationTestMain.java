@@ -94,14 +94,8 @@ public class IntegrationTestMain {
         return context;
     }
 
-    public static ConfigurableApplicationContext initializeFullIntegrationWebApp(Class... classes) {
-        ConfigurableApplicationContext root = initializeGemini(classes);
-        ConfigurableApplicationContext webApp = new SpringApplicationBuilder()
-                .parent(root).sources(Api.class, Autoconfiguration.class)
-                .sources(classes).web(WebApplicationType.SERVLET)
-                .bannerMode(Banner.Mode.OFF)
-                .run();
-        return webApp;
+    public static ConfigurableApplicationContext initializeFullIntegrationWebApp() {
+        return initializeFullIntegrationWebApp(Set.of(), Set.of());
     }
 
     public static ConfigurableApplicationContext initializeFullIntegrationWebApp(Set<Class> coreBean, Set<Class> apiBean) {

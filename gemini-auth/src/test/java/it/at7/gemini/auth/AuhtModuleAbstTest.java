@@ -1,6 +1,5 @@
 package it.at7.gemini.auth;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.auth.core.AuthModuleRef;
 import it.at7.gemini.auth.core.UserRef;
 import it.at7.gemini.core.EntityManager;
@@ -17,7 +16,7 @@ import org.junit.runners.MethodSorters;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class AuhtModuleAbstTest extends UnitTestNoMockWeb {
+public class AuhtModuleAbstTest {
 
     @Test
     public void n1_testAuthModuleInitialization() throws GeminiException {

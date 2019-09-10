@@ -2,7 +2,6 @@ package it.at7.gemini.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.at7.gemini.UnitTestBase;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Services;
 import it.at7.gemini.core.entitymanager.TestData;
@@ -19,6 +18,8 @@ import java.util.Map;
 
 import static it.at7.gemini.api.ApiUtility.GEMINI_API_META_TYPE;
 import static it.at7.gemini.api.ApiUtility.GEMINI_HEADER;
+import static it.at7.gemini.api.MockMVCUtils.API_PATH;
+import static it.at7.gemini.api.MockMVCUtils.mockMvc;
 import static it.at7.gemini.core.RecordConverters.GEMINI_META_FIELD;
 import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -27,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class RestAPIControllerGenericEntityRefAbstTest extends UnitTestBase {
+public class RestAPIControllerGenericEntityRefAbstTest {
 
     @Test
     public void n1_saveEntity() throws Exception {

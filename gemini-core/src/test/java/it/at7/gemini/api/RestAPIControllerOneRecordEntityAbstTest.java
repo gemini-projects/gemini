@@ -1,7 +1,6 @@
 package it.at7.gemini.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.at7.gemini.UnitTestBase;
 import it.at7.gemini.core.entitymanager.OneRecordEntityManagerAbstTest;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -10,6 +9,8 @@ import org.junit.runners.MethodSorters;
 import java.util.HashMap;
 import java.util.Map;
 
+import static it.at7.gemini.api.MockMVCUtils.API_PATH;
+import static it.at7.gemini.api.MockMVCUtils.mockMvc;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -17,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class RestAPIControllerOneRecordEntityAbstTest extends UnitTestBase {
+public class RestAPIControllerOneRecordEntityAbstTest {
 
     @Test
     public void n1_postShouldReturnError() throws Exception {
