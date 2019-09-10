@@ -143,13 +143,13 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
     }
 
     @Override
-    public List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFielValue, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException {
+    public List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFielValue, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         Set<EntityFieldValue> filter = convertToEntityFieldValues(entity, filterFielValue);
         try {
             QueryWithParams queryWithParams = makeSelectQueryFilteringFiledValue(entity, filter, transaction);
             return transactionImpl.executeQuery(queryWithParams.getSql(), queryWithParams.getParams(), resultSet -> {
-                return fromResultSetToEntityRecord(resultSet, entity, resolutionContext, transaction);
+                return fromResultSetToEntityRecord(resultSet, entity, transaction);
             });
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
@@ -157,7 +157,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
     }
 
     @Override
-    public List<EntityRecord> getEntityRecordsMatching(Entity entity, FilterContext filterContext, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException {
+    public List<EntityRecord> getEntityRecordsMatching(Entity entity, FilterContext filterContext, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         try {
             QueryWithParams query = createSelectQueryFor(entity);
@@ -166,7 +166,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
             addLimit(query, filterContext);
             addOffset(query, filterContext);
             return transactionImpl.executeQuery(query.getSql(), query.getParams(), resultSet -> {
-                return fromResultSetToEntityRecord(resultSet, entity, resolutionContext, transaction);
+                return fromResultSetToEntityRecord(resultSet, entity, transaction);
             });
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
@@ -214,7 +214,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
 
     private Optional<EntityRecord> executeOptionalEntityRecordQuery(Entity entity, TransactionImpl transactionImpl, QueryWithParams query) throws SQLException, GeminiException {
         return transactionImpl.executeQuery(query.getSql(), query.getParams(), resultSet -> {
-            List<EntityRecord> entityRecords = fromResultSetToEntityRecord(resultSet, entity, null, transactionImpl);
+            List<EntityRecord> entityRecords = fromResultSetToEntityRecord(resultSet, entity, transactionImpl);
             assert entityRecords.size() <= 1;
             return entityRecords.size() == 0 ? Optional.empty() : Optional.of(entityRecords.get(0));
         });
@@ -373,13 +373,15 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         return size == 0 ? Optional.empty() : Optional.of(recordsMatching.get(0));
     }
 
-    private List<EntityRecord> fromResultSetToEntityRecord(ResultSet rs, Entity entity, EntityResolutionContext resolutionContext, Transaction transaction) throws SQLException, GeminiException {
+    private List<EntityRecord> fromResultSetToEntityRecord(ResultSet rs, Entity entity, Transaction transaction) throws SQLException, GeminiException {
         List<EntityRecord> ret = new ArrayList<>();
         while (rs.next()) {
             EntityRecord er = new EntityRecord(entity);
             if (!entity.isEmbedable()) {
                 er.setUUID(rs.getObject(Field.UUID_NAME, UUID.class));
             }
+            er.put(entity.getIdEntityField(), rs.getLong(entity.getIdEntityField().getName()));
+
             for (EntityField field : entity.getALLEntityFields()) {
                 FieldType type = field.getType();
                 String fieldName = fieldName(field, false);
@@ -404,7 +406,13 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                     EntityReferenceRecord entityReferenceRecord = null;
                     Object pkValue = rs.getObject(fieldName);
                     if (pkValue != null && (Number.class.isAssignableFrom(pkValue.getClass()) && ((Long) pkValue) != 0)) {
-                        EntityRecord lkEntityRecord = getEntityRecordByPersistedID(transaction, field, pkValue);
+                        handleSameRecordInfiniteRecursion(entity, field, rs);
+                        Entity entityRef = field.getEntityRef();
+                        assert entityRef != null;
+                        Optional<EntityRecord> entityRecordOpt = getEntityRecordById(entityRef, (long) pkValue, transaction);
+                        // TODO probably can be also not found
+                        assert entityRecordOpt.isPresent();
+                        EntityRecord lkEntityRecord = entityRecordOpt.get();
                         entityReferenceRecord = createEntityReferenceRecordFromER(field.getEntityRef(), pkValue, lkEntityRecord);
                     }
                     er.put(field, entityReferenceRecord);
@@ -419,13 +427,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                     er.put(field, recordEmbeded);
                     handled = true;
                 }
-                /* if (type.equals(FieldType.ENTITY_COLLECTION_REF)) {
-                    if (resolutionContext.getCollection().equals(EntityResolutionContext.Strategy.NONE)) {
-                        handled = true;
-                    } else {
-                        throw new RuntimeException(String.format("Field %s of type %s not handled - strategy must be implemented", field.getName(), field.getType()));
-                    }
-                } */
                 if (type.equals(FieldType.ENTITY_REF_ARRAY)) {
                     Array array = rs.getArray(fieldName);
                     if (array == null) {
@@ -468,7 +469,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                     if (entityIdValue != null && (Number.class.isAssignableFrom(entityIdValue.getClass()) && ((Long) entityIdValue) != 0)) {
                         Entity targetEntity = getEntityByID((Long) entityIdValue);
                         Object refId = rs.getObject(genericRefActualRefFieldName(field, false));
-                        Optional<EntityRecord> entityRecordByPersistedID = getEntityRecordByPersistedID(transaction, targetEntity, refId);
+                        Optional<EntityRecord> entityRecordByPersistedID = getEntityRecordById(targetEntity, (long) refId, transaction);
                         // TODO resolutions -- if the entityrecord is not found probably the target record was deleted
                         // TODO             but the field was generic and we cannot statically resolve deletion at delete time
                         if (entityRecordByPersistedID.isPresent()) {
@@ -483,24 +484,23 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                     throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
                 }
             }
-            er.put(entity.getIdEntityField(), rs.getLong(entity.getIdEntityField().getName()));
             ret.add(er);
         }
         return ret;
     }
 
+    private void handleSameRecordInfiniteRecursion(Entity entity, EntityField field, ResultSet rs) {
+
+    }
+
     private EntityRecord getEntityRecordByPersistedID(Transaction transaction, EntityField field, Object pkValue) throws
             GeminiException {
         Entity entityRef = field.getEntityRef();
+        assert entityRef != null;
         FieldValue fieldValue = EntityFieldValue.create(entityRef.getIdEntityField(), pkValue);
         List<EntityRecord> recordsMatching = getEntityRecordsMatching(entityRef, Set.of(fieldValue), transaction);
         assert recordsMatching.size() == 1;
         return recordsMatching.get(0);
-    }
-
-    private Optional<EntityRecord> getEntityRecordByPersistedID(Transaction transaction, Entity entity, Object pkValue) throws
-            GeminiException {
-        return getEntityRecordById(entity, (Long) pkValue, transaction);
     }
 
     private QueryWithParams makeInsertQuery(EntityRecord record, Transaction transaction) throws GeminiException {

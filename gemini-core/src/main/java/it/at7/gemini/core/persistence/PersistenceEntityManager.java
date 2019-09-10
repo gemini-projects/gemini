@@ -9,21 +9,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static it.at7.gemini.core.EntityResolutionContext.DEFAULT;
-
 public interface PersistenceEntityManager {
 
-    default List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException {
-        return getEntityRecordsMatching(entity, filterFieldValueType, DEFAULT, transaction);
-    }
+    List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException;
 
-    List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFieldValueType, EntityResolutionContext resolutionContext, Transaction transaction) throws GeminiException;
-
-    List<EntityRecord> getEntityRecordsMatching(Entity entity, FilterContext filterContext, EntityResolutionContext entityResolutionContext, Transaction transaction) throws GeminiException;
-
-    default List<EntityRecord> getEntityRecordsMatching(Entity entity, FilterContext filterContext, Transaction transaction) throws GeminiException {
-        return getEntityRecordsMatching(entity, filterContext, DEFAULT, transaction);
-    }
+    List<EntityRecord> getEntityRecordsMatching(Entity entity, FilterContext filterContex, Transaction transaction) throws GeminiException;
 
     default Optional<EntityRecord> getEntityRecordByLogicalKey(Entity entity, EntityRecord logicalKeyRecord, Transaction transaction) throws GeminiException {
         return getEntityRecordByLogicalKey(entity, logicalKeyRecord.getLogicalKeyValue(), transaction);

@@ -47,7 +47,7 @@ public interface EntityManager {
     /**
      * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
      * Record is inserted is a new fresh Transaction returned by getTransactionManager() and using a default empty
-     * {@link EntityResolutionContext}
+     * {@link EntityOperationContext}
      *
      * @param record record to add
      * @return the inserted EntityRecord
@@ -60,7 +60,7 @@ public interface EntityManager {
     /**
      * Create entity record if absent or throws Exception if it already exists (accordingly to its logical Key).
      * Record is inserted is a new fresh Transaction returned by getTransactionManager() and using a default empty
-     * {@link EntityResolutionContext}
+     * {@link EntityOperationContext}
      *
      * @param record record to add
      * @return the inserted EntityRecord

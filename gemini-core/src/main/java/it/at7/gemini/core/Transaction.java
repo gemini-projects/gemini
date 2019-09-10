@@ -2,10 +2,9 @@ package it.at7.gemini.core;
 
 import it.at7.gemini.exceptions.GeminiException;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 
-public interface Transaction extends AutoCloseable{
+public interface Transaction extends AutoCloseable {
 
     void open() throws GeminiException;
 
