@@ -14,7 +14,7 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class PersistenceEntityManagerTest {
+public class PersistenceEntityManagerAbstTest {
 
     private static Entity dataTypeEntity;
     private static Entity domainEntity;

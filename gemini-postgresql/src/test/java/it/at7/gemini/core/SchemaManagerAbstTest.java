@@ -19,7 +19,7 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class SchemaManagerTest {
+public class SchemaManagerAbstTest {
 
     private static SchemaManager schemaManager;
     private static TransactionManager transactionManager;

@@ -5,7 +5,7 @@ import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityRef;
 import org.junit.Test;
 
-public class DynamicSchemaEntityManagerTest {
+public class DynamicSchemaEntityManagerAbstTest {
 
     @Test(expected = GeminiException.class)
     public void shouldTrhowExceptionOnEntityCreateWhenDynamicSchemaDefault() throws GeminiException {

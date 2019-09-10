@@ -62,6 +62,10 @@ subprojects {
         executionData.setFrom(jacocoExecutionDataFiles)
     }
 
+    test {
+        exclude '**/*AbstTest*'
+    }
+
     task sourceJar(type: Jar) {
         from sourceSets.main.allJava
         classifier "sources"

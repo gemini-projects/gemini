@@ -10,6 +10,3 @@ dependencies {
 jar.enabled = true
 bootJar.enabled = false
 
-test {
-    exclude '**/*AbstTest*'
-}

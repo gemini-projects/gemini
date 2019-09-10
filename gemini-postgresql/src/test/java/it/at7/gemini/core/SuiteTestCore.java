@@ -7,10 +7,10 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        DynamicSchemaEntityManagerTest.class,
+        DynamicSchemaEntityManagerAbstTest.class,
         TransactionManagerAbstTest.class,
-        SchemaManagerTest.class,
-        PersistenceEntityManagerTest.class,
+        SchemaManagerAbstTest.class,
+        PersistenceEntityManagerAbstTest.class,
         BasicTypesEntityManagerAbstTest.class,
         ClosedDomainEntityManagerAbstTest.class,
         EmbedableTypeEntityManagerAbstTest.class,
