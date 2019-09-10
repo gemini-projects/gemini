@@ -1,6 +1,5 @@
 package it.at7.gemini.core.entitymanager;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Services;
@@ -11,7 +10,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class ClosedDomainEntityManagerAbstTest extends UnitTestNoMockWeb {
+public class ClosedDomainEntityManagerAbstTest {
 
     @Test(expected = EntityException.class)
     public void n1_craatetIsNotAllowed() throws Exception {

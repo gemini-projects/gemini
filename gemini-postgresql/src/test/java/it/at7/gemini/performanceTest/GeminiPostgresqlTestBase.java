@@ -1,6 +1,9 @@
-package it.at7.gemini.core;
+package it.at7.gemini.performanceTest;
 
 import it.at7.gemini.boot.IntegrationTestMain;
+import it.at7.gemini.core.SchemaManager;
+import it.at7.gemini.core.Services;
+import it.at7.gemini.core.TransactionManager;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

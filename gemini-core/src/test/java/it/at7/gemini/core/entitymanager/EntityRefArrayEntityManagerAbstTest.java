@@ -1,6 +1,5 @@
 package it.at7.gemini.core.entitymanager;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.EntityReferenceRecord;
 import it.at7.gemini.core.Services;
@@ -15,7 +14,7 @@ import java.util.Collection;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class EntityRefArrayEntityManagerAbsTest extends UnitTestNoMockWeb {
+public class EntityRefArrayEntityManagerAbstTest {
     static EntityRecord lk1;
     static EntityRecord lk2;
 
@@ -28,7 +27,8 @@ public abstract class EntityRefArrayEntityManagerAbsTest extends UnitTestNoMockW
 
     @Test
     public void n1_putIfAbsent_WithLkString() throws GeminiException {
-        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
+        insertDomainRecords();
+        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-erefarray");
         List<EntityRecord> domain1Array = List.of(lk1);
         entityRecord.put("domain1Array", domain1Array);
         EntityRecord persistedEntity = Services.getEntityManager().putIfAbsent(entityRecord);
@@ -41,7 +41,7 @@ public abstract class EntityRefArrayEntityManagerAbsTest extends UnitTestNoMockW
 
     @Test
     public void n2_addAnotherRefInsideArray() throws GeminiException {
-        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
+        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-erefarray");
         List<EntityRecord> domain1Array = List.of(lk1, lk2);
         entityRecord.put("domain1Array", domain1Array);
         EntityRecord persistedEntity = Services.getEntityManager().update(entityRecord);
@@ -51,7 +51,7 @@ public abstract class EntityRefArrayEntityManagerAbsTest extends UnitTestNoMockW
 
     @Test
     public void n3_eraseRefArray() throws GeminiException {
-        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
+        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-erefarray");
         List<EntityRecord> domain1Array = List.of();
         entityRecord.put("domain1Array", domain1Array);
         EntityRecord persistedEntity = Services.getEntityManager().update(entityRecord);

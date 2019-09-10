@@ -1,6 +1,5 @@
 package it.at7.gemini.core.entitymanager;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.DynamicRecord;
 import it.at7.gemini.core.EntityFieldValue;
 import it.at7.gemini.core.EntityRecord;
@@ -24,7 +23,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class BasicTypesEntityManagerAbstTest extends UnitTestNoMockWeb {
+public class BasicTypesEntityManagerAbstTest {
 
     @Test
     public void n1_putIfAbsent() throws GeminiException {

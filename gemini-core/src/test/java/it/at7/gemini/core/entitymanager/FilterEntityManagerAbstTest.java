@@ -1,6 +1,5 @@
 package it.at7.gemini.core.entitymanager;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class FilterEntityManagerAbsTest extends UnitTestNoMockWeb {
+public class FilterEntityManagerAbstTest {
 
     @Test
     public void n1_testStringSearchQuery() throws GeminiException {
@@ -40,11 +39,11 @@ public abstract class FilterEntityManagerAbsTest extends UnitTestNoMockWeb {
         Assert.assertTrue(module.isPresent());
 
         // AND search with Long and String (both basic types on
-        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-basicType");
+        EntityRecord entityRecord = TestData.getTestDataTypeForFilterEntityRecord("logKey-basicType");
         entityRecord.put("numberLong", 10);
         entityManager.putIfAbsent(entityRecord);
         filterContext = FilterContext.withGeminiSearchString("text == logKey-basicType and numberLong == 10"); // all fields with name name
-        List<EntityRecord> andMatching = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
+        List<EntityRecord> andMatching = entityManager.getRecordsMatching(TestData.getTestDataTypeFilterEntity(), filterContext);
         Assert.assertEquals(1, andMatching.size());
 
         // IN operator (same test as or)
@@ -120,12 +119,12 @@ public abstract class FilterEntityManagerAbsTest extends UnitTestNoMockWeb {
     public void n3_testLimit() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
         for (int i = 0; i < 20; i++) {
-            EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord(String.format("logKey-%d", i));
+            EntityRecord entityRecord = TestData.getTestDataTypeForFilterEntityRecord(String.format("logKey-%d", i));
             entityRecord.put("numberLong", 100 - i);
             entityManager.putIfAbsent(entityRecord);
         }
         FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0, null);
-        List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
+        List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeFilterEntity(), filterContext);
         Assert.assertEquals(10, records.size());
 
     }
@@ -134,7 +133,7 @@ public abstract class FilterEntityManagerAbsTest extends UnitTestNoMockWeb {
     public void n4_testStart() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
         FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 15, null);
-        List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
+        List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeFilterEntity(), filterContext);
 
         // 6 because we have inserted 20 in test n3 and 1 in n1
         Assert.assertEquals(6, records.size());
@@ -144,7 +143,7 @@ public abstract class FilterEntityManagerAbsTest extends UnitTestNoMockWeb {
     public void n5_testOrderBy() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
         FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 0, 0, new String[]{"-numberLong"});
-        List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeEntity(), filterContext);
+        List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeFilterEntity(), filterContext);
 
         for (int i = 0; i < 20; i++) {
             // inserted in n3

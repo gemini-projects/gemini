@@ -1,6 +1,7 @@
 package it.at7.gemini.core;
 
 import it.at7.gemini.conf.State;
+import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityRef;
@@ -18,10 +19,18 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class SchemaManagerTest extends GeminiPostgresqlTestBase {
+public class SchemaManagerTest {
+
+    private static SchemaManager schemaManager;
+    private static TransactionManager transactionManager;
+    private static PersistenceEntityManager persistenceEntityManager;
 
     @Test
     public void n1_TestSchemaInitializationWithoutError() {
+        schemaManager = Services.getSchemaManager();
+        transactionManager = Services.getTransactionManager();
+        persistenceEntityManager = Services.getPersistenceEntityManager();
+
         StateManager stateManager = Services.getStateManager();
         State actualState = stateManager.getActualState();
         Assert.assertEquals(State.INITIALIZED, actualState);

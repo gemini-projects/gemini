@@ -1,6 +1,5 @@
 package it.at7.gemini.core.entitymanager;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.DynamicRecord;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.EntityReferenceRecord;
@@ -15,7 +14,7 @@ import org.junit.runners.MethodSorters;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class EntityRefEntityManagerAbstTest extends UnitTestNoMockWeb  {
+public class EntityRefEntityManagerAbstTest {
     public static void insertDomainRecords() throws GeminiException {
         EntityRecord lk1 = TestData.getDomain_singlelk_EntityRecord("lk1");
         EntityRecord lk2 = TestData.getDomain_singlelk_EntityRecord("lk2");
@@ -25,7 +24,8 @@ public abstract class EntityRefEntityManagerAbstTest extends UnitTestNoMockWeb  
 
     @Test
     public void n1_putIfAbsent_WithLkString() throws GeminiException {
-        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey");
+        insertDomainRecords();
+        EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-eref");
         entityRecord.put("domain1", "lk1");
         EntityRecord persistedEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         Object domainPkRefObj = persistedEntity.get("domain1");

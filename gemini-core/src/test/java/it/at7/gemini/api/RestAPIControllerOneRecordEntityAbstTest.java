@@ -2,7 +2,7 @@ package it.at7.gemini.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.at7.gemini.UnitTestBase;
-import it.at7.gemini.core.entitymanager.OneRecordEntityManagerAbsTest;
+import it.at7.gemini.core.entitymanager.OneRecordEntityManagerAbstTest;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -26,7 +26,7 @@ public abstract class RestAPIControllerOneRecordEntityAbstTest extends UnitTestB
         Map<String, Object> json = new HashMap<>();
         json.put("text", "lk");
         String jsonString = objectMapper.writeValueAsString(json);
-        mockMvc.perform(post(API_PATH + "/" + OneRecordEntityManagerAbsTest.SINGLETON_ENTITY)
+        mockMvc.perform(post(API_PATH + "/" + OneRecordEntityManagerAbstTest.SINGLETON_ENTITY)
                 .contentType(APPLICATION_JSON)
                 .content(jsonString)
                 .accept(APPLICATION_JSON))
@@ -41,7 +41,7 @@ public abstract class RestAPIControllerOneRecordEntityAbstTest extends UnitTestB
         Map<String, Object> json = new HashMap<>();
         json.put("text", "lk");
         String jsonString = objectMapper.writeValueAsString(json);
-        mockMvc.perform(put(API_PATH + "/" + OneRecordEntityManagerAbsTest.SINGLETON_ENTITY)
+        mockMvc.perform(put(API_PATH + "/" + OneRecordEntityManagerAbstTest.SINGLETON_ENTITY)
                 .contentType(APPLICATION_JSON)
                 .content(jsonString)
                 .accept(APPLICATION_JSON))
@@ -55,7 +55,7 @@ public abstract class RestAPIControllerOneRecordEntityAbstTest extends UnitTestB
     @Test
     public void n3_testGetOneRecordEntity() throws Exception {
         //==== basic object -- default value
-        mockMvc.perform(get(API_PATH + "/" + OneRecordEntityManagerAbsTest.SINGLETON_ENTITY)
+        mockMvc.perform(get(API_PATH + "/" + OneRecordEntityManagerAbstTest.SINGLETON_ENTITY)
                 .accept(APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -65,7 +65,7 @@ public abstract class RestAPIControllerOneRecordEntityAbstTest extends UnitTestB
 
     @Test
     public void n4_deleteShouldReturnError() throws Exception {
-        mockMvc.perform(delete(API_PATH + "/" + OneRecordEntityManagerAbsTest.SINGLETON_ENTITY)
+        mockMvc.perform(delete(API_PATH + "/" + OneRecordEntityManagerAbstTest.SINGLETON_ENTITY)
                 .accept(APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().is5xxServerError());

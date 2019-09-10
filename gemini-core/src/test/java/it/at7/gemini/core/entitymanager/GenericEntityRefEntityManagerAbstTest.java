@@ -1,6 +1,5 @@
 package it.at7.gemini.core.entitymanager;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import org.junit.FixMethodOrder;
@@ -13,7 +12,7 @@ import static it.at7.gemini.core.entitymanager.EntityTestUtility.testDefaultMeta
 import static org.junit.Assert.assertEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class GenericEntityRefEntityManagerAbstTest extends UnitTestNoMockWeb {
+public class GenericEntityRefEntityManagerAbstTest {
     @Test
     public void n1_putIfAbsent() throws GeminiException {
         EntityRecord lk1 = TestData.getDomain_singlelk_EntityRecord("lk1");

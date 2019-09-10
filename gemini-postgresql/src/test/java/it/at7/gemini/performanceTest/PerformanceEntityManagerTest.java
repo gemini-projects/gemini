@@ -1,7 +1,6 @@
 package it.at7.gemini.performanceTest;
 
 import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.GeminiPostgresqlTestBase;
 import it.at7.gemini.core.Transaction;
 import it.at7.gemini.core.VoidTransactionCallback;
 import it.at7.gemini.exceptions.GeminiException;

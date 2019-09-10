@@ -21,6 +21,22 @@ ENTITY TestDataType {
     PASSWORD        password
 }
 
+ENTITY TestDataTypeFilter {
+    TEXT            text *
+    NUMBER          numberLong
+    NUMBER          numberDouble
+    DOUBLE          double
+    LONG            long
+    BOOL            bool
+    DATE            date
+    TIME            time
+    DATETIME        datetime
+    TestDomain1     domain1
+    [TEXT]          textArray
+    [TestDomain1]   domain1Array
+    PASSWORD        password
+}
+
 ENTITY TestDomainHierarchy {
     TEXT code *
     TestDomain1 domain1 *

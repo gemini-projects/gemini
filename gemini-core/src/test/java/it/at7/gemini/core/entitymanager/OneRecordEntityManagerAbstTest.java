@@ -1,6 +1,5 @@
 package it.at7.gemini.core.entitymanager;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.SchemaManager;
@@ -14,7 +13,7 @@ import org.junit.runners.MethodSorters;
 import static org.junit.Assert.assertEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class OneRecordEntityManagerAbsTest extends UnitTestNoMockWeb {
+public class OneRecordEntityManagerAbstTest {
     public static String SINGLETON_ENTITY = "SingletonTest";
 
     @Test

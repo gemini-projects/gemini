@@ -12,12 +12,28 @@ public class TestData {
         return schemaManager.getEntity("TestDataType");
     }
 
+    public static Entity getTestDataTypeFilterEntity() {
+        SchemaManager schemaManager = Services.getSchemaManager();
+        return schemaManager.getEntity("TestDataTypeFilter");
+    }
+
     /**
      * TestDataType Entity with Primitive dataTypes
      */
     public static EntityRecord getTestDataTypeEntityRecord(String logicalKey) {
         SchemaManager schemaManager = Services.getSchemaManager();
         Entity testDataType = schemaManager.getEntity("TestDataType");
+        EntityRecord entityRecord = new EntityRecord(testDataType);
+        entityRecord.put("text", logicalKey);
+        return entityRecord;
+    }
+
+    /**
+     * TestDataType Entity with Primitive dataTypes
+     */
+    public static EntityRecord getTestDataTypeForFilterEntityRecord(String logicalKey) {
+        SchemaManager schemaManager = Services.getSchemaManager();
+        Entity testDataType = schemaManager.getEntity("TestDataTypeFilter");
         EntityRecord entityRecord = new EntityRecord(testDataType);
         entityRecord.put("text", logicalKey);
         return entityRecord;

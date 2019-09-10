@@ -1,5 +1,6 @@
 package it.at7.gemini.core;
 
+import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.IdFieldException;
 import it.at7.gemini.schema.Entity;
@@ -13,21 +14,26 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class PersistenceEntityManagerTest extends GeminiPostgresqlTestBase {
+public class PersistenceEntityManagerTest {
 
-    Entity dataTypeEntity = schemaManager.getEntity("TESTDATATYPE");
-    Entity domainEntity = schemaManager.getEntity("TESTDOMAIN1");
+    private static Entity dataTypeEntity;
+    private static Entity domainEntity;
+    private static TransactionManager transactionManager;
+    private static PersistenceEntityManager persistenceEntityManager;
 
     @Test
-    public void n1_TestBasicTypesAndDuplicates() throws SQLException, GeminiException {
+    public void n1_TestBasicTypesAndDuplicates() throws GeminiException {
+        dataTypeEntity = Services.getSchemaManager().getEntity("TESTDATATYPE");
+        domainEntity = Services.getSchemaManager().getEntity("TESTDOMAIN1");
         assertNotNull(dataTypeEntity);
+        transactionManager = Services.getTransactionManager();
+        persistenceEntityManager = Services.getPersistenceEntityManager();
 
         EntityRecord newrec = new EntityRecord(dataTypeEntity);
         newrec.put("text", "textString");
         newrec.put("numberLong", 77);
         newrec.put("numberDouble", 77.7);
         newrec.put("bool", false);
-
         // save the new entity
         EntityRecord savedEntity =
                 transactionManager.executeInSingleTrasaction(t -> {

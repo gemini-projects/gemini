@@ -1,18 +1,20 @@
 package it.at7.gemini.core.entitymanager;
 
-import it.at7.gemini.UnitTestNoMockWeb;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Services;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import static it.at7.gemini.core.entitymanager.EntityTestUtility.testDefaulValues;
 import static it.at7.gemini.core.entitymanager.EntityTestUtility.testDefaultMetaValues;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public abstract class ExternalEntityFieldsEntityManagerAbstTest extends UnitTestNoMockWeb {
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+public class ExternalEntityFieldsEntityManagerAbstTest {
 
     @Test
     public void n1_externalField() throws GeminiException {
