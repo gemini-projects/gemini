@@ -1,19 +1,11 @@
 package it.at7.gemini.core;
 
-import it.at7.gemini.UnitTestNoMockWeb;
-import it.at7.gemini.boot.IntegrationTestMain;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityRef;
 import org.junit.Test;
-import org.springframework.context.ConfigurableApplicationContext;
 
-public class DynamicSchemaEntityManagerTest extends UnitTestNoMockWeb {
-
-    @Override
-    protected ConfigurableApplicationContext getApplicationContext() {
-        return IntegrationTestMain.initializeGemini();
-    }
+public class DynamicSchemaEntityManagerTest {
 
     @Test(expected = GeminiException.class)
     public void shouldTrhowExceptionOnEntityCreateWhenDynamicSchemaDefault() throws GeminiException {

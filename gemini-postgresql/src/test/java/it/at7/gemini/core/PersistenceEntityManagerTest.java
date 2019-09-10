@@ -92,7 +92,7 @@ public class PersistenceEntityManagerTest {
 
 
     @Test(expected = IdFieldException.class)
-    public void n2_TestIdRequiredForModifyActions() throws SQLException, GeminiException {
+    public void n2_TestIdRequiredForModifyActions() throws GeminiException {
         EntityRecord newrec = new EntityRecord(dataTypeEntity);
         transactionManager.executeInSingleTrasaction(t -> {
             newrec.put("numberLong", 88);
@@ -101,7 +101,7 @@ public class PersistenceEntityManagerTest {
     }
 
     @Test
-    public void n3_TestSimpleReferenceType() throws SQLException, GeminiException {
+    public void n3_TestSimpleReferenceType() throws GeminiException {
         EntityRecord savedEntity =
                 transactionManager.executeInSingleTrasaction(t -> {
                     EntityRecord domain = new EntityRecord(domainEntity);
