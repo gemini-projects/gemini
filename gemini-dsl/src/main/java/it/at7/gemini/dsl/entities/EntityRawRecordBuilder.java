@@ -1,6 +1,5 @@
 package it.at7.gemini.dsl.entities;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,21 +22,15 @@ public class EntityRawRecordBuilder {
         this.def = def;
     }
 
-    public void addRecord(String versionName, long versionProgressive, Object record) {
-        addRecords(versionName, versionProgressive, List.of(record));
+    public void addRecord(String versionName, long versionProgressive, Object record, long definitionOrder) {
+        addRecords(versionName, versionProgressive, List.of(record), definitionOrder);
     }
 
-    public void addRecord(Collection<EntityRawRecords.VersionedRecords> values) {
-        for (EntityRawRecords.VersionedRecords value : values) {
-            addRecords(value.getVersionName(), value.getVersionProgressive(), value.getRecords());
-        }
-    }
-
-    public EntityRawRecordBuilder addRecords(String versionName, long versionProgressive, List<Object> listRecord) {
+    public EntityRawRecordBuilder addRecords(String versionName, long versionProgressive, List<Object> listRecord, long definitionOrder) {
         if (versionedRecordsList.containsKey(versionName.toUpperCase())) {
             throw new RuntimeException(String.format("Two Entity Records definitions with the same version Name are not allowed: %s - %s", entity, versionName));
         }
-        EntityRawRecords.VersionedRecords vr = new EntityRawRecords.VersionedRecords(versionName, versionProgressive, listRecord);
+        EntityRawRecords.VersionedRecords vr = new EntityRawRecords.VersionedRecords(entity, versionName, versionProgressive, listRecord, definitionOrder);
         this.versionedRecordsList.put(versionName, vr);
         return this;
     }

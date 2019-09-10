@@ -1,11 +1,15 @@
 package it.at7.gemini.core;
 
+import it.at7.gemini.ModuleRawRecord;
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.core.persistence.PersistenceSchemaManager;
 import it.at7.gemini.dsl.RecordParser;
 import it.at7.gemini.dsl.SchemaParser;
-import it.at7.gemini.dsl.entities.*;
+import it.at7.gemini.dsl.entities.EntityRawRecords;
+import it.at7.gemini.dsl.entities.RawEntity;
+import it.at7.gemini.dsl.entities.RawSchema;
+import it.at7.gemini.dsl.entities.RawSchemaBuilder;
 import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.*;
 import org.slf4j.Logger;
@@ -29,7 +33,6 @@ import java.util.stream.Collectors;
 import static it.at7.gemini.core.EntityManagerImpl.CORE_ENTITIES;
 import static it.at7.gemini.core.FilterContext.ALL;
 import static it.at7.gemini.schema.FieldType.*;
-import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -44,11 +47,12 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private final EntityManagerImpl entityManager;
 
     private Map<String, Module> modules;
+    private List<Module> orderedModules;
     private Map<Module, RawSchema> schemas = new LinkedHashMap<>(); // maintain insertion order
 
     // entities are stored UPPERCASE
     private Map<String, Entity> entities = new LinkedHashMap<>();
-    private Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap;
+    private Map<Module, ModuleRawRecord> schemaRawRecordsByModule;
 
     @Autowired
     public SchemaManagerImpl(ApplicationContext applicationContext, StateManager stateManager, PersistenceSchemaManager persistenceSchemaManager, PersistenceEntityManager persistenceEntityManager, @Lazy EntityManagerImpl entityManager) {
@@ -62,10 +66,11 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     @Override
     public void initializeSchemasStorage(List<Module> modulesInOrder, Transaction transaction) throws GeminiException {
         this.modules = modulesInOrder.stream().collect(Collectors.toMap(m -> m.getName().toUpperCase(), m -> m));
+        orderedModules = this.modules.values().stream().sorted(Comparator.comparingInt(Module::order)).collect(toList());
         persistenceSchemaManager.beforeLoadSchema(modulesInOrder, transaction);
         loadModuleSchemas(modulesInOrder);
-        this.schemaRawRecordsMap = loadModuleRecords(modulesInOrder);
-        checkSchemaAndCreateEntities(schemaRawRecordsMap);
+        this.schemaRawRecordsByModule = loadModuleRecords(modulesInOrder);
+        checkSchemaAndCreateEntities();
 
         persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
         this.stateManager.changeState(State.SCHEMA_STORAGE_INITIALIZED, Optional.of(transaction));
@@ -73,11 +78,6 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
     @Override
     public void initializeSchemaEntityRecords(List<Module> modulesInOrder, Transaction transaction) throws GeminiException {
-        // entity records for entity, field / core entities
-
-        Map<String, List<EntityRawRecords>> recordsByEntity = schemaRawRecordsMap.values().stream()
-                .flatMap(m -> m.entrySet().stream())
-                .collect(Collectors.groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
 
         /* NB: dediced to use basic data types (no references) for common Entity/Field column types... so no need to initialize anything
         //
@@ -87,8 +87,8 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         */
         handleSchemasEntityRecords(entities.values(), transaction); // add core entityRecord i.e. ENTITY and FIELD
         stateManager.changeState(State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED, Optional.of(transaction));
-        createProvidedEntityRecords(recordsByEntity, transaction); // add entity record provided as resources
-        loadEntityRecordsForFrameworkEntities(transaction);
+        createProvidedEntityRecords(transaction); // add entity record provided as resources
+        loadEntityRecordsForFrameworkEntities(transaction); // reload entity record and assign them to framework objects
         stateManager.changeState(State.PROVIDED_CLASSPATH_RECORDS_HANDLED, Optional.of(transaction));
     }
 
@@ -233,43 +233,40 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         return Collections.unmodifiableCollection(entities.values());
     }
 
-    private void createProvidedEntityRecords(Map<String, List<EntityRawRecords>> recordsByEntity, Transaction transaction) throws GeminiException {
-        // TODO topological order
-        EntityOperationContext operationContextForInitSchema = getOperationContextForInitSchema();
-        for (Map.Entry<String, List<EntityRawRecords>> e : recordsByEntity.entrySet()) {
-            String key = e.getKey();
-            Entity entity = entities.get(key);
-            if (entity == null) {
-                logger.warn(String.format("Found Entity Records For Inexistent Entity with key %s", key));
-                return;
-            }
-            List<EntityRawRecords> rawRecords = e.getValue();
-            for (EntityRawRecords rr : rawRecords) {
-                Map<String, EntityRawRecords.VersionedRecords> versionedRecords = rr.getVersionedRecords();
-                for (EntityRawRecords.VersionedRecords version : versionedRecords.values()) {
-                    EntityRecord initVersionRec = new EntityRecord(entities.get(InitRecordDef.NAME));
-                    initVersionRec.set(InitRecordDef.FIELDS.ENTITY, entity.getName());
-                    initVersionRec.set(InitRecordDef.FIELDS.VERSION_NAME, version.getVersionName());
-                    initVersionRec.set(InitRecordDef.FIELDS.VERSION_NUMBER, version.getVersionProgressive());
-                    Optional<EntityRecord> optRecord = entityManager.getOptional(initVersionRec, transaction);
+    private void createProvidedEntityRecords(Transaction transaction) throws GeminiException {
+        for (Module m : this.orderedModules) {
+            ModuleRawRecord moduleRawRecord = this.schemaRawRecordsByModule.get(m);
 
-                    if (!optRecord.isPresent()) {
-                        logger.info(String.format("Handling records for entity %s and version %s - %d", entity.getName(), version.getVersionName(), version.getVersionProgressive()));
-                        for (Object record : version.getRecords()) {
-                            EntityRecord entityRecord = RecordConverters.entityRecordFromMap(entity, (Map<String, Object>) record);
-                            if (CORE_ENTITIES.contains(entity.getName().toUpperCase())) {
-                                entityManager.update(entityRecord, operationContextForInitSchema, transaction);
-                            } else {
-                                entityManager.putOrUpdate(entityRecord, operationContextForInitSchema, transaction);
-                            }
+            Map<String, EntityRawRecords> moduleRecordsByEntity = moduleRawRecord.getModuleRecordsByEntity();
+            List<EntityRawRecords.VersionedRecords> versionsRecords = moduleRecordsByEntity.values().stream().
+                    map(EntityRawRecords::getVersionedRecords).flatMap(v -> v.values().stream()).
+                    sorted(Comparator.comparingLong(EntityRawRecords.VersionedRecords::getDefinitionOrder)).collect(toList());
+
+            EntityOperationContext operationContextForInitSchema = getOperationContextForInitSchema();
+            for (EntityRawRecords.VersionedRecords version : versionsRecords) {
+                String entityName = version.getEntity().toUpperCase();
+                EntityRecord initVersionRec = new EntityRecord(entities.get(InitRecordDef.NAME));
+                initVersionRec.set(InitRecordDef.FIELDS.ENTITY, entityName);
+                initVersionRec.set(InitRecordDef.FIELDS.VERSION_NAME, version.getVersionName());
+                initVersionRec.set(InitRecordDef.FIELDS.VERSION_NUMBER, version.getVersionProgressive());
+                Optional<EntityRecord> optRecord = entityManager.getOptional(initVersionRec, transaction);
+
+                if (!optRecord.isPresent()) {
+                    logger.info(String.format("Handling records for entity %s and version %s - %d", entities, version.getVersionName(), version.getVersionProgressive()));
+                    for (Object record : version.getRecords()) {
+                        EntityRecord entityRecord = RecordConverters.entityRecordFromMap(entities.get(entityName), (Map<String, Object>) record);
+                        if (CORE_ENTITIES.contains(entityName.toUpperCase())) {
+                            entityManager.update(entityRecord, operationContextForInitSchema, transaction);
+                        } else {
+                            entityManager.putOrUpdate(entityRecord, operationContextForInitSchema, transaction);
                         }
-                        entityManager.putIfAbsent(initVersionRec, operationContextForInitSchema, transaction);
                     }
+                    entityManager.putIfAbsent(initVersionRec, operationContextForInitSchema, transaction);
                 }
             }
+
         }
     }
-
 
     private void loadModuleSchemas(Collection<Module> modules) throws GeminiGenericException {
         try {
@@ -298,17 +295,17 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         }
     }
 
-    private Map<String, Map<String, EntityRawRecords>> loadModuleRecords(Collection<Module> modules) throws GeminiGenericException {
+    private Map<Module, ModuleRawRecord> loadModuleRecords(Collection<Module> modules) throws GeminiGenericException {
         try {
-            Map<String, Map<String, EntityRawRecords>> schemaRawRecords = new HashMap<>();
+            Map<Module, ModuleRawRecord> recordsByModule = new HashMap<>();
             for (Module module : modules) {
+                ModuleRawRecord moduleRawRecord = new ModuleRawRecord();
                 String location = module.getSchemaRecordResourceLocation();
                 Resource resource = applicationContext.getResource(location);
-                Map<String, EntityRawRecords> allRecords = new HashMap<>();
                 if (resource.exists()) {
                     logger.info("Records definition found for module {}: location {}", module.getName(), location);
                     InputStream schemaRecordStream = resource.getInputStream();
-                    allRecords = RecordParser.parse(new InputStreamReader(schemaRecordStream));
+                    moduleRawRecord.addModuleRecords(RecordParser.parse(new InputStreamReader(schemaRecordStream)));
                 } else {
                     logger.info("No module records definition found for module {}: location {}", module.getName(), location);
                 }
@@ -322,50 +319,23 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                         if (entityResource.exists()) {
                             logger.info("Found entity records definition for module/entity {}/{}: location {}", module.getName(), capitalizedEntityName, entityLocation);
                             InputStream entityRecordStream = entityResource.getInputStream();
-                            Map<String, EntityRawRecords> records = RecordParser.parse(new InputStreamReader(entityRecordStream));
-                            mergeModuleRecordsWithSpecificEntityRecords(allRecords, records);
+                            Map<String, EntityRawRecords> specificResourceRecords = RecordParser.parse(new InputStreamReader(entityRecordStream));
+                            moduleRawRecord.addEntityRecords(rawEntity, specificResourceRecords);
+                            // mergeModuleRecordsWithSpecificEntityRecords(moduleRecords, specificResourceRecords);
                         } else {
                             logger.info("No entity records definition found for module/entity {}/{}: location {}", module.getName(), capitalizedEntityName, entityLocation);
                         }
                     }
                 }
-                schemaRawRecords.put(module.getName(), allRecords);
+                recordsByModule.put(module, moduleRawRecord);
             }
-            return schemaRawRecords;
+            return recordsByModule;
         } catch (Exception e) {
             throw GeminiGenericException.wrap(e);
         }
     }
 
-    private void mergeModuleRecordsWithSpecificEntityRecords(Map<String, EntityRawRecords> allRecords, Map<String, EntityRawRecords> records) {
-        Set<String> allRecordsKeySet = allRecords.keySet();
-        Set<String> recordsKeyset = records.keySet();
-        HashSet<String> keyset = new HashSet<>();
-        keyset.addAll(allRecordsKeySet);
-        keyset.addAll(recordsKeyset);
-        for (String entity : keyset) {
-            EntityRawRecords moduleDefinitions = allRecords.get(entity);
-            EntityRawRecords entityDefinitions = records.get(entity);
-            if (moduleDefinitions == null && entityDefinitions != null) {
-                // simply need to add the specific definitions
-                allRecords.put(entity, entityDefinitions);
-            }
-            if (moduleDefinitions != null && entityDefinitions != null) {
-                // NEED to merge here
-                EntityRawRecordBuilder mergedBuilder = new EntityRawRecordBuilder(entity);
-                mergedBuilder.setDefaultRecord(entityDefinitions.getDef() == null ? moduleDefinitions.getDef() : entityDefinitions.getDef());
-                Map<String, EntityRawRecords.VersionedRecords> moduleRecs = moduleDefinitions.getVersionedRecords();
-                Map<String, EntityRawRecords.VersionedRecords> entityRecs = entityDefinitions.getVersionedRecords();
-                mergedBuilder.addRecord(moduleRecs.values());
-                mergedBuilder.addRecord(entityRecs.values());
-                allRecords.put(entity, mergedBuilder.build());
-            }
-            // NO OPERATION for this type of check
-            // if( moduleDefinitions != null && entityDefinitions == null)
-        }
-    }
-
-    private void checkSchemaAndCreateEntities(Map<String, Map<String, EntityRawRecords>> schemaRawRecordsMap) throws FieldException {
+    private void checkSchemaAndCreateEntities() throws FieldException {
         /* TODO entità estendibii per modulo
             caricare ogni modulo a se stante.. con le entità.. poi fare il merge delle
             entries (ognuna contenente il modulo da dove viene)
@@ -396,12 +366,28 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                 entityBuilders.put(entityName, entityB);
             }
 
-            // for entities we have also records // TODO check FOR Extended entities??
-            Map<String, EntityRawRecords> rawRecordsByEntity = schemaRawRecordsMap.getOrDefault(module.getName(), Map.of());
-            EntityRawRecords entityRawRecords = rawRecordsByEntity.get(entityName.toUpperCase());
-            if (entityRawRecords != null) {
-                Object defRecord = entityRawRecords.getDef();
-                entityB.setDefaultRecord(defRecord);
+
+            for (Module m : orderedModules) {
+                // calculate the default entity record
+                String entityUpper = entityName.toUpperCase();
+                ModuleRawRecord moduleRawRecord = schemaRawRecordsByModule.get(m);
+                if (moduleRawRecord != null) {
+                    Map<String, EntityRawRecords> moduleRecordsByEntity = moduleRawRecord.getModuleRecordsByEntity();
+                    EntityRawRecords entityRawRecords = moduleRecordsByEntity.get(entityUpper);
+                    if (entityRawRecords != null) {
+                        Object defaultRecord = entityRawRecords.getDefaultRecord();
+                        if (defaultRecord != null)
+                            entityB.setDefaultRecord(defaultRecord);
+                    }
+                    Map<String, Map<String, EntityRawRecords>> singleEntityRecordsDefinition = moduleRawRecord.getSingleEntityRecordsDefinition();
+                    // we get the default only from the specific entity file
+                    entityRawRecords = singleEntityRecordsDefinition.getOrDefault(entityUpper, Map.of()).get(entityUpper);
+                    if (entityRawRecords != null) {
+                        Object defaultRecord = entityRawRecords.getDefaultRecord();
+                        if (defaultRecord != null)
+                            entityB.setDefaultRecord(defaultRecord);
+                    }
+                }
             }
         });
 

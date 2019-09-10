@@ -163,11 +163,15 @@ public class FieldConverters {
                         if (refEntity == null) {
                             throw new RuntimeException(String.format("Field %s must have fields '%s:STRING' with a valid entity - %s not found", field.toString(), GENERIC_ENTITY_RECORD_ENTITY_FIELD, entity));
                         }
-                        Object ref = mapValue.get(GENERIC_ENTITY_RECORD_REF_FIELD);
-                        if (ref == null) {
-                            throw new RuntimeException(String.format("Field %s must have fields '%s:OBJECT' inside the Map object", field.toString(), GENERIC_ENTITY_RECORD_REF_FIELD));
+                        if (refEntity.isOneRecord()) {
+                            return new EntityReferenceRecord(refEntity);
+                        } else {
+                            Object ref = mapValue.get(GENERIC_ENTITY_RECORD_REF_FIELD);
+                            if (ref == null) {
+                                throw new RuntimeException(String.format("Field %s must have fields '%s:OBJECT' inside the Map object", field.toString(), GENERIC_ENTITY_RECORD_REF_FIELD));
+                            }
+                            return logicalKeyFromObject(refEntity, ref);
                         }
-                        return logicalKeyFromObject(refEntity, ref);
                     }
                     throw new RuntimeException(String.format("Field %s must have fields '%s:STRING' and '%s:OBJECT' inside the Map object", field.toString(), GENERIC_ENTITY_RECORD_ENTITY_FIELD, GENERIC_ENTITY_RECORD_REF_FIELD));
                 }

@@ -2,8 +2,8 @@ package it.at7.gemini.dsl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.at7.gemini.dsl.entities.EntityRawRecords;
 import it.at7.gemini.dsl.entities.EntityRawRecordBuilder;
+import it.at7.gemini.dsl.entities.EntityRawRecords;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -23,6 +23,7 @@ public class RecordParser {
     }
 
     public Map<String, EntityRawRecords> parse() throws SyntaxError, IOException {
+        long definitionOrder = 0;
         Map<String, EntityRawRecordBuilder> recordsByEntityName = new HashMap<>();
         String line = reader.readLine();
         if(line == null){
@@ -51,19 +52,21 @@ public class RecordParser {
             String jsonString = jsonBuilder.toString();
             // convert JSON string to Map
 
+            definitionOrder++;
             if (jsonString.charAt(0) == '{') {
                 Object singleRecord = new ObjectMapper().readValue(jsonString,
                         new TypeReference<Map<String, Object>>() {
                         });
                 if (def) entityRawRecordBuilder.setDefaultRecord(singleRecord);
-                else entityRawRecordBuilder.addRecord(versionNameOrDefault, versionProgressive, singleRecord);
+                else
+                    entityRawRecordBuilder.addRecord(versionNameOrDefault, versionProgressive, singleRecord, definitionOrder);
             } else {
                 assert jsonString.charAt(0) == '[';
                 List<Object> listRecord = new ObjectMapper().readValue(jsonString,
                         new TypeReference<List<Map<String, Object>>>() {
                         });
                 assert !def; // array not allowed for DEFAULT
-                entityRawRecordBuilder.addRecords(versionNameOrDefault, versionProgressive, listRecord);
+                entityRawRecordBuilder.addRecords(versionNameOrDefault, versionProgressive, listRecord, definitionOrder);
             }
         }
         return recordsByEntityName.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, b -> b.getValue().build()));
@@ -93,7 +96,7 @@ public class RecordParser {
     public enum Token {
         ENTITYRECORD("ENTITY-RECORD"),
         ENTITYNAME("[a-zA-z]+"),
-        VERSIONNAME("[a-zA-z]+"),
+        VERSIONNAME("[a-zA-z_\\-]+"),
         VERSIONPROGRESSIVE("[0-9]+"),
         DEFAULT("DEFAULT"),
         L_BRACE(Pattern.quote("{")),

@@ -799,6 +799,10 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
             if (EntityReferenceRecord.class.isAssignableFrom(value.getClass())) {
                 EntityReferenceRecord erf = (EntityReferenceRecord) value;
                 if (!erf.hasPrimaryKey()) {
+                    if (erf.getEntity().isOneRecord()) {
+                        EntityRecord entityRecordSingleton = getEntityRecordSingleton(erf.getEntity(), transaction);
+                        return GenericEntityRecPrimValue.from((Long) entityRecordSingleton.getEntity().getIDValue(), (Long) entityRecordSingleton.getID());
+                    }
                     Optional<EntityRecord> erbyLk = getEntityRecordByLogicalKey(erf.getEntity(), erf.getLogicalKeyRecord().getFieldValues(), transaction);
                     if (erbyLk.isPresent()) {
                         return GenericEntityRecPrimValue.from((Long) erf.getEntity().getIDValue(), (Long) erbyLk.get().getID());
