@@ -298,6 +298,9 @@ public class OpenAPIBuilder {
         type.type = "string";
         search.schema = type;
         search.allowReserver = true;
+        search.examples = new HashMap<>();
+        search.examples.put("simple", exampleForSearch("Simple search by field", "fieldName==fieldValue"));
+        search.examples.put("query", exampleForSearch("RSQL query search", "(fieldName==fieldValue) or (field2=v2 and field3=v3)"));
 
         Parameter limit = new Parameter();
         limit.name = FilterContextBuilder.LIMIT_PARAMETER;
@@ -331,6 +334,11 @@ public class OpenAPIBuilder {
         parameters.add(start);
         parameters.add(orderBy);
         return parameters;
+    }
+
+    private Object exampleForSearch(String description, String value) {
+        return Map.of("value", value,
+                "summary", description);
     }
 
     private Method getEntityUUIDandLKMethod(Entity entity, String summary) {
@@ -684,6 +692,7 @@ public class OpenAPIBuilder {
         public boolean required;
         public SchemaProperty schema;
         public boolean allowReserver;
+        public Map<String, Object> examples;
     }
 
     public static class SecuritySchema {
