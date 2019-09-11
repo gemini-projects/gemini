@@ -35,7 +35,7 @@ subprojects {
     }
 
     group 'it.at7.gemini'
-    version '0.2.2-SNAPSHOT'
+    version '0.3.0'
 
     apply plugin: 'java'
     apply plugin: 'idea'
@@ -85,7 +85,7 @@ subprojects {
             name = project.archivesBaseName
             userOrg = user
             licenses = ['Apache-2.0']
-            vcsUrl = 'https://github.com/h4t0n/gemini'
+            vcsUrl = 'https://github.com/gemini-projects/gemini'
         }
         publications = ['geminiModule']
     }
