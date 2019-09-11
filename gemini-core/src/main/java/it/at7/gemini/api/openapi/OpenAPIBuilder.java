@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.at7.gemini.api.ApiUtility;
+import it.at7.gemini.core.FilterContextBuilder;
 import it.at7.gemini.core.Module;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
@@ -263,12 +264,13 @@ public class OpenAPIBuilder {
             // response single record entity
             response200JsonEntityRecord(entity, response200);
         } else {
+
+            method.parameters = filterParameters();
+
             // response list
             response200.content.put(String.format("application/json; %s=%s", ApiUtility.GEMINI_CONTENT_TYPE, ApiUtility.GEMINI_API_META_TYPE),
                     Map.of("schema",
-                            Map.of("type", "array",
-                                    "items",
-                                    Map.of("$ref", String.format("#/components/schemas/%s", entityWithMetaSchemaName(entity))))));
+                            Map.of("$ref", String.format("#/components/schemas/%s", entityListWithMetaSchemaName(entity)))));
             response200.content.put("application/json",
                     Map.of("schema",
                             Map.of("type", "array",
@@ -282,6 +284,53 @@ public class OpenAPIBuilder {
         method.responses.put("default", DEFAULTERR_REF);
 
         return method;
+    }
+
+    private List<Object> filterParameters() {
+        List<Object> parameters = new ArrayList<>();
+
+        Parameter search = new Parameter();
+        search.name = FilterContextBuilder.SEARCH_PARAMETER;
+        search.description = "Search string to filter records using RSQL query";
+        search.in = "query";
+        search.required = false;
+        SchemaProperty type = new SchemaProperty();
+        type.type = "string";
+        search.schema = type;
+        search.allowReserver = true;
+
+        Parameter limit = new Parameter();
+        limit.name = FilterContextBuilder.LIMIT_PARAMETER;
+        limit.description = "Limit the results of the query";
+        limit.in = "query";
+        limit.required = false;
+        type = new SchemaProperty();
+        type.type = "integer";
+        type.format = "int64";
+        limit.schema = type;
+
+        Parameter start = new Parameter();
+        start.name = FilterContextBuilder.START_PARAMETER;
+        start.description = "Start results from a certain records";
+        start.in = "query";
+        start.required = false;
+        start.schema = type;
+
+        Parameter orderBy = new Parameter();
+        orderBy.name = FilterContextBuilder.ORDER_BY_PARAMETER;
+        orderBy.description = "Comma separated fields to order results. (Use - to DESC order)";
+        orderBy.in = "query";
+        orderBy.required = false;
+        type = new SchemaProperty();
+        type.type = "string";
+        orderBy.schema = type;
+        orderBy.allowReserver = false;
+
+        parameters.add(search);
+        parameters.add(limit);
+        parameters.add(start);
+        parameters.add(orderBy);
+        return parameters;
     }
 
     private Method getEntityUUIDandLKMethod(Entity entity, String summary) {
@@ -403,8 +452,37 @@ public class OpenAPIBuilder {
                 rootSchema.properties.put("data", dataSchema);
                 rootSchema.required = List.of("meta", "data");
                 schemas.put(entityWithMetaSchemaName(entity), rootSchema);
+
+                Schema listSchema = new Schema();
+                listSchema.type = "object";
+                listSchema.properties = new LinkedHashMap<>();
+                listSchema.properties.put("meta", schemaForFilter());
+                listSchema.properties.put("data", Map.of("type", "array",
+                        "items", Map.of("$ref", String.format("#/components/schemas/%s", entityWithMetaSchemaName(entity)))));
+                listSchema.required = List.of("meta", "data");
+                schemas.put(entityListWithMetaSchemaName(entity), listSchema);
+
             }
         }
+    }
+
+    private Object schemaForFilter() {
+        Schema schema = new Schema();
+        schema.type = "object";
+        schema.properties = new LinkedHashMap<>();
+        SchemaProperty intProperty = new SchemaProperty();
+        intProperty.type = "integer";
+        intProperty.format = "int64";
+
+        SchemaProperty orderProperty = new SchemaProperty();
+        orderProperty.type = "array";
+        orderProperty.items = new SchemaProperty();
+        orderProperty.items.type = "string";
+
+        schema.properties.put("limit", intProperty);
+        schema.properties.put("start", intProperty);
+        schema.properties.put("orderBy", orderProperty);
+        return schema;
     }
 
     private Schema createSchemaFor(Set<EntityField> fields) {
@@ -493,6 +571,10 @@ public class OpenAPIBuilder {
 
     private String entityWithMetaSchemaName(Entity entity) {
         return entity.getName() + "_META";
+    }
+
+    private String entityListWithMetaSchemaName(Entity entity) {
+        return "LIST_" + entity.getName() + "_META";
     }
 
     public void addSecurityComponent(String name, SecuritySchema securitySchema) {
@@ -601,6 +683,7 @@ public class OpenAPIBuilder {
         public String description;
         public boolean required;
         public SchemaProperty schema;
+        public boolean allowReserver;
     }
 
     public static class SecuritySchema {
