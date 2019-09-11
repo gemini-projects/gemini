@@ -121,6 +121,13 @@ public class EntityRecord implements RecordBase {
         return getEntityFieldValue(fields);
     }
 
+    /**
+     * Get modified fields.. both for DATA and META
+     */
+    public Set<EntityFieldValue> getOnlyDataModifiedEntityFieldValue() {
+        return getEntityFieldValue(this.entity.getDataEntityFields());
+    }
+
     public EntityFieldValue getEntityFieldValue(EntityField field) {
         Object value = get(field);
         EntityFieldValue fieldValue = EntityFieldValue.create(field, value);

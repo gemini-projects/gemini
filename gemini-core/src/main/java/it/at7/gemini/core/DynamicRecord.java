@@ -78,4 +78,18 @@ public class DynamicRecord implements RecordBase {
         return getFieldValues(fields);
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DynamicRecord that = (DynamicRecord) o;
+        return Objects.equals(store, that.store) &&
+                Objects.equals(fields, that.fields);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(store, fields);
+    }
 }

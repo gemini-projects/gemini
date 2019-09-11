@@ -256,7 +256,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     }
 
     private boolean someRealUpdatedNeeded(EntityRecord record, EntityRecord persistedRecord) {
-        for (EntityFieldValue ev : record.getOnlyModifiedEntityFieldValue()) {
+        for (EntityFieldValue ev : record.getOnlyDataModifiedEntityFieldValue()) {
             EntityField entityField = ev.getEntityField();
             Object persistedValue = persistedRecord.get(entityField);
             if (!ev.fieldValueEquals(persistedValue)) {

@@ -27,10 +27,15 @@ public class FieldConverters {
 
 
     public static Object getConvertedFieldValue(Field field, Object objValue) {
+        FieldType type = field.getType();
         if (objValue == null) {
+            // TODO handle null value better
+            switch (type) {
+                case BOOL:
+                    return false;
+            }
             return null;
         }
-        FieldType type = field.getType();
         String stValue = String.valueOf(objValue);
         switch (type) {
             case PK:

@@ -25,16 +25,18 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 @Scope("prototype")
 public class TransactionImpl implements Transaction {
     private final Logger logger = LoggerFactory.getLogger(TransactionImpl.class);
+    private final DataSource dataSource;
+
     private Connection connection;
     private boolean committed;
     private LocalDateTime openTime;
-
-    private final DataSource dataSource;
+    private TransactionCache transactionCache;
 
     @Autowired
     public TransactionImpl(DataSource dataSource) {
@@ -46,6 +48,7 @@ public class TransactionImpl implements Transaction {
         try {
             this.connection = dataSource.getConnection();
             this.openTime = LocalDateTime.now(ZoneOffset.UTC);
+            this.transactionCache = new TransactionCache();
             connection.setAutoCommit(false);
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
@@ -83,6 +86,11 @@ public class TransactionImpl implements Transaction {
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
         }
+    }
+
+    @Override
+    public Optional<TransactionCache> getTransactionCache() {
+        return Optional.ofNullable(transactionCache);
     }
 
     /**

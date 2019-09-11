@@ -175,6 +175,12 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
 
     @Override
     public Optional<EntityRecord> getEntityRecordById(Entity entity, long recordId, Transaction transaction) throws GeminiException {
+        Optional<TransactionCache> transactionCache = transaction.getTransactionCache();
+        if (transactionCache.isPresent()) {
+            Optional<EntityRecord> entityRecordOpt = transactionCache.get().get(entity, recordId);
+            if (entityRecordOpt.isPresent())
+                return entityRecordOpt;
+        }
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         try {
             QueryWithParams query = createSelectQueryFor(entity);
@@ -381,7 +387,10 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                 er.setUUID(rs.getObject(Field.UUID_NAME, UUID.class));
             }
             er.put(entity.getIdEntityField(), rs.getLong(entity.getIdEntityField().getName()));
-
+            Optional<TransactionCache> transactionCacheOpt = transaction.getTransactionCache();
+            if (transactionCacheOpt.isPresent()) {
+                transactionCacheOpt.get().put(er);
+            }
             for (EntityField field : entity.getALLEntityFields()) {
                 FieldType type = field.getType();
                 String fieldName = fieldName(field, false);
@@ -406,7 +415,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                     EntityReferenceRecord entityReferenceRecord = null;
                     Object pkValue = rs.getObject(fieldName);
                     if (pkValue != null && (Number.class.isAssignableFrom(pkValue.getClass()) && ((Long) pkValue) != 0)) {
-                        handleSameRecordInfiniteRecursion(entity, field, rs);
                         Entity entityRef = field.getEntityRef();
                         assert entityRef != null;
                         Optional<EntityRecord> entityRecordOpt = getEntityRecordById(entityRef, (long) pkValue, transaction);
@@ -487,10 +495,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
             ret.add(er);
         }
         return ret;
-    }
-
-    private void handleSameRecordInfiniteRecursion(Entity entity, EntityField field, ResultSet rs) {
-
     }
 
     private EntityRecord getEntityRecordByPersistedID(Transaction transaction, EntityField field, Object pkValue) throws

@@ -15,7 +15,8 @@ public class EntityRecordException extends GeminiException {
         LK_NOTFOUND,
         INSERTED_RECORD_NOT_FOUND,
         UUID_NOTFOUND,
-        ONERECORD_ENTITY_MUSTEXIST
+        ONERECORD_ENTITY_MUSTEXIST,
+        ID_RECORD_NOT_FOUND
     }
 
     private final Entity entity;
@@ -88,4 +89,9 @@ public class EntityRecordException extends GeminiException {
     public static EntityRecordException ONERECORD_ENTITY_MUSTEXIST(Entity entity) {
         return new EntityRecordException(ONERECORD_ENTITY_MUSTEXIST, entity, String.format("Entity %s is ONEREC - must contain one record", entity.getName()));
     }
+
+    public static EntityRecordException ID_RECORD_NOT_FOUND(EntityRecord entityRecord) {
+        return new EntityRecordException(ID_RECORD_NOT_FOUND, entityRecord.getEntity(), entityRecord.getLogicalKeyValue(), "EntityRecord ID not found");
+    }
+
 }

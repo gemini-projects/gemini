@@ -3,6 +3,7 @@ package it.at7.gemini.core;
 import it.at7.gemini.exceptions.GeminiException;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface Transaction extends AutoCloseable {
 
@@ -13,6 +14,8 @@ public interface Transaction extends AutoCloseable {
     void commit() throws GeminiException;
 
     void rollback() throws GeminiException;
+
+    Optional<TransactionCache> getTransactionCache();
 
     LocalDateTime getOpenTime();
 
