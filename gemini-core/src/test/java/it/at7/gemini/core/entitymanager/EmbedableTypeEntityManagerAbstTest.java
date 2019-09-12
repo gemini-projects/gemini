@@ -37,7 +37,7 @@ public class EmbedableTypeEntityManagerAbstTest {
         testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         EntityRecord embededRecord = testEntity.get("embeded");
         Assert.assertNotNull(embededRecord);
-        testDefaulValues(embededRecord, "");
+        testDefaulValues(embededRecord, null);
         testDefaultMetaValues(testEntity);
     }
 

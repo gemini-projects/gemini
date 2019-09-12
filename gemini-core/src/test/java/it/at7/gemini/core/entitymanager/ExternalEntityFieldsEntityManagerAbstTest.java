@@ -26,7 +26,7 @@ public class ExternalEntityFieldsEntityManagerAbstTest {
         testDefaulValues(testEntity, "logKey");
         assertEquals("testExternalFieldOnOtherModule", testEntity.get("externalText")); // real field
         testDefaultMetaValues(testEntity);
-        assertNotNull(testEntity.get("externalMetaField"));
+        assertNotNull(testEntity.getEntity().getMetaField("externalMetaField"));
     }
 
     @Test
