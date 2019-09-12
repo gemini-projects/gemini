@@ -96,6 +96,11 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         }
         QueryWithParams queryWithParams = makeModifyQueryFromID(record, transaction);
         transactionImpl.executeUpdate(queryWithParams.getSql(), queryWithParams.getParams());
+        Optional<TransactionCache> transactionCache = transaction.getTransactionCache();
+        if (transactionCache.isPresent()) {
+            TransactionCache tc = transactionCache.get();
+            tc.delete(record);
+        }
         Optional<EntityRecord> recordById = getEntityRecordById(record.getEntity(), (long) id, transactionImpl);
         assert recordById.isPresent();
         return recordById.get();

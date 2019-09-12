@@ -37,6 +37,14 @@ public class FieldConverters {
             return null;
         }
         String stValue = String.valueOf(objValue);
+        if (stValue.equals("") || stValue.equals("{}")) {
+            // TODO better to refactor and create a method ?
+            switch (type) {
+                case BOOL:
+                    return false;
+            }
+            return null;
+        }
         switch (type) {
             case PK:
                 return objValue;
@@ -161,7 +169,7 @@ public class FieldConverters {
                 if (Map.class.isAssignableFrom(objValue.getClass())) {
                     Map<String, Object> mapValue = (Map<String, Object>) objValue;
                     Object entityO = mapValue.get(GENERIC_ENTITY_RECORD_ENTITY_FIELD);
-                    if (String.class.isAssignableFrom(entityO.getClass())) {
+                    if (entityO != null && String.class.isAssignableFrom(entityO.getClass())) {
                         String entity = ((String) entityO).toUpperCase();
                         EntityManager entityManager = Services.getEntityManager();
                         Entity refEntity = entityManager.getEntity(entity);

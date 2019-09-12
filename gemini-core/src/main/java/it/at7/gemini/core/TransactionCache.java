@@ -39,4 +39,11 @@ public class TransactionCache {
         Map<Object, EntityRecord> innerCache = cache.getOrDefault(entity.getName().toUpperCase(), Map.of());
         return Optional.ofNullable(innerCache.get(id));
     }
+
+    public void delete(EntityRecord record) {
+        if (record.getID() != null) {
+            Map<Object, EntityRecord> cacheByEntityID = cache.computeIfAbsent(record.getEntity().getName().toUpperCase(), k -> new HashMap<>());
+            cacheByEntityID.remove(record.getID());
+        }
+    }
 }
