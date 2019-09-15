@@ -1,3 +1,13 @@
+ENTITY-RECORD Entity Entity-Config 1
+[{
+     "name" : "ENTITY",
+     "closedDomain": true
+},
+{
+     "name" : "FIELD",
+     "closedDomain": true
+}]
+
 ENTITY-RECORD FieldCommonSettings DEFAULT
 {
      "visible" : {
@@ -11,11 +21,18 @@ ENTITY-RECORD FieldCommonSettings DEFAULT
      "required" : {
         "strategy": "STATIC",
         "value": false
-     },
-     "choiceDataStrategy" : "STATIC"
+     }
 }
 
-ENTITY-RECORD FieldResolution V 1
+ENTITY-RECORD ValueStrategy V 1
+[{
+    "code" : "STATIC",
+    "description": "Get the configured static value"
+}]
+
+
+
+ENTITY-RECORD FieldResolution FieldResolution 1
 [{
    "field": {
         "entity": "FIELD",

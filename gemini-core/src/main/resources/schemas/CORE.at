@@ -21,8 +21,6 @@ ENTITY Entity {
     BOOL            closedDomain
 }
 
-# ENTITY FieldScope IMPLEMENTS Domain
-
 ENTITY Field {
     TEXT                name *
     Entity              entity *
@@ -31,7 +29,6 @@ ENTITY Field {
     Entity              refEntity
     BOOL                isLogicalKey
     LONG                lkOrder
-    FieldCommonSettings commonSettings
 }
 
 ENTITY ValueStrategy IMPLEMENTS Domain
@@ -41,12 +38,11 @@ ENTITY EMBEDABLE    BoolStrategy {
     BOOL            value
 }
 
-ENTITY EMBEDABLE FieldCommonSettings   {
-    # [Field]             dependencies
+ENTITY FieldCommonSettings   {
+    Field                 field *
     BoolStrategy          visible
     BoolStrategy          modifiable
     BoolStrategy          required
-    ValueStrategy         choiceDataStrategy
 }
 
 ENTITY InitRecord {

@@ -41,4 +41,11 @@ public class GeminiConfigurationService {
     public String getServiceInfoResource() {
         return serviceInfoResource;
     }
+
+    @Value("${gemini.dev-mode:false}")
+    private boolean devMode;
+
+    public boolean isDevMode() {
+        return devMode;
+    }
 }

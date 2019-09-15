@@ -28,6 +28,7 @@ public class RecordConverters {
     }
 
     public static EntityRecord entityRecordFromMap(Entity entity, Map<String, Object> fieldMap) throws InvalidLogicalKeyValue, InvalidTypeForObject {
+        assert entity != null;
         Map<String, Object> rawFields = fieldMap;
         if (containGeminiDataTypeFields(rawFields)) {
             Object rawFieldsOBJ = rawFields.get(GEMINI_DATA_FIELD);

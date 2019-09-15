@@ -18,7 +18,6 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.*;
-import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.genericRefEntityFieldName;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -236,6 +235,8 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
 
     private void updateEntityStorage(Entity entity, TransactionImpl transaction) throws SQLException, GeminiException {
         logger.info("{}: check/update Fields for {}", entity.getModule().getName(), entity.getName());
+
+        // TODO embedable converted in non embedable need uuid
 
         /*
             NB meta fields columns are creted or updated always starting from the schema file.

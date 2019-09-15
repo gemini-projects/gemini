@@ -697,7 +697,10 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         for (EntityField entityField : record.getModifiedFields()) {
             if (entityField.getType().equals(FieldType.ENTITY_EMBEDED)) {
                 EntityRecord embededRec = record.get(entityField);
-                deleteEntityRecordByID(embededRec, transaction);
+                if (embededRec != null) {
+                    assert embededRec.getID() != null;
+                    deleteEntityRecordByID(embededRec, transaction);
+                }
             }
         }
     }

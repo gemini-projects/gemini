@@ -44,6 +44,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private final StateManager stateManager;
     private final PersistenceSchemaManager persistenceSchemaManager;
     private final PersistenceEntityManager persistenceEntityManager;
+    private final GeminiConfigurationService geminiConfigurationService;
     private final EntityManagerImpl entityManager;
 
     private Map<String, Module> modules;
@@ -55,11 +56,17 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private Map<Module, ModuleRawRecord> schemaRawRecordsByModule;
 
     @Autowired
-    public SchemaManagerImpl(ApplicationContext applicationContext, StateManager stateManager, PersistenceSchemaManager persistenceSchemaManager, PersistenceEntityManager persistenceEntityManager, @Lazy EntityManagerImpl entityManager) {
+    public SchemaManagerImpl(ApplicationContext applicationContext,
+                             StateManager stateManager,
+                             PersistenceSchemaManager persistenceSchemaManager,
+                             PersistenceEntityManager persistenceEntityManager,
+                             GeminiConfigurationService geminiConfigurationService,
+                             @Lazy EntityManagerImpl entityManager) {
         this.applicationContext = applicationContext;
         this.stateManager = stateManager;
         this.persistenceSchemaManager = persistenceSchemaManager;
         this.persistenceEntityManager = persistenceEntityManager;
+        this.geminiConfigurationService = geminiConfigurationService;
         this.entityManager = entityManager;
     }
 
@@ -245,26 +252,39 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
             EntityOperationContext operationContextForInitSchema = getOperationContextForInitSchema();
             for (EntityRawRecords.VersionedRecords version : versionsRecords) {
                 String entityName = version.getEntity().toUpperCase();
-                EntityRecord initVersionRec = new EntityRecord(entities.get(InitRecordDef.NAME));
-                initVersionRec.set(InitRecordDef.FIELDS.ENTITY, entityName);
-                initVersionRec.set(InitRecordDef.FIELDS.VERSION_NAME, version.getVersionName());
-                initVersionRec.set(InitRecordDef.FIELDS.VERSION_NUMBER, version.getVersionProgressive());
-                Optional<EntityRecord> optRecord = entityManager.getOptional(initVersionRec, transaction);
 
-                if (!optRecord.isPresent()) {
-                    logger.info(String.format("Handling records for entity %s and version %s - %d", entities, version.getVersionName(), version.getVersionProgressive()));
-                    for (Object record : version.getRecords()) {
-                        EntityRecord entityRecord = RecordConverters.entityRecordFromMap(entities.get(entityName), (Map<String, Object>) record);
-                        if (CORE_ENTITIES.contains(entityName.toUpperCase())) {
-                            entityManager.update(entityRecord, operationContextForInitSchema, transaction);
-                        } else {
-                            entityManager.putOrUpdate(entityRecord, operationContextForInitSchema, transaction);
-                        }
+                if (this.geminiConfigurationService.isDevMode()) {
+                    createOrUpdateRecords(transaction, operationContextForInitSchema, version, entityName);
+                } else {
+                    EntityRecord initVersionRec = new EntityRecord(entities.get(InitRecordDef.NAME));
+                    initVersionRec.set(InitRecordDef.FIELDS.ENTITY, entityName);
+                    initVersionRec.set(InitRecordDef.FIELDS.VERSION_NAME, version.getVersionName());
+                    initVersionRec.set(InitRecordDef.FIELDS.VERSION_NUMBER, version.getVersionProgressive());
+                    Optional<EntityRecord> optRecord = entityManager.getOptional(initVersionRec, transaction);
+
+                    if (!optRecord.isPresent()) {
+                        createOrUpdateRecords(transaction, operationContextForInitSchema, version, entityName);
+                        entityManager.putIfAbsent(initVersionRec, operationContextForInitSchema, transaction);
                     }
-                    entityManager.putIfAbsent(initVersionRec, operationContextForInitSchema, transaction);
                 }
             }
 
+        }
+    }
+
+    private void createOrUpdateRecords(Transaction transaction, EntityOperationContext operationContextForInitSchema, EntityRawRecords.VersionedRecords version, String entityName) throws GeminiException {
+        logger.info(String.format("Handling records for entity %s and version %s - %d", entityName, version.getVersionName(), version.getVersionProgressive()));
+        for (Object record : version.getRecords()) {
+            Entity entity = entities.get(entityName);
+            if (entity == null) {
+                throw new GeminiRuntimeException(String.format("Handling records for entity %s and version %s - %d -- Entity %s not found", entityName, version.getVersionName(), version.getVersionProgressive(), entityName));
+            }
+            EntityRecord entityRecord = RecordConverters.entityRecordFromMap(entity, (Map<String, Object>) record);
+            if (CORE_ENTITIES.contains(entityName.toUpperCase())) {
+                entityManager.update(entityRecord, operationContextForInitSchema, transaction);
+            } else {
+                entityManager.putOrUpdate(entityRecord, operationContextForInitSchema, transaction);
+            }
         }
     }
 
