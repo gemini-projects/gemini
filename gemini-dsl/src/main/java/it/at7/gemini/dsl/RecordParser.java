@@ -95,7 +95,7 @@ public class RecordParser {
 
     public enum Token {
         ENTITYRECORD("ENTITY-RECORD"),
-        ENTITYNAME("[a-zA-z]+"),
+        ENTITYNAME("[a-zA-z0-9]+"),
         VERSIONNAME("[a-zA-z_\\-]+"),
         VERSIONPROGRESSIVE("[0-9]+"),
         DEFAULT("DEFAULT"),
