@@ -391,7 +391,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
             if (!entity.isEmbedable()) {
                 er.setUUID(rs.getObject(Field.UUID_NAME, UUID.class));
             }
-            er.put(entity.getIdEntityField(), rs.getLong(entity.getIdEntityField().getName()));
+            long sourceID = rs.getLong(entity.getIdEntityField().getName());
+            er.put(entity.getIdEntityField(), sourceID);
             Optional<TransactionCache> transactionCacheOpt = transaction.getTransactionCache();
             if (transactionCacheOpt.isPresent()) {
                 transactionCacheOpt.get().put(er);
@@ -423,10 +424,12 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                         Entity entityRef = field.getEntityRef();
                         assert entityRef != null;
                         Optional<EntityRecord> entityRecordOpt = getEntityRecordById(entityRef, (long) pkValue, transaction);
-                        // TODO probably can be also not found
-                        assert entityRecordOpt.isPresent();
-                        EntityRecord lkEntityRecord = entityRecordOpt.get();
-                        entityReferenceRecord = createEntityReferenceRecordFromER(field.getEntityRef(), pkValue, lkEntityRecord);
+                        if (entityRecordOpt.isPresent()) {
+                            EntityRecord lkEntityRecord = entityRecordOpt.get();
+                            entityReferenceRecord = createEntityReferenceRecordFromER(field.getEntityRef(), pkValue, lkEntityRecord);
+                        } else {
+                            logger.warn("No Entity Record found for Entity: {} id {} - Source {} id {}", entityRef.getName(), pkValue, entity.getName(), sourceID);
+                        }
                     }
                     er.put(field, entityReferenceRecord);
                     handled = true;
