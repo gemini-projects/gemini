@@ -26,18 +26,19 @@ public class RecordParser {
         long definitionOrder = 0;
         Map<String, EntityRawRecordBuilder> recordsByEntityName = new HashMap<>();
         String line = reader.readLine();
-        if(line == null){
+        if (line == null) {
             return Map.of();
         }
         this.scanner = new Scanner(line);
-        while (has(ENTITYRECORD)) {
+        while (hasCheckingComments(ENTITYRECORD)) {
             expect(ENTITYRECORD);
             String entityName = expect(ENTITYNAME);
             EntityRawRecordBuilder entityRawRecordBuilder = recordsByEntityName.computeIfAbsent(entityName.toUpperCase(), EntityRawRecordBuilder::new);
             StringBuilder jsonBuilder = new StringBuilder();
             String versionNameOrDefault = expect(VERSIONNAME); // DEFAULT in case of default record
-            long versionProgressive = 0; boolean def = true;
-            if(!versionNameOrDefault.equals("DEFAULT")) {
+            long versionProgressive = 0;
+            boolean def = true;
+            if (!versionNameOrDefault.equals("DEFAULT")) {
                 def = false;
                 versionProgressive = Long.parseLong(expect(VERSIONPROGRESSIVE));
             }
@@ -72,7 +73,7 @@ public class RecordParser {
         return recordsByEntityName.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, b -> b.getValue().build()));
     }
 
-    private boolean checkDefault() {
+    private boolean checkDefault() throws IOException {
         return has(DEFAULT);
     }
 
@@ -83,6 +84,17 @@ public class RecordParser {
             String next = scanner.next();
             throw new SyntaxError(String.format("Line %d: Expected %s while found %s", reader.getLineNumber(), token.pattern, next));
         }
+    }
+
+    private boolean hasCheckingComments(Token token) throws IOException {
+        while (scanner.hasNext("#") || !scanner.hasNextLine()) {
+            String line = reader.readLine();
+            if (line != null)
+                this.scanner = new Scanner(line);
+            else
+                break;
+        }
+        return scanner.hasNext(token.pattern);
     }
 
     private boolean has(Token token) {
