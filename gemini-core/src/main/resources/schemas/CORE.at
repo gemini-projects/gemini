@@ -22,13 +22,14 @@ ENTITY Entity {
 }
 
 ENTITY Field {
-    TEXT                name *
-    Entity              entity *
+    TEXT                name    *1
+    Entity              entity  *2
     TEXT                type
     TEXT                scope
     Entity              refEntity
     BOOL                isLogicalKey
     LONG                lkOrder
+    Field               parentField
 }
 
 ENTITY ValueStrategy IMPLEMENTS Domain

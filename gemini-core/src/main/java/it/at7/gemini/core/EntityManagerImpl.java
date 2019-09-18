@@ -251,7 +251,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         this.checkFrameworkEntitiesCreation(record);
         this.eventManager.beforeInsertFields(record, entityOperationContext, transaction);
         EntityRecord newEntityRecord = persistenceEntityManager.createNewEntityRecord(record, transaction);
-        this.eventManager.onInsertedRecord(record, entityOperationContext, transaction);
+        this.eventManager.onInsertedRecord(newEntityRecord, entityOperationContext, transaction);
         return newEntityRecord;
     }
 

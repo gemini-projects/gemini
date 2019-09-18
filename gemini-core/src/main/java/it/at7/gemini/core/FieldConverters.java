@@ -33,6 +33,10 @@ public class FieldConverters {
             switch (type) {
                 case BOOL:
                     return false;
+                case LONG:
+                    return 0L;
+                case NUMBER:
+                    return 0;
             }
             return null;
         }

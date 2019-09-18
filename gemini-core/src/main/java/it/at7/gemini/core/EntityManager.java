@@ -483,6 +483,12 @@ public interface EntityManager {
         return getRecordsMatching(entity, Set.of(fieldValue));
     }
 
+    default List<EntityRecord> getRecordsMatching(Entity entity, String field, Object value, Transaction transaction) throws GeminiException {
+        EntityField entityField = entity.getField(field);
+        FieldValue fieldValue = FieldValue.create(entityField, value);
+        return getRecordsMatching(entity, Set.of(fieldValue), transaction);
+    }
+
     List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType) throws GeminiException;
 
     List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType, Transaction transaction) throws GeminiException;

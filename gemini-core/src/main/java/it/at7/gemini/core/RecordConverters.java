@@ -102,15 +102,11 @@ public class RecordConverters {
     }
 
 
-    public static Map<String, Object> toMap(EntityRecord record) {
-        return toMap(record.getDataEntityFieldValues());
+    public static Map<String, Object> dataToMap(EntityRecord record) {
+        return dataToMap(record.getDataEntityFieldValues());
     }
 
-    public static Map<String, Object> toMap(DynamicRecord record) {
-        return toMap(record.getFieldValues());
-    }
-
-    public static Map<String, Object> toMap(Collection<? extends FieldValue> fieldValues) {
+    public static Map<String, Object> dataToMap(Collection<? extends FieldValue> fieldValues) {
         Map<String, Object> convertedMap = new HashMap<>();
         for (FieldValue fieldValue : fieldValues) {
             convertSingleFieldTOJSONValue(convertedMap, fieldValue);
@@ -237,7 +233,7 @@ public class RecordConverters {
         } else if (EntityRecord.class.isAssignableFrom(value.getClass())) {
             // we have the full reference record here -- we add a map of its fields
             EntityRecord eRValue = (EntityRecord) value;
-            convertedMap.put(fieldNameLC, toMap(eRValue));
+            convertedMap.put(fieldNameLC, dataToMap(eRValue));
         }
     }
 
@@ -264,7 +260,7 @@ public class RecordConverters {
         }
         if (EntityRecord.class.isAssignableFrom(value.getClass())) {
             EntityRecord eRValue = (EntityRecord) value;
-            convertedMap.put(fieldName, toMap(eRValue));
+            convertedMap.put(fieldName, dataToMap(eRValue));
             return;
         }
         throw new RuntimeException("Unsupported OPE");

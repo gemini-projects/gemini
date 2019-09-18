@@ -1,5 +1,6 @@
 package it.at7.gemini.core.persistence;
 
+import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Module;
 import it.at7.gemini.core.Transaction;
 import it.at7.gemini.core.TransactionImpl;
@@ -61,15 +62,23 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
             HashMap<String, Object> parameters = new HashMap<>();
             parameters.put("ids", entitiesID);
             transactionImpl.executeQuery(sql, parameters, rs -> {
+                boolean found = false;
                 while (rs.next()) {
+                    found = true;
                     String name = rs.getString(1);
-                    transactionImpl.executeUpdate(String.format("DROP TABLE IF EXISTS %s", wrapDoubleQuotes(name.toLowerCase())));
+                    logger.warn("Found an entity that is not in the schema - Going to DELETE entity/field records for entity: {}", name);
+                    /* TODO parameter to actually drop the table
+                    transactionImpl.executeUpdate(String.format("DROP TABLE IF EXISTS %s", wrapDoubleQuotes(name.toLowerCase()))); */
+                }
+                if (found) {
+                    String deleteEntitiesSql = String.format("DELETE FROM entity WHERE %s NOT IN (:ids)", Field.ID_NAME);
+                    String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE entity NOT IN (:ids)");
+                    // TODO ed i record dipendenti ? forse conviene passare dal manager ?
+                    transactionImpl.executeUpdate(deleteEntitiesSql, parameters);
+                    transactionImpl.executeUpdate(deleteEntitiesFieldsSql, parameters);
                 }
             });
-            String deleteEntitiesSql = String.format("DELETE FROM entity WHERE %s NOT IN (:ids)", Field.ID_NAME);
-            String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE entity NOT IN (:ids)");
-            transactionImpl.executeUpdate(deleteEntitiesSql, parameters);
-            transactionImpl.executeUpdate(deleteEntitiesFieldsSql, parameters);
+
         } catch (SQLException e) {
             logger.error("deleteUnnecessaryEntites Failed", e);
             throw new GeminiGenericException(e);
@@ -114,30 +123,35 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
     }
 
     @Override
-    public void deleteUnnecessaryFields(Entity entity, Set<EntityField> fields, Transaction transaction) throws GeminiException {
+    public void deleteUnnecessaryFields(Entity entity, List<EntityRecord> fields, Transaction transaction) throws GeminiException {
         try {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
-            List<Long> fieldsID = fields.stream().map(EntityField::getIDValue).map(Long.class::cast).collect(toList());
+            List<Long> fieldsID = fields.stream().map(EntityRecord::getID).map(Long.class::cast).collect(toList());
             if (!fieldsID.isEmpty()) {
                 String sql = String.format("SELECT name, type FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
                 HashMap<String, Object> parameters = new HashMap<>();
                 parameters.put("ids", fieldsID);
                 parameters.put("entityId", entity.getIDValue());
                 transactionImpl.executeQuery(sql, parameters, rs -> {
+
+                    /*
                     while (rs.next()) {
                         String columnName = rs.getString(1).toLowerCase();
                         String typeName = rs.getString(2);
                         String drop;
-                        if(typeName.equals(FieldType.GENERIC_ENTITY_REF.name())){
+                        /* TODO drop columns that are not required ?
+                        if (typeName.equals(FieldType.GENERIC_ENTITY_REF.name())) {
                             drop = String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s, DROP COLUMN IF EXISTS %s", wrapDoubleQuotes(entity.getName().toLowerCase()), ENTITY_PREFIX + columnName, REF_PREFIX + columnName);
                         } else {
                             drop = String.format("ALTER TABLE %s DROP COLUMN IF EXISTS %s", wrapDoubleQuotes(entity.getName().toLowerCase()), wrapDoubleQuotes(columnName));
                         }
                         transactionImpl.executeUpdate(drop);
+                        */
+                    if (rs.next()) {
+                        String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
+                        transactionImpl.executeUpdate(deleteEntitiesFieldsSql, parameters);
                     }
                 });
-                String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
-                transactionImpl.executeUpdate(deleteEntitiesFieldsSql, parameters);
             }
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
@@ -222,8 +236,9 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
         sqlBuilder.append(primaryKeyField(Field.ID_NAME));
         if (!entity.isEmbedable()) {
             sqlBuilder.append(uuidField());
+            entity.getMetaEntityFields().forEach(mf -> sqlBuilder.append(", ").append(field(mf)));
         }
-        entity.getMetaEntityFields().forEach(mf -> sqlBuilder.append(", ").append(field(mf)));
+
         entity.getDataEntityFields().forEach(f -> sqlBuilder.append(", ").append(field(f)));
         handleUniqueLogicalKeyConstraint(sqlBuilder, entity);
         sqlBuilder.append(" );");
@@ -342,6 +357,8 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 String data_type = resultSet.getString("data_type");
                 String domain_name = resultSet.getString("domain_name");
                 if (!checkSqlType(field, data_type, domain_name)) {
+
+                    /* TODO parameter to drop the column -- manually drop now
                     String sqlAlterTable =
                             "ALTER TABLE " + wrapDoubleQuotes(entity.getName().toLowerCase()) +
                                     " DROP COLUMN " + fieldName(field, true);
@@ -349,11 +366,11 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                             "ALTER TABLE " + wrapDoubleQuotes(entity.getName().toLowerCase()) +
                             " ADD COLUMN " + field(field);
                     transaction.executeUpdate(sqlAlterTable);
+                    */
+                    throw new GeminiRuntimeException(String.format("Field '%s.%s' cannot be added - Column '%s' already exists with a wrong type - PLEASE CHECK DATABASE AND SCHEMA (or manually drop the column)", entity.getName(), field.getName(), field.getName()));
                 }
-                // TODO Complex types
-                // nothing to DO here
+                logger.debug("Field {}.{} is OK", entity.getName(), field.getName());
             }
-
         });
     }
 
@@ -394,6 +411,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                         column_name = resultSet.getString("column_name");
                         if (column_name.equals(actualRef)
                                 && data_type.equals("bigint")) {
+                            logger.debug("Field {}.{} is OK", entity.getName(), field.getName());
                             return;
                         }
                     } else {

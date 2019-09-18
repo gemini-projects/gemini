@@ -2,13 +2,11 @@ package it.at7.gemini.auth.events;
 
 import it.at7.gemini.api.ApiListenerManagerInit;
 import it.at7.gemini.api.RestAPIControllerListener;
-import it.at7.gemini.auth.core.AuthEntityOperationContext;
 import it.at7.gemini.auth.AuthModule;
+import it.at7.gemini.auth.core.AuthEntityOperationContext;
 import it.at7.gemini.auth.core.AuthModuleRef;
-import it.at7.gemini.core.ApiListenerManagerImpl;
-import it.at7.gemini.core.EntityManager;
-import it.at7.gemini.core.EntityOperationContext;
-import it.at7.gemini.core.SchemaManagerInitListener;
+import it.at7.gemini.auth.core.UserRef;
+import it.at7.gemini.core.*;
 import it.at7.gemini.core.events.BeforeInsertField;
 import it.at7.gemini.core.events.EventContext;
 import it.at7.gemini.core.events.Events;
@@ -19,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Events(entityName = Entity.CORE_META, order = -100)
@@ -28,6 +29,9 @@ public class AuthMetaEvents implements SchemaManagerInitListener, RestAPIControl
     private final ApplicationContext applicationContext;
     private final EntityManager entityManager;
     private final ApiListenerManagerInit apiListenersManager;
+
+
+    Map<String, EntityReferenceRecord> entityRefUserCache = new HashMap<>();
 
     @Autowired
     public AuthMetaEvents(ApplicationContext applicationContext, EntityManager entityManager, ApiListenerManagerImpl apiListenersManager) {
@@ -48,10 +52,30 @@ public class AuthMetaEvents implements SchemaManagerInitListener, RestAPIControl
             Optional<AuthEntityOperationContext> authEntityOpContext = eop.getModuleEntityOpContext(authModule);
             if (authEntityOpContext.isPresent()) {
                 AuthEntityOperationContext aop = authEntityOpContext.get();
-                return aop.getUsername();
+
+                return getUserEntityReferenceRec(aop.getUsername(), eventContext);
+
             }
         }
         return null;
+    }
+
+    private Object getUserEntityReferenceRec(String username, EventContext eventContext) throws GeminiException {
+        EntityReferenceRecord userRef = entityRefUserCache.get(username);
+        if (userRef == null) {
+            Optional<Transaction> transaction = eventContext.getTransaction();
+            if (transaction.isPresent()) {
+                Entity userEntity = entityManager.getEntity(UserRef.NAME);
+                List<EntityRecord> users = entityManager.getRecordsMatching(userEntity, UserRef.FIELDS.USERNAME, username, transaction.get());
+                assert !users.isEmpty();
+                EntityRecord entityRecord = users.get(0);
+                EntityReferenceRecord entityReferenceRecord = EntityReferenceRecord.fromPKValue(userEntity, entityRecord.getID());
+                entityRefUserCache.put(username, entityReferenceRecord);
+            } else {
+                return username;
+            }
+        }
+        return userRef;
     }
 
 

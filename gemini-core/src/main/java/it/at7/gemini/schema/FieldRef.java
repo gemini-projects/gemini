@@ -8,5 +8,7 @@ public interface FieldRef {
         public static final String TYPE = "type";
         public static final String REFENTITY = "refEntity";
         public static final String ISLOGICALKEY = "isLogicalKey";
+        public static final String PARENT_FIELD = "parentField";
+        public static final String SCOPE = "scope";
     }
 }

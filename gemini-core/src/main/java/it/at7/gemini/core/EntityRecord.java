@@ -122,10 +122,10 @@ public class EntityRecord implements RecordBase {
     }
 
     /**
-     * Get modified fields.. both for DATA and META
+     * Get DATA modified fields
      */
     public Set<EntityFieldValue> getOnlyDataModifiedEntityFieldValue() {
-        return getEntityFieldValue(this.entity.getDataEntityFields());
+        return getEntityFieldValue(fields.stream().filter(f -> this.entity.getDataEntityFields().contains(f)).collect(Collectors.toSet()));
     }
 
     public EntityFieldValue getEntityFieldValue(EntityField field) {

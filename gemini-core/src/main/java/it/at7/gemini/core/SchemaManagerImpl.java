@@ -92,7 +92,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, EntityRef.NAME);
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, FieldRef.NAME);
         */
-        handleSchemasEntityRecords(entities.values(), transaction); // add core entityRecord i.e. ENTITY and FIELD
+        handleSchemasEntityRecords(transaction); // add core entityRecord i.e. ENTITY and FIELD
         stateManager.changeState(State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED, Optional.of(transaction));
         createProvidedEntityRecords(transaction); // add entity record provided as resources
         loadEntityRecordsForFrameworkEntities(transaction); // reload entity record and assign them to framework objects
@@ -126,18 +126,20 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
 
-    private Map<String, List<EntityRecord>> handleSchemasEntityRecords(Collection<Entity> entities, Transaction transaction) throws GeminiException {
-        Map<String, List<EntityRecord>> fieldsRecordByEntityName = new HashMap<>();
+    private void handleSchemasEntityRecords(Transaction transaction) throws GeminiException {
         EntityOperationContext entityOperationContext = getOperationContextForInitSchema();
-        for (Entity entity : entities) {
+        for (Entity entity : entities.values()) {
             updateENTITYRecord(transaction, entityOperationContext, entity);
         }
-        persistenceSchemaManager.deleteUnnecessaryEntites(entities, transaction);
-        for (Entity entity : entities) {
-            fieldsRecordByEntityName.put(entity.getName().toUpperCase(), updateEntityFieldsRecords(transaction, entityOperationContext, entity));
+        persistenceSchemaManager.deleteUnnecessaryEntites(entities.values(), transaction);
+        for (Entity entity : entities.values()) {
+            List<EntityRecord> erFields = updateEntityFieldsRecords(transaction, entityOperationContext, entity, null);
+
+            persistenceSchemaManager.deleteUnnecessaryFields(entity, erFields, transaction);
+
+            // singleton entities
             handleOneRecordEntity(transaction, entityOperationContext, entity);
         }
-        return fieldsRecordByEntityName;
     }
 
     private void handleOneRecordEntity(Transaction transaction, EntityOperationContext entityOperationContext, Entity entity) throws GeminiException {
@@ -178,17 +180,45 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         return entityOperationContext;
     }
 
-    private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, EntityOperationContext entityOperationContext, Entity entity) throws GeminiException {
+    private List<EntityRecord> updateEntityFieldsRecords(Transaction transaction, EntityOperationContext entityOperationContext, Entity entity, @Nullable RootEntityField parentFieldWrapper) throws GeminiException {
         List<EntityRecord> fieldRecords = new ArrayList<>();
         Set<EntityField> fields = entity.getALLEntityFields();
         for (EntityField field : fields) {
-            logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
-            EntityRecord fieldEntityRecord = field.toInitializationEntityRecord();
+            long fieldID = 0;
+            EntityRecord fieldEntityRecord;
+            if (parentFieldWrapper == null) {
+                logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), entity.getName(), field.getName());
+                fieldEntityRecord = field.toInitializationEntityRecord();
+            } else {
+                String fieldName = parentFieldWrapper.getFieldName(field);
+                logger.info("{}: creating/updating EntityRecord Fields for {} : {}", entity.getModule().getName(), parentFieldWrapper.parentEntity.getName(), fieldName);
+                Entity fieldRef = entities.get(FieldRef.NAME);
+                fieldEntityRecord = new EntityRecord(fieldRef);
+                fieldEntityRecord.put(FieldRef.FIELDS.NAME, fieldName);
+                fieldEntityRecord.put(FieldRef.FIELDS.ENTITY, parentFieldWrapper.parentEntity.getName());
+                fieldEntityRecord.put(FieldRef.FIELDS.TYPE, field.getType().name());
+                fieldEntityRecord.put(FieldRef.FIELDS.SCOPE, field.getScope());
+
+                fieldEntityRecord.put(FieldRef.FIELDS.PARENT_FIELD, EntityReferenceRecord.fromPKValue(fieldRef, parentFieldWrapper.getParentFieldID()));
+                Entity entityRef = field.getEntityRef();
+                if (entityRef != null) {
+                    fieldEntityRecord.put("refentity", EntityReferenceRecord.fromPKValue(entityRef, entityRef.getIDValue()));
+                }
+            }
+
             fieldEntityRecord = this.entityManager.putOrUpdate(fieldEntityRecord, entityOperationContext, transaction);
-            field.setFieldIDValue(fieldEntityRecord.get(fieldEntityRecord.getEntity().getIdEntityField()));
+            fieldID = fieldEntityRecord.get(fieldEntityRecord.getEntity().getIdEntityField());
+            field.setFieldIDValue(fieldID);
             fieldRecords.add(fieldEntityRecord);
+
+            // add also inner fields if it is an embedable field
+            if (field.getType().equals(ENTITY_EMBEDED)) {
+                Entity entityRef = field.getEntityRef();
+                assert entityRef != null;
+                RootEntityField newParentField = RootEntityField.fromParent(parentFieldWrapper, entity, field, fieldID);
+                fieldRecords.addAll(updateEntityFieldsRecords(transaction, entityOperationContext, entityRef, newParentField));
+            }
         }
-        persistenceSchemaManager.deleteUnnecessaryFields(entity, fields, transaction);
         return fieldRecords;
     }
 
@@ -514,87 +544,45 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         }
     }
 
-    /*
-    private boolean handleEntityCollectionRef(Map<String, EntityBuilder> entityBuilders, EntityBuilder currentEntityBuilder, RawEntity.Entry entry) {
-        String type = entry.getType();
-        if (type.startsWith("[") && type.endsWith("]")) {
-            String innerType = type.substring(1, type.length() - 1);
-            String[] splitted = innerType.split(":");
-            if (splitted.length != 2) {
-                return false;
-            }
-            String collectionEntityName = splitted[0];
-            String collectionEntityField = splitted[1];
-            EntityBuilder collectionEntityBuilder = entityBuilders.get(collectionEntityName);
-            if (collectionEntityBuilder == null) {
-                return false;
-            }
-            List<RawEntity.Entry> targetEntityEntries = collectionEntityBuilder.getRawEntity().getEntries();
-            Optional<RawEntity.Entry> findLinker = targetEntityEntries.stream()
-                    .filter(e -> e.getName().equalsIgnoreCase(collectionEntityField) && e.getType().equalsIgnoreCase(currentEntityBuilder.getName()))
-                    .findAny();
-            if (findLinker.isPresent()) {
-                currentEntityBuilder.addField(ENTITY_COLLECTION_REF, entry, collectionEntityName, collectionEntityField);
-                return true;
-            }
-        }
-        return false;
-    } */
+    static class RootEntityField {
+        List<EntityField> fields;
+        Entity parentEntity;
+        List<Long> parentsId;
 
-
-    /* TODO runtime entity handler
-    @Override
-    public synchronized void addNewRuntimeEntity(Entity newEntity, Transaction transaction) throws GeminiException {
-        Module module = newEntity.getModule();
-        assert module.editable();
-        persistenceSchemaManager.handleSchemaStorage(transaction, newEntity);
-        saveOrUpdateEntityInSchemaFile(newEntity);
-    }
-
-    @Override
-    public synchronized void addNewRuntimeEntityField(EntityField newEntityField, Transaction transaction) throws GeminiException {
-        Entity entity = newEntityField.getEntity();
-        assert entity.getModule().editable();
-        entity.addField(newEntityField);
-        persistenceSchemaManager.handleSchemaStorage(transaction, entity);
-        saveOrUpdateEntityInSchemaFile(entity);
-    }
-
-    @Override
-    public void deleteRuntimeEntity(Entity entity, Transaction transaction) throws GeminiException {
-        Module module = entity.getModule();
-        assert module.editable();
-        persistenceSchemaManager.handleSchemaStorage(transaction, entity);
-        saveOrUpdateEntityInSchemaFile(entity);
-    }
-
-    @Override
-    public void deleteRuntimeEntityField(EntityField field, Transaction transaction) throws GeminiException {
-        Entity entity = field.getEntity();
-        Module module = entity.getModule();
-        assert module.editable();
-        entity.removeField(field);
-        persistenceSchemaManager.handleSchemaStorage(transaction, entity);
-        saveOrUpdateEntityInSchemaFile(entity);
-    }
-
-
-    */
-
-    /*
-    private void saveOrUpdateEntityInSchemaFile(Entity entity) throws UnableToUpdateSchemaFIle {
-        Module module = entity.getModule();
-        RawSchema rawSchema = schemas.get(module);
-        RuntimeModule rtm = RuntimeModule.class.cast(module);
-        List<RawEntity.Entry> entries = entity.getDataEntityFields().stream().map(ef -> new RawEntity.Entry(ef.getType().name(), ef.getName(), ef.isLogicalKey())).collect(toList());
-        rawSchema.addOrUpdateRawEntity(new RawEntity(entity.getName(), false , entries, Collections.EMPTY_LIST));
-        entities.putIfAbsent(entity.getName(), entity);
-        try {
-            rawSchema.persist(rtm.getSchemaLocation());
-        } catch (IOException e) {
-            throw new UnableToUpdateSchemaFIle();
+        public RootEntityField(Entity parentEntity, EntityField parent, long fieldID) {
+            this.parentEntity = parentEntity;
+            this.fields = new ArrayList<>();
+            this.fields.add(parent);
+            this.parentsId = new ArrayList<>();
+            this.parentsId.add(fieldID);
         }
 
+        public RootEntityField(RootEntityField parentFieldWrapper, EntityField field, long fieldID) {
+            this.parentEntity = parentFieldWrapper.parentEntity;
+            this.fields = new ArrayList<>();
+            this.fields.addAll(parentFieldWrapper.fields);
+            this.fields.add(field);
+            this.parentsId = new ArrayList<>();
+            this.parentsId.addAll(parentFieldWrapper.parentsId);
+            this.parentsId.add(fieldID);
+        }
 
-    } */
+        public static RootEntityField fromParent(@Nullable RootEntityField parentFieldWrapper, Entity entity, EntityField field, long fieldID) {
+            if (parentFieldWrapper == null) {
+                return new RootEntityField(entity, field, fieldID);
+            }
+            return new RootEntityField(parentFieldWrapper, field, fieldID);
+        }
+
+        String getFieldName(EntityField field) {
+            StringBuilder s = new StringBuilder();
+            fields.forEach(f -> s.append(f.getName()).append("."));
+            s.append(field.getName());
+            return s.toString();
+        }
+
+        public Long getParentFieldID() {
+            return parentsId.get(parentsId.size() - 1);
+        }
+    }
 }

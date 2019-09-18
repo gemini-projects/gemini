@@ -53,7 +53,7 @@ public class Entity {
         fieldsBuilders.forEach(f -> f.setEntity(this));
         this.dataFields = fieldsBuilders.stream().filter(e -> e.getScope().equals(EntityField.Scope.DATA)).map(EntityFieldBuilder::build).collect(toSet());
         this.dataFieldsByName = dataFields.stream().collect(Collectors.toMap(e -> e.getName().toLowerCase(), e -> e));
-        this.metaFields = fieldsBuilders.stream().filter(e -> e.getScope().equals(EntityField.Scope.META)).map(EntityFieldBuilder::build).collect(toSet());
+        this.metaFields = embedable ? Set.of() : fieldsBuilders.stream().filter(e -> e.getScope().equals(EntityField.Scope.META)).map(EntityFieldBuilder::build).collect(toSet());
         this.metaFieldsByName = metaFields.stream().collect(Collectors.toMap(e -> e.getName().toLowerCase(), e -> e));
         Assert.isTrue(uniqueMetaAndDataField(dataFieldsByName.keySet(), metaFieldsByName.keySet()), "Data/Meta Fields names are not unique");
         this.logicalKey = extractLogicalKeyFrom(dataFields);
@@ -168,7 +168,7 @@ public class Entity {
     */
 
     public EntityRecord toInitializationEntityRecord() {
-        Map<String, Object> values = copyDefaultRecord();
+        Map<String, Object> values = new HashMap<>();
         values.put("name", name);
         values.put("module", module.getName());
         values.put("embedable", embedable);

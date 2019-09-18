@@ -381,6 +381,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         List<EntityRecord> recordsMatching = getEntityRecordsMatching(entity, logicalKeyValues, transaction);
         int size = recordsMatching.size();
         Assert.isTrue(recordsMatching.isEmpty() || size == 1, String.format("Logical Key must have 0 or 1 records found %s - Database is not consistent withGeminiSearchString schema", size));
+        if (size == 0) {
+            logger.debug("No result");
+        }
         return size == 0 ? Optional.empty() : Optional.of(recordsMatching.get(0));
     }
 
