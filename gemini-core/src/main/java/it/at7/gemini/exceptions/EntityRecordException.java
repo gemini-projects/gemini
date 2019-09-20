@@ -16,7 +16,8 @@ public class EntityRecordException extends GeminiException {
         INSERTED_RECORD_NOT_FOUND,
         UUID_NOTFOUND,
         ONERECORD_ENTITY_MUSTEXIST,
-        ID_RECORD_NOT_FOUND
+        ID_RECORD_NOT_FOUND,
+        EMPTY_LK_IN_RECORD
     }
 
     private final Entity entity;
@@ -94,4 +95,7 @@ public class EntityRecordException extends GeminiException {
         return new EntityRecordException(ID_RECORD_NOT_FOUND, entityRecord.getEntity(), entityRecord.getLogicalKeyValue(), "EntityRecord ID not found");
     }
 
+    public static EntityRecordException EMPTY_LK_IN_RECORD(EntityRecord entityRecord) {
+        return new EntityRecordException(EMPTY_LK_IN_RECORD, entityRecord.getEntity(), String.format("Provided a record for entity %s with empty logical key -  %s", entityRecord.getEntity().getName(), entityRecord.toString()));
+    }
 }

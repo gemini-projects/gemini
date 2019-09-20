@@ -65,6 +65,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         checkEnabledState();
         checkDynamicSchema(record);
         checkEntity(record.getEntity());
+        checkLogicalKey(record);
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
             // can insert the entity record
@@ -82,6 +83,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         if (entity.isOneRecord())
             return updateOneRecordEntity(record, entityOperationContext, transaction);
 
+        checkLogicalKey(record);
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
             // can insert the entity record and return it
@@ -302,6 +304,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         return new EntityBuilder(name, runtimeModule).build();
     }
     */
+
     private void handleDeleteResolution(EntityRecord entityRecord, Transaction transaction) throws GeminiException {
         ResolutionExecutor resolutionExecutor = ResolutionExecutor.forDelete(entityRecord, persistenceEntityManager, schemaManager, transaction);
         resolutionExecutor.run();
@@ -347,6 +350,17 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
                 if (stateManager.getActualState().compareTo(State.INITIALIZED) >= 0 && CORE_ENTITIES.contains(name)) {
                     throw SchemaException.DYNAMIC_SCHEMA_NOT_ENABLED(name);
                 }
+        }
+    }
+
+    private void checkLogicalKey(EntityRecord record) throws EntityRecordException {
+        Entity entity = record.getEntity();
+        if (!entity.getLogicalKey().isEmpty()) {
+            Set<EntityFieldValue> logicalKeyValue = record.getLogicalKeyValue();
+            for (EntityFieldValue lk : logicalKeyValue) {
+                if (lk.getValue() == null)
+                    throw EntityRecordException.EMPTY_LK_IN_RECORD(record);
+            }
         }
     }
 

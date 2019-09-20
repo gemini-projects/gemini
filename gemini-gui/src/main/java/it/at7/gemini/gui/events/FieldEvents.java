@@ -30,6 +30,9 @@ public class FieldEvents {
 
         EntityRecord entityRecord = eventContext.getEntityRecord();
         String name = entityRecord.get(FieldRef.FIELDS.NAME);
+        assert name != null;
+        String[] splittedNames = name.split("\\.");
+        name = splittedNames[splittedNames.length - 1];
         EntityRecord guiRef = new EntityRecord(this.entityManager.getEntity(FieldGUIRef.NAME));
         guiRef.put(FieldGUIRef.FIELDS.FIELD, EntityReferenceRecord.fromEntityRecord(entityRecord));
         guiRef.put(FieldGUIRef.FIELDS.DISPLAY_NAME, name);

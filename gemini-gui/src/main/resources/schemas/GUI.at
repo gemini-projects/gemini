@@ -16,11 +16,10 @@ ENTITY EntityGUI {
     TEXT    displayName
 }
 
-# Extended from CORE
 ENTITY FieldGUI {
     Field               field   *
-    FieldGuiSettings    guiSettings
     TEXT                displayName
+    FieldGuiSettings    guiSettings
 }
 
 ENTITY EMBEDABLE FieldGuiSettings  {

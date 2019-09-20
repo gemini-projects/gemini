@@ -74,7 +74,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
     @Override
     public EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
-        record.setUUID(getUUIDforEntityRecord(record));
+        if (!record.getEntity().isEmbedable())
+            record.setUUID(getUUIDforEntityRecord(record));
         QueryWithParams queryWithParams = makeInsertQuery(record, transaction);
         try {
             long recordId = transactionImpl.executeInsert(queryWithParams.getSql(), queryWithParams.getParams());
@@ -601,8 +602,10 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         for (EntityField entityField : record.getModifiedFields()) {
             if (entityField.getType().equals(FieldType.ENTITY_EMBEDED)) {
                 EntityRecord embededRec = record.get(entityField);
-                embededRec = createNewEntityRecord(embededRec, transaction);
-                results.put(entityField, embededRec);
+                if (embededRec != null) {
+                    embededRec = createNewEntityRecord(embededRec, transaction);
+                    results.put(entityField, embededRec);
+                }
             }
         }
         return results;
