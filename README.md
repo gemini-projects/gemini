@@ -2,7 +2,7 @@
     <a href="https://gemini.at7.it" target="_blank"><img src="./gemini_logo.png" height="130" alt="Gemini Logo"></a>
     <br />
     <br />
-    <b>A Model Driven Framework to automatically expose REST APIs and that manages everything else</b>
+    <b>A Model Driven Framework to automatically expose CRUD REST APIs and that manages everything else</b>
     <br />
     <br />
 </p>
