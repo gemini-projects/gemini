@@ -7,15 +7,13 @@
     <br />
 </p>
 
-
-___
-
 ![License](https://img.shields.io/github/license/h4t0n/gemini.svg)
 [![Build Status](https://travis-ci.org/gemini-projects/gemini.svg?branch=master)](https://travis-ci.org/gemini-projects/gemini)
 [![Twitter](https://img.shields.io/badge/Twitter-@h4t0n-blue.svg?style=flat)](http://twitter.com/h4t0n)
 [![Gitter](https://img.shields.io/gitter/room/gemini-framework/general)](https://gitter.im/gemini-framework/general)
 ![Last Commit](https://img.shields.io/github/last-commit/h4t0n/gemini.svg)
 ![Version](https://img.shields.io/github/release/h4t0n/gemini)
+___
 
 > Gemini makes REST API development faster with a Model Driven approach. You can create microservices, full backend web/mobile applications and
 MVPs in minutes with no code. Gemini uses Java and Spring, ready for agile enterprise environments.
