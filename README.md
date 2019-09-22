@@ -1,6 +1,12 @@
 <p align="center">
-   <img src="./gemini_logo.png" height="150">
+    <a href="https://gemini.at7.it" target="_blank"><img src="./gemini_logo.png" height="130" alt="Gemini Logo"></a>
+    <br />
+    <br />
+    <b>A Model Driven Framework to automatically expose REST APIs and that manages everything else</b>
+    <br />
+    <br />
 </p>
+
 
 ___
 
@@ -29,6 +35,8 @@ Gemini is a backend REST framework to automatically create CRUD REST APIs from s
 
 ## Quick Start & Documentation
 To use Gemini take a look at the [documentation](https://gemini.at7.it).
+
+You can use Docker to start in minutes.
 
 ## Contribute
 Gemini is in early stage of development. The best way to contribute is to checkout the project and try it. Then we can
