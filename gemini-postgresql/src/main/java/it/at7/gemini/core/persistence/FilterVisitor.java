@@ -8,17 +8,22 @@ import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.FieldType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Set;
 
 import static it.at7.gemini.schema.FieldType.*;
 
 @Service
 public class FilterVisitor implements RSQLVisitor<String, Entity> {
+    public static final ComparisonOperator LIKE_OPERATOR = new ComparisonOperator("=like=", false);
+
     private static final GeminiTypeFilterVisitor BASIC_TYPE_FILTER = new BasicTypeFilterVisitor();
     private static final GeminiTypeFilterVisitor ENTITY_REF_TYPE_FILTER = new EntityRefTypeFilterVisitor();
 
+    private Set<ComparisonOperator> comparisonOperators;
 
     Map<FieldType, GeminiTypeFilterVisitor> geminiTypeVisitors = Map.of(
             TEXT, BASIC_TYPE_FILTER,
@@ -27,6 +32,16 @@ public class FilterVisitor implements RSQLVisitor<String, Entity> {
             NUMBER, BASIC_TYPE_FILTER,
             ENTITY_REF, ENTITY_REF_TYPE_FILTER
     );
+
+    @Autowired
+    public FilterVisitor() {
+        comparisonOperators = RSQLOperators.defaultOperators();
+        comparisonOperators.add(LIKE_OPERATOR);
+    }
+
+    public Set<ComparisonOperator> getOperators() {
+        return comparisonOperators;
+    }
 
     @Override
     public String visit(AndNode node, Entity entity) {

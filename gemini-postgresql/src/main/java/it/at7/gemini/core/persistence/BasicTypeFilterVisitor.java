@@ -5,7 +5,6 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.FieldType;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -17,11 +16,12 @@ public class BasicTypeFilterVisitor implements GeminiTypeFilterVisitor{
 
     Map<ComparisonOperator, String> singleArgumentOpertors = Map.of(
             EQUAL, " = ",
-            NOT_EQUAL, "!=",
-            GREATER_THAN, ">",
-            GREATER_THAN_OR_EQUAL, ">=",
-            LESS_THAN, "<",
-            LESS_THAN_OR_EQUAL, "<="
+            NOT_EQUAL, " != ",
+            GREATER_THAN, " > ",
+            GREATER_THAN_OR_EQUAL, " >= ",
+            LESS_THAN, " < ",
+            LESS_THAN_OR_EQUAL, " <= ",
+            FilterVisitor.LIKE_OPERATOR, " LIKE "
     );
     Map<ComparisonOperator, String> multipleArgumentsOperators = Map.of(
             IN, " IN ",

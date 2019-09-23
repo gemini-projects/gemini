@@ -18,10 +18,11 @@ import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.wrapDou
 public class EntityRefTypeFilterVisitor implements GeminiTypeFilterVisitor {
 
     Map<ComparisonOperator, String> supportedOperators = Map.of(
-            EQUAL, " IN ",
-            NOT_EQUAL, "NOT IN",
-            IN, " IN ",
-            NOT_IN, " NOT IN "
+            EQUAL, " IN ( %s )",
+            NOT_EQUAL, " NOT IN ( %s )",
+            IN, " IN ( %s )",
+            NOT_IN, " NOT IN ( %s ) ",
+            FilterVisitor.LIKE_OPERATOR, " LIKE %s"
     );
 
     @Override
@@ -47,7 +48,7 @@ public class EntityRefTypeFilterVisitor implements GeminiTypeFilterVisitor {
             }
             return wrapDoubleQuotes(field.getEntity().getName().toLowerCase()) + "." +
                     wrapDoubleQuotes(field.getName().toLowerCase())
-                    + " " + sqlOperator + " ( " + innerINQuery + " ) ";
+                    + " IN ( " + innerINQuery + " )";
         }
         throw new GeminiRuntimeException(String.format("EntityRefTypeFilterVisitor unsupported operator %s", node.getOperator().getSymbol()));
     }
@@ -72,18 +73,22 @@ public class EntityRefTypeFilterVisitor implements GeminiTypeFilterVisitor {
         Entity entityRef = field.getEntityRef();
         Entity.LogicalKey logicalKey = entityRef.getLogicalKey();
         EntityField lkField = logicalKey.getLogicalKeyList().get(0);
-        String sqlFilter = String.format("" +
-                "SELECT %1$s.%2$s" +
-                "  FROM %1$s " +
-                " WHERE %1$s.%3$s IN ( ", wrapDoubleQuotes(entityRef.getName().toLowerCase()), wrapDoubleQuotes(entityRef.getIdEntityField().getName().toLowerCase()), wrapDoubleQuotes(lkField.getName().toLowerCase()));
         List<String> arguments = node.getArguments();
+        StringBuilder innerFilter = new StringBuilder();
         for (int i = 0; i < arguments.size(); i++) {
-            sqlFilter += resolveArgumentValue(lkField, arguments.get(i));
+            innerFilter.append(resolveArgumentValue(lkField, arguments.get(i)));
             if (i != arguments.size() - 1) {
-                sqlFilter += " , ";
+                innerFilter.append(" , ");
             }
         }
-        sqlFilter += " )";
+        String sqlFilter = String.format("" +
+                        "SELECT %1$s.%2$s" +
+                        "  FROM %1$s " +
+                        " WHERE %1$s.%3$s ",
+                wrapDoubleQuotes(entityRef.getName().toLowerCase()),
+                wrapDoubleQuotes(entityRef.getIdEntityField().getName().toLowerCase()),
+                wrapDoubleQuotes(lkField.getName().toLowerCase()));
+        sqlFilter += String.format(sqlOperator, innerFilter);
         return sqlFilter;
     }
 

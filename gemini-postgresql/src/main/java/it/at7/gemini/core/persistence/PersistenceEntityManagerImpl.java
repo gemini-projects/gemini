@@ -244,7 +244,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         String sqlFilter = "";
         FilterContext.FilterType filterType = filterContext.getFilterType();
         if (filterType == FilterContext.FilterType.GEMINI && !filterContext.getSearchString().isEmpty()) {
-            Node rootNode = new RSQLParser().parse(filterContext.getSearchString());
+            Node rootNode = new RSQLParser(filterVisitor.getOperators()).parse(filterContext.getSearchString());
             sqlFilter += " WHERE " + rootNode.accept(filterVisitor, entity);
         }
         if (filterType == FilterContext.FilterType.PERSISTENCE) {
