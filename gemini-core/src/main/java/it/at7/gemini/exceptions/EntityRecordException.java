@@ -96,6 +96,6 @@ public class EntityRecordException extends GeminiException {
     }
 
     public static EntityRecordException EMPTY_LK_IN_RECORD(EntityRecord entityRecord) {
-        return new EntityRecordException(EMPTY_LK_IN_RECORD, entityRecord.getEntity(), String.format("Provided a record for entity %s with empty logical key -  %s", entityRecord.getEntity().getName(), entityRecord.toString()));
+        return new EntityRecordException(EMPTY_LK_IN_RECORD, entityRecord.getEntity(), String.format("Provided a record for entity %s withRecord empty logical key -  %s", entityRecord.getEntity().getName(), entityRecord.toString()));
     }
 }

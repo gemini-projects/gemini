@@ -71,6 +71,7 @@ public class AuthMetaEvents implements SchemaManagerInitListener, RestAPIControl
                 EntityRecord entityRecord = users.get(0);
                 EntityReferenceRecord entityReferenceRecord = EntityReferenceRecord.fromPKValue(userEntity, entityRecord.getID());
                 entityRefUserCache.put(username, entityReferenceRecord);
+                return entityReferenceRecord;
             } else {
                 return username;
             }

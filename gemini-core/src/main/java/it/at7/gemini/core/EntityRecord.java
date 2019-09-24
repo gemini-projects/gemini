@@ -92,8 +92,8 @@ public class EntityRecord implements RecordBase {
 
     /**
      * Get values and fields for all the fields available in the Entity Schema. This means
-     * that if a new EntityRecord is created with only a subset of fields the remaining fields
-     * are extracted with a default value. Returns only DATA fields.
+     * that if a new EntityRecord is created withRecord only a subset of fields the remaining fields
+     * are extracted withRecord a default value. Returns only DATA fields.
      */
     public Set<EntityFieldValue> getDataEntityFieldValues() {
         return getEntityFieldValue(entity.getDataEntityFields());

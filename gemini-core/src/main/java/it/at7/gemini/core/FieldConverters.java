@@ -178,7 +178,7 @@ public class FieldConverters {
                         EntityManager entityManager = Services.getEntityManager();
                         Entity refEntity = entityManager.getEntity(entity);
                         if (refEntity == null) {
-                            throw new RuntimeException(String.format("Field %s must have fields '%s:STRING' with a valid entity - %s not found", field.toString(), GENERIC_ENTITY_RECORD_ENTITY_FIELD, entity));
+                            throw new RuntimeException(String.format("Field %s must have fields '%s:STRING' withRecord a valid entity - %s not found", field.toString(), GENERIC_ENTITY_RECORD_ENTITY_FIELD, entity));
                         }
                         if (refEntity.isOneRecord()) {
                             return new EntityReferenceRecord(refEntity);

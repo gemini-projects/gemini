@@ -20,7 +20,7 @@ public class FilterEntityManagerAbstTest {
         Entity fieldEntity = entityManager.getEntity("FIELD");
 
         // single search
-        FilterContext filterContext = FilterContext.withGeminiSearchString("name == name");// all fields with name name
+        FilterContext filterContext = FilterContext.withGeminiSearchString("name == name");// all fields withRecord name name
         List<EntityRecord> nameFields = entityManager.getRecordsMatching(fieldEntity, filterContext);
         Assert.assertTrue(!nameFields.isEmpty());
         for (EntityRecord nameField : nameFields) {
@@ -29,7 +29,7 @@ public class FilterEntityManagerAbstTest {
         }
 
         // OR search
-        filterContext = FilterContext.withGeminiSearchString("name == name or name == module"); // all fields with name = name or module
+        filterContext = FilterContext.withGeminiSearchString("name == name or name == module"); // all fields withRecord name = name or module
         List<EntityRecord> nameOrCodeFields = entityManager.getRecordsMatching(fieldEntity, filterContext);
         Assert.assertTrue(!nameOrCodeFields.isEmpty());
         Assert.assertTrue(nameOrCodeFields.size() > nameFields.size());
@@ -38,11 +38,11 @@ public class FilterEntityManagerAbstTest {
         Optional<EntityRecord> module = nameOrCodeFields.stream().filter(f -> f.get("name").equals("module")).findFirst();
         Assert.assertTrue(module.isPresent());
 
-        // AND search with Long and String (both basic types on
+        // AND search withRecord Long and String (both basic types on
         EntityRecord entityRecord = TestData.getTestDataTypeForFilterEntityRecord("logKey-basicType");
         entityRecord.put("numberLong", 10);
         entityManager.putIfAbsent(entityRecord);
-        filterContext = FilterContext.withGeminiSearchString("text == logKey-basicType and numberLong == 10"); // all fields with name name
+        filterContext = FilterContext.withGeminiSearchString("text == logKey-basicType and numberLong == 10"); // all fields withRecord name name
         List<EntityRecord> andMatching = entityManager.getRecordsMatching(TestData.getTestDataTypeFilterEntity(), filterContext);
         Assert.assertEquals(1, andMatching.size());
 
@@ -92,7 +92,7 @@ public class FilterEntityManagerAbstTest {
         Assert.assertTrue(field.isPresent());
 
         // AND search
-        filterContext = FilterContext.withGeminiSearchString("entity == ENTITY and name == name"); // all fields with name = name and entity = entity
+        filterContext = FilterContext.withGeminiSearchString("entity == ENTITY and name == name"); // all fields withRecord name = name and entity = entity
         List<EntityRecord> nameFieldForEntity = entityManager.getRecordsMatching(fieldEntity, filterContext);
         Assert.assertEquals(1, nameFieldForEntity.size());
 

@@ -367,7 +367,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                             " ADD COLUMN " + field(field);
                     transaction.executeUpdate(sqlAlterTable);
                     */
-                    throw new GeminiRuntimeException(String.format("Field '%s.%s' cannot be added - Column '%s' already exists with a wrong type - PLEASE CHECK DATABASE AND SCHEMA (or manually drop the column)", entity.getName(), field.getName(), field.getName()));
+                    throw new GeminiRuntimeException(String.format("Field '%s.%s' cannot be added - Column '%s' already exists withRecord a wrong type - PLEASE CHECK DATABASE AND SCHEMA (or manually drop the column)", entity.getName(), field.getName(), field.getName()));
                 }
                 logger.debug("Field {}.{} is OK", entity.getName(), field.getName());
             }

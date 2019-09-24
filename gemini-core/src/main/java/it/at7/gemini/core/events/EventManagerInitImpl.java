@@ -31,6 +31,9 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
      * Maps contains method to invoke for each Entity accordingly to the event type
      */
     private final Map<String, List<BeanWithMethod>> onRecordInserted = new HashMap<>();
+    private final Map<String, List<BeanWithMethod>> beforeCreateRecord = new HashMap<>();
+    private final Map<String, List<BeanWithMethod>> beforeUpdateRecord = new HashMap<>();
+    private final Map<String, List<BeanWithMethod>> beforeDeleteRecord = new HashMap<>();
 
 
     Map<String, List<Object>> entityEventsBeans;
@@ -104,6 +107,17 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         if (annotation instanceof OnRecordInserted) {
             resolveAnnotationEntity(entityName, onRecordInserted, bean, targetMethod);
         }
+        if (annotation instanceof BeforeCreateRecord) {
+            resolveAnnotationEntity(entityName, beforeCreateRecord, bean, targetMethod);
+        }
+
+        if (annotation instanceof BeforeUpdateRecord) {
+            resolveAnnotationEntity(entityName, beforeUpdateRecord, bean, targetMethod);
+        }
+
+        if (annotation instanceof BeforeDeleteRecord) {
+            resolveAnnotationEntity(entityName, beforeDeleteRecord, bean, targetMethod);
+        }
     }
 
     private void resolveAnnotationField(String entityName, String fieldName, Map<String, Map<String, List<BeanWithMethod>>> mapByEntNameAndField, Object bean, Method targetMethod) {
@@ -119,15 +133,15 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
 
     @Override
     public void beforeInsertFields(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
-        handleEventForFields(record, transaction, entityOperationContext, this.beforeInsertField);
+        handleEventForFields(record, null, transaction, entityOperationContext, this.beforeInsertField);
     }
 
     @Override
-    public void onUpdateFields(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
-        handleEventForFields(record, transaction, entityOperationContext, this.onUpdateField);
+    public void onUpdateFields(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        handleEventForFields(record, persistedRecord, transaction, entityOperationContext, this.onUpdateField);
     }
 
-    private void handleEventForFields(EntityRecord record, Transaction transaction, EntityOperationContext entityOperationContext, Map<String, Map<String, List<BeanWithMethod>>> methods) throws GeminiException {
+    private void handleEventForFields(EntityRecord record, EntityRecord persistedRecord, Transaction transaction, EntityOperationContext entityOperationContext, Map<String, Map<String, List<BeanWithMethod>>> methods) throws GeminiException {
         Entity entity = record.getEntity();
         String entityName = entity.getName();
 
@@ -139,61 +153,76 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
             if (interfaceName != null) {
                 Map<String, List<BeanWithMethod>> interfaceMethods = methods.get(interfaceName.toUpperCase());
                 if (interfaceMethods != null) {
-                    invokeEventMethodForField(record, entityOperationContext, interfaceMethods, field, transaction);
+                    invokeEventMethodForField(record, persistedRecord, entityOperationContext, interfaceMethods, field, transaction);
                 }
             }
 
             Map<String, List<BeanWithMethod>> entityMethods = methods.get(entityName);
             if (entityMethods != null) {
-                invokeEventMethodForField(record, entityOperationContext, entityMethods, field, transaction);
+                invokeEventMethodForField(record, persistedRecord, entityOperationContext, entityMethods, field, transaction);
             }
         }
     }
 
-    private void invokeEventMethodForField(EntityRecord record, EntityOperationContext entityOperationContext, Map<String, List<BeanWithMethod>> entityMethods, EntityField field, Transaction transaction) throws GeminiException {
+    private void invokeEventMethodForField(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, Map<String, List<BeanWithMethod>> entityMethods, EntityField field, Transaction transaction) throws GeminiException {
         String fieldName = field.getName();
         List<BeanWithMethod> beanWithMethods = entityMethods.get(fieldName.toLowerCase());
         if (beanWithMethods != null && !beanWithMethods.isEmpty()) {
             // TODO events sorting and priority
             for (BeanWithMethod bm : beanWithMethods) {
                 try {
-                    EventContext eventContext = getEventContext(transaction, entityOperationContext, record);
+                    EventContext eventContext = getEventContext(transaction, entityOperationContext, record, persistedRecord);
                     Object res = bm.method.invoke(bm.bean, eventContext);
                     if (res != null) {
                         record.put(field, res);
                     }
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw GeminiGenericException.wrap(e);
+                    throw GeminiGenericException.wrap(e.getCause());
                 }
             }
         }
     }
 
     @Override
-    public void onInsertedRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
-        handleEventForEntity(record, transaction, entityOperationContext, this.onRecordInserted);
+    public void beforeUpdateRecord(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
+        handleEventForEntity(record, persistedRecord, transaction, entityOperationContext, this.beforeUpdateRecord);
     }
 
-    private void handleEventForEntity(EntityRecord record, Transaction transaction, EntityOperationContext entityOperationContext, Map<String, List<BeanWithMethod>> methods) throws GeminiGenericException {
+    @Override
+    public void beforeCreateRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
+        handleEventForEntity(record, null, transaction, entityOperationContext, this.beforeCreateRecord);
+    }
+
+    @Override
+    public void beforeDeleteRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
+        handleEventForEntity(record, null, transaction, entityOperationContext, this.beforeDeleteRecord);
+    }
+
+    @Override
+    public void onInsertedRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
+        handleEventForEntity(record, null, transaction, entityOperationContext, this.onRecordInserted);
+    }
+
+    private void handleEventForEntity(EntityRecord record, EntityRecord persistedRecord, Transaction transaction, EntityOperationContext entityOperationContext, Map<String, List<BeanWithMethod>> methods) throws GeminiGenericException {
         Entity entity = record.getEntity();
         String entityName = entity.getName();
 
         List<String> implementsIntefaces = entity.getImplementsIntefaces();
         for (String intf : implementsIntefaces) {
             List<BeanWithMethod> interfaceMethods = methods.get(intf);
-            ivokeMethodForEntity(record, entityOperationContext, interfaceMethods, transaction);
+            ivokeMethodForEntity(record, persistedRecord, entityOperationContext, interfaceMethods, transaction);
         }
 
         List<BeanWithMethod> entityMethods = methods.get(entityName);
-        ivokeMethodForEntity(record, entityOperationContext, entityMethods, transaction);
+        ivokeMethodForEntity(record, persistedRecord, entityOperationContext, entityMethods, transaction);
     }
 
-    private void ivokeMethodForEntity(EntityRecord record, EntityOperationContext entityOperationContext, List<BeanWithMethod> beanWithMethods, Transaction transaction) throws GeminiGenericException {
+    private void ivokeMethodForEntity(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, List<BeanWithMethod> beanWithMethods, Transaction transaction) throws GeminiGenericException {
         if (beanWithMethods != null && !beanWithMethods.isEmpty()) {
             // TODO events sorting and priority
             for (BeanWithMethod bm : beanWithMethods) {
                 try {
-                    EventContext eventContext = getEventContext(transaction, entityOperationContext, record);
+                    EventContext eventContext = getEventContext(transaction, entityOperationContext, record, persistedRecord);
                     bm.method.invoke(bm.bean, eventContext);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw GeminiGenericException.wrap(e);
@@ -202,11 +231,12 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         }
     }
 
-    private EventContext getEventContext(Transaction transaction, EntityOperationContext entityOperationContext, EntityRecord record) {
+    private EventContext getEventContext(Transaction transaction, EntityOperationContext entityOperationContext, EntityRecord record, EntityRecord persistedRecord) {
         return new EventContextBuilder()
                 .with(transaction)
                 .with(entityOperationContext)
-                .with(record)
+                .withRecord(record)
+                .withPersistedRecord(persistedRecord)
                 .build();
     }
 

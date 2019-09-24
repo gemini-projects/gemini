@@ -170,7 +170,7 @@ public class OpenAPIBuilder {
             if (!entity.isClosedDomain())
                 uuidEntityPath.put = putEntityUUIDandLKMethod(entity, "Update any %s resource by its uuid");
 
-            // DELETE not enabled with oneRecordEntity or ClosedDomain
+            // DELETE not enabled withRecord oneRecordEntity or ClosedDomain
             if (!entity.isOneRecord() && !entity.isClosedDomain())
                 uuidEntityPath.delete = deleteEntityUUIDandLKMethod(entity, "Delete any %s resource by its uuid");
             uuidEntityPath.parameters = List.of(
@@ -182,7 +182,7 @@ public class OpenAPIBuilder {
 
             // GET / PUT and DELETE on /entityname/{logicalKey/...}
             Entity.LogicalKey logicalKey = entity.getLogicalKey();
-            // NOT Embedable with a LK can be used as reference - we are removing also oneRecord
+            // NOT Embedable withRecord a LK can be used as reference - we are removing also oneRecord
             if (!logicalKey.isEmpty()) {
                 String lkPathString = getEntityLKPath(entity, true);
                 Path lkPath = new Path();
@@ -202,7 +202,7 @@ public class OpenAPIBuilder {
                 addComponentSchema(entity, ENTITY_LK);
             }
 
-            // SCHEMA with META only if it is not embedable
+            // SCHEMA withRecord META only if it is not embedable
             addComponentSchema(entity, ENTITY_WITH_META);
         }
 

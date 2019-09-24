@@ -3,7 +3,7 @@
 # info property is used to generate the OpenAPI Specification
 info:
 
-  # Change the following properties with your service info
+  # Change the following properties withRecord your service info
   title: Gemini Service
   version: 1.0-DRAFT
 

@@ -1,0 +1,25 @@
+ENTITY-RECORD FieldCommonSettings AuthCommonSettings 1
+[{
+    "field": {
+        "entity": "USER",
+        "name": "username"
+    },
+    "required": {
+        "strategy": "STATIC",
+        "value": true
+    },
+    "modifiable" : {
+        "strategy": "STATIC",
+        "value": false
+    }
+},
+{
+    "field": {
+        "entity": "USER",
+        "name": "framework"
+    },
+    "modifiable" : {
+        "strategy": "STATIC",
+        "value": false
+    }
+}]

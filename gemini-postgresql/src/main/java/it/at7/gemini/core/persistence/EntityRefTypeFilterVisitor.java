@@ -66,7 +66,7 @@ public class EntityRefTypeFilterVisitor implements GeminiTypeFilterVisitor {
                     "  FROM %1$s WHERE ", wrapDoubleQuotes(entityRef.getName().toLowerCase()), wrapDoubleQuotes(entityRef.getIdEntityField().getName().toLowerCase()))
                     + innerQuery;
         }
-        throw new GeminiRuntimeException(String.format("EntityRefTypeFilterVisitor unsupported operator %s with for that one argument", node.getOperator().getSymbol()));
+        throw new GeminiRuntimeException(String.format("EntityRefTypeFilterVisitor unsupported operator %s withRecord for that one argument", node.getOperator().getSymbol()));
     }
 
     private String handleSingleLogicalKeyEntity(EntityField field, ComparisonNode node, String sqlOperator) {

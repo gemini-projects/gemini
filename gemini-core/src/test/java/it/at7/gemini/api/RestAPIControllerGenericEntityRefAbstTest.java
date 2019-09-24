@@ -39,7 +39,7 @@ public class RestAPIControllerGenericEntityRefAbstTest {
         ObjectMapper objectMapper = new ObjectMapper(); // for json conversion
 
 
-        //==== insert generic entity rec reference with only one logical key
+        //==== insert generic entity rec reference withRecord only one logical key
         Map<String, Object> json = new HashMap<>();
         json.put("logKey", "lk");
         Map<String, Object> lkObj = new HashMap<>();
@@ -65,7 +65,7 @@ public class RestAPIControllerGenericEntityRefAbstTest {
                 .andExpect(content().json("{'errorcode':'MULTIPLE_LK_FOUND'}"));
 
 
-        //==== insert generic entity rec reference with more than one logical key
+        //==== insert generic entity rec reference withRecord more than one logical key
         Map<String, Object> jsonMoreLk = new HashMap<>();
         jsonMoreLk.put("lk1", "one");
         jsonMoreLk.put("lk2", "two");
@@ -77,7 +77,7 @@ public class RestAPIControllerGenericEntityRefAbstTest {
                 .andDo(print())
                 .andExpect(status().isOk());
 
-        //==== insert generic entity rec reference with only one logical key
+        //==== insert generic entity rec reference withRecord only one logical key
 
         json.put("logKey", "lk2");
         Map<String, Object> lkObj2 = new HashMap<>();

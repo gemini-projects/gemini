@@ -29,7 +29,7 @@ public class EmbedableTypeEntityManagerAbstTest {
         EntityRecord testEntity = Services.getEntityManager().putIfAbsent(entityRecord);
         Assert.assertNull(testEntity.get("embeded"));
 
-        // create embedable <--> with default value
+        // create embedable <--> withRecord default value
         Entity embedableEntity = Services.getSchemaManager().getEntity("EmbedableEntity");
         EntityRecord embedable = new EntityRecord(embedableEntity);
         entityRecord = TestData.getEmbedable_singlelk_EntityRecord("logKey");
@@ -44,7 +44,7 @@ public class EmbedableTypeEntityManagerAbstTest {
     @Test
     public void n2_putWithAllBasicTypes() throws GeminiException {
 
-        // create embedable <--> with basic types for embeded record
+        // create embedable <--> withRecord basic types for embeded record
 
         Entity embedableEntity = Services.getSchemaManager().getEntity("EmbedableEntity");
         EntityRecord embedable = new EntityRecord(embedableEntity);
@@ -99,7 +99,7 @@ public class EmbedableTypeEntityManagerAbstTest {
         Object idOrig = embededRecord.getID();
 
 
-        // update directly an available record with embeded subrecords..
+        // update directly an available record withRecord embeded subrecords..
         // if we don't get it we don't have the ID filled.. so the software should not recreate the embeded field
         // lets change only the numberLong for the already existent embeded entity
         Entity embedableEntity = Services.getSchemaManager().getEntity("EmbedableEntity");

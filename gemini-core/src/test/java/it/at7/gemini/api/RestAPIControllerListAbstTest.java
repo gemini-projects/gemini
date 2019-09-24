@@ -45,7 +45,7 @@ public class RestAPIControllerListAbstTest {
                 });
         Assert.assertEquals(10, listRecord.size());
 
-        // with gemini API Data Type - default limit
+        // withRecord gemini API Data Type - default limit
         mockMvc.perform(get(API_PATH + "/TestDataTypeFilter")
                 .header(GEMINI_HEADER, GEMINI_API_META_TYPE)
                 .contentType(APPLICATION_JSON)

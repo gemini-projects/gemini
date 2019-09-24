@@ -12,7 +12,13 @@ public interface EventManager {
 
     void beforeInsertFields(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
-    void onUpdateFields(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+    void onUpdateFields(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+    void beforeUpdateRecord(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+    void beforeCreateRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+    void beforeDeleteRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
     void onInsertedRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 }

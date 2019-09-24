@@ -518,7 +518,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                 return;
             }
 
-            // try to get an array of entity ref (NB arrays of basic types are handled with aliases)
+            // try to get an array of entity ref (NB arrays of basic types are handled withRecord aliases)
             if (type.charAt(0) == '[' && type.charAt(type.length() - 1) == ']') {
                 String entityRef = type.substring(1, type.length() - 1);
                 EntityBuilder entityForRefType = entityBuilders.get(entityRef);

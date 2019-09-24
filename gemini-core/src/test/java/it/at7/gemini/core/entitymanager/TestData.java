@@ -18,7 +18,7 @@ public class TestData {
     }
 
     /**
-     * TestDataType Entity with Primitive dataTypes
+     * TestDataType Entity withRecord Primitive dataTypes
      */
     public static EntityRecord getTestDataTypeEntityRecord(String logicalKey) {
         SchemaManager schemaManager = Services.getSchemaManager();
@@ -29,7 +29,7 @@ public class TestData {
     }
 
     /**
-     * TestDataType Entity with Primitive dataTypes
+     * TestDataType Entity withRecord Primitive dataTypes
      */
     public static EntityRecord getTestDataTypeForFilterEntityRecord(String logicalKey) {
         SchemaManager schemaManager = Services.getSchemaManager();

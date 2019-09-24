@@ -3,12 +3,12 @@ package it.at7.gemini.core.events;
 import it.at7.gemini.core.EntityOperationContext;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Transaction;
-import org.w3c.dom.Entity;
 
 public class EventContextBuilder {
     private Transaction transaction;
     private EntityOperationContext entityOperationContext;
     private EntityRecord entityRecord;
+    private EntityRecord persistedEntityRecord;
 
     public EventContextBuilder() {
     }
@@ -23,12 +23,17 @@ public class EventContextBuilder {
         return this;
     }
 
-    public EventContextBuilder with(EntityRecord entityRecord) {
+    public EventContextBuilder withRecord(EntityRecord entityRecord) {
         this.entityRecord = entityRecord;
         return this;
     }
 
+    public EventContextBuilder withPersistedRecord(EntityRecord entityRecord) {
+        this.persistedEntityRecord = entityRecord;
+        return this;
+    }
+
     public EventContext build() {
-        return new EventContext(transaction, entityOperationContext, entityRecord);
+        return new EventContext(transaction, entityOperationContext, entityRecord, persistedEntityRecord);
     }
 }

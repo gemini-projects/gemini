@@ -82,7 +82,7 @@ public class Password {
         // firs of all check if both password has the same original password
         if (this.originalPassword != null && password.originalPassword != null && this.originalPassword.equals(password.originalPassword))
             return true;
-        // then we try to check the two password with the target password salt (target not have origial password)
+        // then we try to check the two password withRecord the target password salt (target not have origial password)
         if (this.originalPassword != null) {
             if (password.isEquals(originalPassword)) {
                 return true;

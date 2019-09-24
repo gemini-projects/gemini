@@ -54,7 +54,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
         switch (actual) {
             case FRAMEWORK_SCHEMA_RECORDS_INITIALIZED:
-                // we have Entity Recors initialized with ID values so we can initialize entities here
+                // we have Entity Recors initialized withRecord ID values so we can initialize entities here
                 FieldTypePersistenceUtility.initEntities(this.schemaManager.getAllEntities());
                 break;
         }
@@ -551,7 +551,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                         .append(genericRefActualRefFieldName(entityField, true));
             }
             if (!fieldHandled) {
-                throw new GeminiRuntimeException(String.format("Insert Query - Column for Field %s with type %s not handled", entityField.getName(), type));
+                throw new GeminiRuntimeException(String.format("Insert Query - Column for Field %s withRecord type %s not handled", entityField.getName(), type));
             }
         }
         sql.append(") VALUES ");
@@ -589,7 +589,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                 params.put(actualRefParam, entityWithRef.refId);
             }
             if (!fieldHandled) {
-                throw new GeminiRuntimeException(String.format("Insert Query - Value for Field %s with type %s not handled", entityField.getName(), type));
+                throw new GeminiRuntimeException(String.format("Insert Query - Value for Field %s withRecord type %s not handled", entityField.getName(), type));
             }
         }
         sql.append(")");
@@ -615,7 +615,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
             GeminiException {
         Entity entity = record.getEntity();
         Map<EntityField, EntityRecord> embededEntityRecords = checkAndModifyEmbededEntyRecords(record, transaction);
-        StringBuilder sql = new StringBuilder(String.format("UPDATE %s SET ", entity.getName().toLowerCase()));
+        StringBuilder sql = new StringBuilder(String.format("UPDATE %s SET ", wrapDoubleQuotes(entity.getName().toLowerCase())));
         Map<String, Object> params = new HashMap<>();
         if (!record.getEntity().isEmbedable() && record.getUUID() != null) { // uuis should be updated only if it is provided
             sql.append(String.format(" %s = :%s , ", Field.UUID_NAME, Field.UUID_NAME));

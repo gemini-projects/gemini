@@ -59,7 +59,7 @@ public class JwtAuthenticationService implements UserAuthenticationService {
     public AccessToken refreshLogin(String refresh_token) {
         try {
             Claim username = jwtTokenService.verify(refresh_token).get(JwtTokenService.USER_CLAIM);
-            // TODO ??  do some check with the user (and blacklist the RF ? )
+            // TODO ??  do some check withRecord the user (and blacklist the RF ? )
             return jwtTokenService.createBearer(username.asString());
         } catch (JWTVerificationException e) {
             throw new BadCredentialsException("Invalid JWT RefreshToken.", e);

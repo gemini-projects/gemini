@@ -18,6 +18,11 @@ public class GeminiException extends Exception {
         this.errorCodeName = errorCodeName;
     }
 
+    public GeminiException(String errorCodeName, Throwable t) {
+        super(t);
+        this.errorCodeName = errorCodeName;
+    }
+
     public String getErrorCodeName() {
         return errorCodeName;
     }

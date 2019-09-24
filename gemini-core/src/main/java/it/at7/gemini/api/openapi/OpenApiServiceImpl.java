@@ -51,7 +51,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
         if (configurationService.isOpenapiSchema()) {
             this.stateManager.register(this);
 
-            // openapi spec with all entities
+            // openapi spec withRecord all entities
             builders.put("ALL", OpenAPIFile.from(new OpenAPIBuilder(), "ALL", "all.json"));
 
             // entities by module... in each dedicated file

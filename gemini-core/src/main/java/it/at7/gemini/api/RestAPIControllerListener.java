@@ -8,7 +8,7 @@ public interface RestAPIControllerListener {
 
     /**
      * For each Entity request an EntityOperation Context is created. You can use the following callback to add custom
-     * logic accordingly to your module. You can extend the entity Operation Context with your information and retrieve
+     * logic accordingly to your module. You can extend the entity Operation Context withRecord your information and retrieve
      * them later during Entity Manager events
      *
      * @param entity                 target entity

@@ -196,6 +196,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     private EntityRecord deleteRecordHandlingEvents(Transaction transaction, EntityOperationContext entityOperationContext, EntityRecord persistedRecord) throws GeminiException {
         // TODO handle entityOperationContextHandler
         // // TODO enable when dynamic schema -- handleDeleteSchemaCoreEntities(persistedRecord, transaction);
+        eventManager.beforeDeleteRecord(persistedRecord, entityOperationContext, transaction);
         handleDeleteResolution(persistedRecord, transaction); // TODO ? use entityOperationContext ??
         persistenceEntityManager.deleteEntityRecordByID(persistedRecord, transaction);
         return persistedRecord;
@@ -251,6 +252,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
     private EntityRecord createNewEntityRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         this.checkFrameworkEntitiesCreation(record);
+        this.eventManager.beforeCreateRecord(record, entityOperationContext, transaction);
         this.eventManager.beforeInsertFields(record, entityOperationContext, transaction);
         EntityRecord newEntityRecord = persistenceEntityManager.createNewEntityRecord(record, transaction);
         this.eventManager.onInsertedRecord(newEntityRecord, entityOperationContext, transaction);
@@ -270,7 +272,8 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
 
     private EntityRecord updateRecordIfNeededHandlingEvents(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction, EntityRecord persistedRecord) throws GeminiException {
-        eventManager.onUpdateFields(record, entityOperationContext, transaction);
+        eventManager.beforeUpdateRecord(record, persistedRecord, entityOperationContext, transaction);
+        eventManager.onUpdateFields(record, persistedRecord, entityOperationContext, transaction);
         if (someRealUpdatedNeeded(record, persistedRecord)) {
             persistedRecord.update(record);
             return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
