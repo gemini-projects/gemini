@@ -33,11 +33,16 @@ public interface PersistenceEntityManager {
 
     EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException;
 
+    void createNewEntityRecordNoResults(EntityRecord record, Transaction transaction) throws GeminiException;
+
+    void createEntityRecordBatch(Collection<EntityRecord> records, Transaction transaction) throws GeminiException;
+
     EntityRecord updateEntityRecordByID(EntityRecord record, Transaction transaction) throws GeminiException;
 
     void deleteEntityRecordByID(EntityRecord record, Transaction transaction) throws GeminiException;
 
-    EntityRecord createOrUpdateEntityRecord(EntityRecord entityRecord, Transaction transaction) throws GeminiException;
+    EntityRecord createOrUpdateEntityRecord(EntityRecord entityRecord, Transaction transaction) throws
+            GeminiException;
 
     UUID getUUIDforEntityRecord(EntityRecord record) throws GeminiException;
 

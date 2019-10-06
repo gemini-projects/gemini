@@ -35,7 +35,7 @@ subprojects {
     }
 
     group 'it.at7.gemini'
-    version '0.3.2'
+    version '0.3.3-SNAP'
 
     apply plugin: 'java'
     apply plugin: 'idea'

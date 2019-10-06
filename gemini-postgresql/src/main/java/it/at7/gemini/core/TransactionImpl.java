@@ -120,12 +120,26 @@ public class TransactionImpl implements Transaction {
         return createStatement(sql, parameters, ps -> {
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getLong(1);
+            try {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+                return 0L;
+            } finally {
+                rs.close();
+                ps.close();
             }
-            return 0L;
         });
     }
+
+    public void executeInsertNoResult(String sql, @Nullable Map<String, Object> parameters) throws GeminiException {
+        try (PreparedStatement preparedStatement = getPreparedStatement(sql, parameters, false)) {
+            preparedStatement.executeUpdate();
+        } catch (SQLException e1) {
+            throw GeminiGenericException.wrap(e1);
+        }
+    }
+
 
     public <R> R executeQuery(String sql, @Nullable Map<String, Object> parameters, CallbackWithResultThrowingSqlException<R, ResultSet> callback) throws SQLException, GeminiException {
         return createStatement(sql, parameters, ps -> {
@@ -149,14 +163,14 @@ public class TransactionImpl implements Transaction {
         });
     }
 
-    private PreparedStatement getPreparedStatement(String sql, @Nullable Map<String, ?> parameters) throws SQLException {
+    private PreparedStatement getPreparedStatement(String sql, @Nullable Map<String, ?> parameters, boolean returnKeys) throws SQLException {
         SqlParameterSource paramSource = new MapSqlParameterSource(parameters);
         ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
         String sqlToUse = NamedParameterUtils.substituteNamedParameters(parsedSql, paramSource);
         List<SqlParameter> declaredParameters = NamedParameterUtils.buildSqlParameterList(parsedSql, paramSource);
         Object[] params = NamedParameterUtils.buildValueArray(parsedSql, paramSource, null);
         PreparedStatementCreatorFactory psCreatorFactory = new PreparedStatementCreatorFactory(sqlToUse, declaredParameters);
-        psCreatorFactory.setReturnGeneratedKeys(true);
+        psCreatorFactory.setReturnGeneratedKeys(returnKeys);
         PreparedStatementCreator psCreator = psCreatorFactory.newPreparedStatementCreator(params);
         PreparedStatement preparedStatement = psCreator.createPreparedStatement(connection);
         logger.debug(preparedStatement.unwrap(PreparedStatement.class).toString());
@@ -164,7 +178,7 @@ public class TransactionImpl implements Transaction {
     }
 
     private <R> R createStatement(String sql, Map<String, Object> parameters, PsAccept<R> psa) throws GeminiException {
-        try (PreparedStatement ps = getPreparedStatement(sql, parameters)) {
+        try (PreparedStatement ps = getPreparedStatement(sql, parameters, true)) {
             try {
                 return psa.accept(ps);
             } catch (SQLException e) {

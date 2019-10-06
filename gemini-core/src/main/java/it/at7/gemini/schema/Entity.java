@@ -198,8 +198,7 @@ public class Entity {
         if (o == null || getClass() != o.getClass()) return false;
         Entity entity = (Entity) o;
         return Objects.equals(module, entity.module) &&
-                Objects.equals(name, entity.name) &&
-                Objects.equals(embedable, entity.embedable);
+                Objects.equals(name, entity.name);
     }
 
     @Override
@@ -236,7 +235,6 @@ public class Entity {
     public EntityRecord getActualEntityRecord() {
         return actualEntityRecord;
     }
-
 
 
     public class LogicalKey {

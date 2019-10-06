@@ -28,7 +28,7 @@ public class EventContext {
     }
 
     /**
-     * @ return the entity record that is involved in the operation
+     * @return the entity record that is involved in the operation
      */
     public EntityRecord getEntityRecord() {
         return entityRecord;

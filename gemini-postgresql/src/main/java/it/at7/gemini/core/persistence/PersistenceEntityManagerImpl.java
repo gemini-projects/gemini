@@ -14,16 +14,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
+import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterUtils;
+import org.springframework.jdbc.core.namedparam.ParsedSql;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.sql.Array;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -73,19 +77,84 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
 
     @Override
     public EntityRecord createNewEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
-        TransactionImpl transactionImpl = (TransactionImpl) transaction;
-        if (!record.getEntity().isEmbedable())
-            record.setUUID(getUUIDforEntityRecord(record));
-        QueryWithParams queryWithParams = makeInsertQuery(record, transaction);
         try {
+            TransactionImpl transactionImpl = (TransactionImpl) transaction;
+            QueryWithParams queryWithParams = createInsertQuery(record, transaction);
             long recordId = transactionImpl.executeInsert(queryWithParams.getSql(), queryWithParams.getParams());
-            Optional<EntityRecord> insertedRecord = getEntityRecordById(record.getEntity(), recordId, transactionImpl);
+            Optional<EntityRecord> insertedRecord = getEntityRecordById(record.getEntity(), recordId, transaction);
             checkInsertedRecord(recordId, record, insertedRecord);
             return insertedRecord.get();
         } catch (GeminiException e) {
             logger.error("createNewEntityRecord SQL Exception", e);
             throw e;
         }
+    }
+
+    @Override
+    public void createNewEntityRecordNoResults(EntityRecord record, Transaction transaction) throws GeminiException {
+        try {
+            TransactionImpl transactionImpl = (TransactionImpl) transaction;
+            QueryWithParams queryWithParams = createInsertQuery(record, transaction);
+            transactionImpl.executeInsertNoResult(queryWithParams.getSql(), queryWithParams.getParams());
+        } catch (GeminiException e) {
+            logger.error("createNewEntityRecordNoResults SQL Exception", e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void createEntityRecordBatch(Collection<EntityRecord> records, Transaction transaction) throws GeminiException {
+        TransactionImpl transactionImpl = (TransactionImpl) transaction;
+        if (!records.isEmpty()) {
+            Iterator<EntityRecord> recordIterator = records.iterator();
+            EntityRecord first = recordIterator.next();
+            Entity targetEntity = first.getEntity();
+            for (EntityField f : targetEntity.getALLEntityFields()) {
+                if (f.getType().equals(FieldType.ENTITY_EMBEDED)) {
+                    throw new GeminiRuntimeException("Batch Insert - Entity with embedable not supported yet");
+                }
+            }
+            for (EntityRecord r : records) {
+                if (!r.getEntity().equals(targetEntity))
+                    throw new GeminiRuntimeException("Batch Insert - Entity record must belong to the same Entity");
+            }
+            String namedQuery = makeInsertNamedQuery(targetEntity);
+            Map<String, Object> parameters = creteParametersMapForNamedQuery(first, Map.of(), transaction);
+            try {
+                SqlParameterSource paramSource = new MapSqlParameterSource(parameters);
+                ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(namedQuery);
+                String sqlToUse = NamedParameterUtils.substituteNamedParameters(parsedSql, paramSource);
+                List<SqlParameter> declaredParameters = NamedParameterUtils.buildSqlParameterList(parsedSql, paramSource);
+                Object[] params = NamedParameterUtils.buildValueArray(parsedSql, paramSource, null);
+                PreparedStatementCreatorFactory psCreatorFactory = new PreparedStatementCreatorFactory(sqlToUse, declaredParameters);
+                psCreatorFactory.setReturnGeneratedKeys(false);
+                PreparedStatementCreator psCreator = psCreatorFactory.newPreparedStatementCreator(params);
+                PreparedStatement preparedStatement = psCreator.createPreparedStatement(((TransactionImpl) transaction).getConnection());
+
+                preparedStatement.addBatch();
+                recordIterator.forEachRemaining(record -> {
+                    try {
+                        Map<String, Object> p = creteParametersMapForNamedQuery(record, Map.of(), transaction);
+                        SqlParameterSource ps = new MapSqlParameterSource(p);
+                        Object[] effectiveparams = NamedParameterUtils.buildValueArray(parsedSql, ps, null);
+                        psCreatorFactory.newPreparedStatementSetter(effectiveparams).setValues(preparedStatement);
+                        preparedStatement.addBatch();
+                    } catch (Exception e) {
+                        throw new GeminiRuntimeException(e);
+                    }
+                });
+
+                preparedStatement.executeBatch();
+            } catch (SQLException e) {
+                throw GeminiGenericException.wrap(e);
+            }
+        }
+    }
+
+    private QueryWithParams createInsertQuery(EntityRecord record, Transaction transaction) throws GeminiException {
+        if (!record.getEntity().isEmbedable())
+            record.setUUID(getUUIDforEntityRecord(record));
+        return makeInsertQuery(record, transaction);
     }
 
     @Override
@@ -521,21 +590,23 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
 
     private QueryWithParams makeInsertQuery(EntityRecord record, Transaction transaction) throws GeminiException {
         Entity entity = record.getEntity();
-
         Map<EntityField, EntityRecord> embededEntityRecords = checkAndCreateEmbededEntity(record, transaction);
+        String sql = makeInsertNamedQuery(entity);
+        Map<String, Object> parameters = creteParametersMapForNamedQuery(record, embededEntityRecords, transaction);
+        return new QueryWithParams(sql, parameters);
+    }
 
+    private String makeInsertNamedQuery(Entity entity) {
         StringBuilder sql = new StringBuilder(String.format("INSERT INTO %s", wrapDoubleQuotes(entity.getName().toLowerCase())));
-        Map<String, Object> params = new HashMap<>();
-        List<EntityFieldValue> sortedFields = sortFields(record.getALLEntityFieldValues());
+        List<EntityField> sortedFields = sortFields(entity.getALLEntityFields());
         boolean first = true;
         if (!entity.isEmbedable()) {
             sql.append("(").append(Field.UUID_NAME);
             first = false;
         }
-        for (EntityFieldValue field : sortedFields) {
+        for (EntityField entityField : sortedFields) {
             boolean fieldHandled = false;
-            FieldType type = field.getField().getType();
-            EntityField entityField = field.getEntityField();
+            FieldType type = entityField.getType();
             if (oneToOneType(type) || entityType(type) || passwordType(type)) {
                 fieldHandled = true;
                 sql.append(first ? "(" : ",");
@@ -559,22 +630,19 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         if (!entity.isEmbedable()) {
             first = false;
             sql.append("(:").append(Field.UUID_NAME);
-            params.put(Field.UUID_NAME, record.getUUID());
         }
-        for (EntityFieldValue field : sortedFields) {
+        for (EntityField entityField : sortedFields) {
             boolean fieldHandled = false;
-            FieldType type = field.getField().getType();
-            EntityField entityField = field.getEntityField();
+            FieldType type = entityField.getType();
             if (oneToOneType(type) || entityType(type) || passwordType(type)) {
                 fieldHandled = true;
-                String columnName = field.getField().getName().toLowerCase();
+                String columnName = entityField.getName().toLowerCase();
                 sql.append(first ? "(" : ",");
                 first = false;
                 sql.append(":").append(columnName);
                 if (type == FieldType.PASSWORD) {
                     sql.append("::JSON");
                 }
-                params.put(columnName, fromFieldToPrimitiveValue(field, embededEntityRecords, transaction));
             }
             if (genericEntityRefType(type)) {
                 fieldHandled = true;
@@ -584,16 +652,45 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                 sql.append(":").append(entityRefParam);
                 sql.append(", ");
                 sql.append(":").append(actualRefParam);
+            }
+            if (!fieldHandled) {
+                throw new GeminiRuntimeException(String.format("Make Insert Query - Field %s withRecord type %s not handled", entityField.getName(), type));
+            }
+        }
+        sql.append(")");
+        return sql.toString();
+    }
+
+    private Map<String, Object> creteParametersMapForNamedQuery(EntityRecord record, Map<EntityField, EntityRecord> embededEntityRecords, Transaction transaction) throws GeminiException {
+        Entity entity = record.getEntity();
+
+        Map<String, Object> params = new HashMap<>();
+        List<EntityFieldValue> sortedFields = sortFieldsValue(record.getALLEntityFieldValues());
+        if (!entity.isEmbedable()) {
+            params.put(Field.UUID_NAME, record.getUUID());
+        }
+        for (EntityFieldValue field : sortedFields) {
+            boolean fieldHandled = false;
+            FieldType type = field.getField().getType();
+            EntityField entityField = field.getEntityField();
+            if (oneToOneType(type) || entityType(type) || passwordType(type)) {
+                fieldHandled = true;
+                String columnName = field.getField().getName().toLowerCase();
+                params.put(columnName, fromFieldToPrimitiveValue(field, embededEntityRecords, transaction));
+            }
+            if (genericEntityRefType(type)) {
+                fieldHandled = true;
+                String entityRefParam = genericRefEntityFieldName(entityField, false).toLowerCase();
+                String actualRefParam = genericRefActualRefFieldName(entityField, false).toLowerCase();
                 GenericEntityRecPrimValue entityWithRef = (GenericEntityRecPrimValue) fromFieldToPrimitiveValue(field, embededEntityRecords, transaction);
                 params.put(entityRefParam, entityWithRef.entityId);
                 params.put(actualRefParam, entityWithRef.refId);
             }
             if (!fieldHandled) {
-                throw new GeminiRuntimeException(String.format("Insert Query - Value for Field %s withRecord type %s not handled", entityField.getName(), type));
+                throw new GeminiRuntimeException(String.format("Parameter Query - Value for Field %s withRecord type %s not handled", entityField.getName(), type));
             }
         }
-        sql.append(")");
-        return new QueryWithParams(sql.toString(), params);
+        return params;
     }
 
     private Map<EntityField, EntityRecord> checkAndCreateEmbededEntity(EntityRecord record, Transaction transaction) throws
@@ -621,7 +718,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
             sql.append(String.format(" %s = :%s , ", Field.UUID_NAME, Field.UUID_NAME));
             params.put(Field.UUID_NAME, record.getUUID());
         }
-        List<EntityFieldValue> sortedFields = sortFields(record.getOnlyModifiedEntityFieldValue());
+        List<EntityFieldValue> sortedFields = sortFieldsValue(record.getOnlyModifiedEntityFieldValue());
         for (int i = 0; i < sortedFields.size(); i++) {
             EntityFieldValue field = sortedFields.get(i);
             EntityField entityField = field.getEntityField();
@@ -962,8 +1059,12 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         throw new RuntimeException(String.format("No Class for type %s", type.name()));
     }
 
-    private <T extends FieldValue> List<T> sortFields(Collection<T> fieldValue) {
+    private <T extends FieldValue> List<T> sortFieldsValue(Collection<T> fieldValue) {
         return fieldValue.stream().sorted(Comparator.comparing(f -> f.getField().getName())).collect(Collectors.toList());
+    }
+
+    private <T extends Field> List<T> sortFields(Collection<T> fields) {
+        return fields.stream().sorted(Comparator.comparing(f -> f.getName())).collect(Collectors.toList());
     }
 
     class QueryWithParams {

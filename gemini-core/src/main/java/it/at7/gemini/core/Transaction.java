@@ -18,5 +18,4 @@ public interface Transaction extends AutoCloseable {
     Optional<TransactionCache> getTransactionCache();
 
     LocalDateTime getOpenTime();
-
 }
