@@ -249,6 +249,27 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
     }
 
     @Override
+    public long countEntityRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        TransactionImpl transactionImpl = (TransactionImpl) transaction;
+        try {
+            QueryWithParams query = createCountQueryFor(entity);
+            addFilter(query, filterContext, entity);
+            // addOrderBy(query, filterContext, entity);
+            addLimit(query, filterContext);
+            addOffset(query, filterContext);
+            return transactionImpl.executeQuery(query.getSql(), query.getParams(), resultSet -> {
+                boolean next = resultSet.next();
+                if (!next) {
+                    throw new GeminiRuntimeException("Expected one long in query");
+                }
+                return resultSet.getLong(1);
+            });
+        } catch (SQLException e) {
+            throw GeminiGenericException.wrap(e);
+        }
+    }
+
+    @Override
     public Optional<EntityRecord> getEntityRecordById(Entity entity, long recordId, Transaction transaction) throws GeminiException {
         Optional<TransactionCache> transactionCache = transaction.getTransactionCache();
         if (transactionCache.isPresent()) {
@@ -364,6 +385,16 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
     private String createSelectQuerySQLFor(Entity entity) {
         String entityName = entity.getName().toLowerCase();
         return String.format("SELECT %1$s.* FROM %1$s ", wrapDoubleQuotes(entityName));
+    }
+
+    private String createCountQuerySQLFor(Entity entity) {
+        String entityName = entity.getName().toLowerCase();
+        return String.format("SELECT count(*) FROM %1$s ", wrapDoubleQuotes(entityName));
+    }
+
+    private QueryWithParams createCountQueryFor(Entity entity) {
+        String select = createCountQuerySQLFor(entity);
+        return new QueryWithParams(select);
     }
 
     private QueryWithParams createSelectQueryFor(Entity entity) {

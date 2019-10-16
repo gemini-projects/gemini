@@ -6,13 +6,15 @@ public class FilterContext {
     private int limit;
     private final int start;
     private final String[] orderBy;
+    private final boolean count;
 
-    public FilterContext(FilterType filterType, String searchString, int limit, int start, String[] orderBy) {
+    public FilterContext(FilterType filterType, String searchString, int limit, int start, String[] orderBy, boolean count) {
         this.filterType = filterType;
         this.searchString = searchString;
         this.limit = limit;
         this.start = start;
         this.orderBy = orderBy;
+        this.count = count;
     }
 
     public String getSearchString() {
@@ -35,7 +37,11 @@ public class FilterContext {
         return orderBy;
     }
 
-    // ============ static binding to builder ===========
+    public boolean isCount() {
+        return count;
+    }
+
+// ============ static binding to builder ===========
 
     public static FilterContext withGeminiSearchString(String searchString){
         return new FilterContextBuilder().withGeminiSearchString(searchString).build();

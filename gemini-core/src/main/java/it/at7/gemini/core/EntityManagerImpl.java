@@ -236,6 +236,10 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         return persistenceEntityManager.getEntityRecordsMatching(entity, filterContext, transaction);
     }
 
+    @Override
+    public long countRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        return persistenceEntityManager.countEntityRecordsMatching(entity, filterContext, entityOperationContext, transaction);
+    }
 
     @Override
     public EntityRecord getOneRecordEntity(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {

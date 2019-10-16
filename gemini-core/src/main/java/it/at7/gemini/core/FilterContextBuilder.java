@@ -7,6 +7,7 @@ public class FilterContextBuilder {
     public static final String LIMIT_PARAMETER = "limit";
     public static final String START_PARAMETER = "start";
     public static final String ORDER_BY_PARAMETER = "orderBy";
+    public static final String COUNT_PARAMETER = "count";
 
     private static final String ORDER_BY_SEPARATOR = ",";
 
@@ -17,6 +18,7 @@ public class FilterContextBuilder {
     private int limit;
     private int start;
     private String[] orderBy;
+    private boolean count = false;
 
     public FilterContextBuilder() {
         this.configurationService = null;
@@ -31,6 +33,7 @@ public class FilterContextBuilder {
         withLimit(getLimitFromParameters(parameters.get(LIMIT_PARAMETER)));
         withStart(getStartFromParameters(parameters.get(START_PARAMETER)));
         withOrderBy(getOrderByFromParameters(parameters.get(ORDER_BY_PARAMETER)));
+        withCount(getCountFromParameters(parameters.get(COUNT_PARAMETER)));
         return this;
     }
 
@@ -55,6 +58,11 @@ public class FilterContextBuilder {
         return this;
     }
 
+    private FilterContextBuilder withCount(boolean count) {
+        this.count = count;
+        return this;
+    }
+
     public FilterContextBuilder withPersistenceTypeSearchString(String searchString) {
         this.filterType = FilterContext.FilterType.PERSISTENCE;
         this.searchString = searchString;
@@ -62,7 +70,7 @@ public class FilterContextBuilder {
     }
 
     public FilterContext build() {
-        return new FilterContext(filterType, searchString, limit, start, orderBy);
+        return new FilterContext(filterType, searchString, limit, start, orderBy, count);
     }
 
     private int getLimitFromParameters(String[] limitParams) {
@@ -92,5 +100,13 @@ public class FilterContextBuilder {
 
         }
         return null;
+    }
+
+    private boolean getCountFromParameters(String[] countParameters) {
+        if (countParameters != null && countParameters.length > 0) {
+            String countSt = countParameters[0].trim();
+            return countSt.equals("1") || countSt.equals("true");
+        }
+        return false;
     }
 }

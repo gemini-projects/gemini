@@ -65,6 +65,9 @@ public class RestAPIController {
         if (results instanceof GeminiWrappers.EntityRecordsList) {
             return GeminiWrappers.EntityRecordListApiType.of((GeminiWrappers.EntityRecordsList) results);
         }
+        if (results instanceof GeminiWrappers.CountRequest) {
+            return GeminiWrappers.CountRequestApiType.of((GeminiWrappers.CountRequest) results);
+        }
         throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
     }
 
@@ -160,13 +163,17 @@ public class RestAPIController {
         return entityManager.getOneRecordEntity(entity, entityOperationContext);
     }
 
-    private GeminiWrappers.EntityRecordsList handleGetEntityList(Entity e, Map<String, String[]> parameters, EntityOperationContext entityOperationContext) throws GeminiException {
+    private Object handleGetEntityList(Entity e, Map<String, String[]> parameters, EntityOperationContext entityOperationContext) throws GeminiException {
         FilterContext filterContext = new FilterContextBuilder(configurationService)
                 .fromParameters(parameters)
                 .build();
-        List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterContext, entityOperationContext);
-        // TODO add entity Operation Context ??
-        return GeminiWrappers.EntityRecordsList.of(recordList, filterContext);
+        if (filterContext.isCount()) {
+            return GeminiWrappers.CountRequest.of(entityManager.countRecordsMatching(e, filterContext, entityOperationContext), filterContext);
+        } else {
+            List<EntityRecord> recordList = entityManager.getRecordsMatching(e, filterContext, entityOperationContext);
+            // TODO add entity Operation Context ??
+            return GeminiWrappers.EntityRecordsList.of(recordList, filterContext);
+        }
     }
 
     private Object handleInsertRecord(Entity e, List<String> geminiHeader, Object body, EntityOperationContext entityOperationContext) throws GeminiException {

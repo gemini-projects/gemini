@@ -67,4 +67,42 @@ public class GeminiWrappers {
             return new EntityRecordListApiType(recordList);
         }
     }
+
+    public static class CountRequest {
+        private final long result;
+        private final FilterContext filterContext;
+
+        public CountRequest(long result, FilterContext filterContext) {
+            this.result = result;
+            this.filterContext = filterContext;
+        }
+
+        public long getResult() {
+            return result;
+        }
+
+        public FilterContext getFilterContext() {
+            return filterContext;
+        }
+
+        public static CountRequest of(long result, FilterContext filterContext) {
+            return new CountRequest(result, filterContext);
+        }
+    }
+
+    public static class CountRequestApiType {
+        private final CountRequest countRequest;
+
+        public CountRequestApiType(CountRequest countRequest) {
+            this.countRequest = countRequest;
+        }
+
+        public CountRequest getCountRequest() {
+            return countRequest;
+        }
+
+        public static CountRequestApiType of(CountRequest countRequest) {
+            return new CountRequestApiType(countRequest);
+        }
+    }
 }

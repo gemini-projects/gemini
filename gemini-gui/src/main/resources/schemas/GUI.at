@@ -1,16 +1,5 @@
 #  ====  Gemini GUI Module =====
 
-# Extended from CORE
-ENTITY Entity {
-    TEXT    displayName
-}
-
-# Extended from CORE
-ENTITY Field {
-    FieldGuiSettings    guiSettings
-    TEXT    displayName
-}
-
 ENTITY EntityGUI {
     Entity  entity  *
     TEXT    displayName
@@ -33,18 +22,22 @@ ENTITY GUISettings {
     TEXT                code *
     TEXT                displayName
     GuiSettingsType     type
-    GENERIC_ENTITY_REF  extRef
-
+    GENERIC_ENTITY_REF  genericRef
 }
 
 ENTITY ONEREC SideBarSettings {
     BOOL     active
+    TEXT     mode
+    BOOL     isCollapsed
 }
 
 ENTITY SideBarElemType IMPLEMENTS Domain
 
 ENTITY SideBarElem {
-    TEXT            code *
-    TEXT            displayName
-    SideBarElemType type
+    TEXT                code *
+    TEXT                displayName
+    SideBarElemType     type
+    GENERIC_ENTITY_REF  genericRef
+    TEXT                icon
+    LONG                sortKey
 }

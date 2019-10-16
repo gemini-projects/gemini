@@ -47,4 +47,6 @@ public interface PersistenceEntityManager {
     UUID getUUIDforEntityRecord(EntityRecord record) throws GeminiException;
 
     EntityRecord getEntityRecordSingleton(Entity entity, Transaction transaction) throws GeminiException;
+
+    long countEntityRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 }

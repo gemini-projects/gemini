@@ -505,4 +505,12 @@ public interface EntityManager {
 
     List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
+    default long countRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return countRecordsMatching(entity, filterContext, entityOperationContext, transaction);
+        });
+    }
+
+    long countRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
 }

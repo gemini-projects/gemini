@@ -1,5 +1,38 @@
-ENTITY-RECORD Entity GUI 1
-{
+ENTITY-RECORD Entity Entity-GUI-Config 1
+[{
      "name" : "SIDEBARELEMTYPE",
      "closedDomain": true
+},
+{
+     "name" : "GUISETTINGSTYPE",
+     "closedDomain": true
+}]
+
+ENTITY-RECORD SIDEBARELEMTYPE INIT-SIDEBARELEMTYPE 1
+[{
+     "code" : "ENTITY_PAGE",
+     "description": "Entity Route"
+}]
+
+ENTITY-RECORD GUISETTINGSTYPE INIT-GUISETTINGSTYPE 1
+[{
+    "code" : "FROM_ENTITY",
+    "description": "Settings stored in Entity"
+}]
+
+ENTITY-RECORD GUISETTINGS INIT-GUISETTING 1
+[{
+    "code" : "SIDE_BAR",
+    "description": "Side Bar",
+    "type": "FROM_ENTITY",
+    "genericRef":  {
+        "entity": "ENTITY",
+        "ref": "SIDEBARSETTINGS"
+    }
+}]
+
+ENTITY-RECORD SIDEBARSETTINGS INIT-SIDEBARSETTINGS 1
+{
+    "active": true
 }
+
