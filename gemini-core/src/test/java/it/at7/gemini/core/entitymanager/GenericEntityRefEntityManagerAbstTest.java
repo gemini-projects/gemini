@@ -65,7 +65,7 @@ public class GenericEntityRefEntityManagerAbstTest {
         entityRecordG.put("genericRef", tER);
         entityManager.putIfAbsent(entityRecordG);
 
-        List<EntityRecord> listGenericRecs = entityManager.getRecordsMatching(entityManager.getEntity("WithGenericEntityRef"), new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0, null, count));
+        List<EntityRecord> listGenericRecs = entityManager.getRecordsMatching(entityManager.getEntity("WithGenericEntityRef"), new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0, null, false));
         assertEquals(2, listGenericRecs.size());
 
     }
