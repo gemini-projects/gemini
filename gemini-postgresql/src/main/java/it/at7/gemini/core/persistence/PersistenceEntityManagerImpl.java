@@ -47,10 +47,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
 
     @Autowired
     public PersistenceEntityManagerImpl(@Lazy SchemaManager schemaManager,
-                                        StateManager stateManager,
-                                        FilterVisitor filterVisitor) {
+                                        StateManager stateManager) {
         this.schemaManager = schemaManager;
-        this.filterVisitor = filterVisitor;
+        this.filterVisitor = new FilterVisitor(); // is a singleton insede the persistence entity manager
         stateManager.register(this);
     }
 
@@ -335,7 +334,10 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
         FilterContext.FilterType filterType = filterContext.getFilterType();
         if (filterType == FilterContext.FilterType.GEMINI && !filterContext.getSearchString().isEmpty()) {
             Node rootNode = new RSQLParser(filterVisitor.getOperators()).parse(filterContext.getSearchString());
-            sqlFilter += " WHERE " + rootNode.accept(filterVisitor, entity);
+
+            QueryWithParams queryWithParams = rootNode.accept(filterVisitor, FilterVisitor.FilterVisitorContext.of(entity));
+            sqlFilter += " WHERE " + queryWithParams.getSql();
+            query.addParams(queryWithParams.getParams());
         }
         if (filterType == FilterContext.FilterType.PERSISTENCE) {
             sqlFilter += " WHERE " + filterContext.getSearchString();
@@ -1096,34 +1098,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
 
     private <T extends Field> List<T> sortFields(Collection<T> fields) {
         return fields.stream().sorted(Comparator.comparing(f -> f.getName())).collect(Collectors.toList());
-    }
-
-    class QueryWithParams {
-        private StringBuilder sqlBuilder;
-        private Map<String, Object> params;
-
-        public QueryWithParams(String sql) {
-            this.sqlBuilder = new StringBuilder(sql);
-            this.params = new HashMap<>();
-        }
-
-        public QueryWithParams(String sql, Map<String, Object> params) {
-            this.sqlBuilder = new StringBuilder(sql);
-            this.params = params;
-        }
-
-        public QueryWithParams addToSql(String sql) {
-            sqlBuilder.append(sql);
-            return this;
-        }
-
-        public String getSql() {
-            return sqlBuilder.toString();
-        }
-
-        public Map<String, Object> getParams() {
-            return params;
-        }
     }
 
     static class GenericEntityRecPrimValue {
