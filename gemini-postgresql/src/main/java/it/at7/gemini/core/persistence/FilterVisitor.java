@@ -17,6 +17,7 @@ import static it.at7.gemini.schema.FieldType.*;
 
 public class FilterVisitor implements RSQLVisitor<QueryWithParams, FilterVisitor.FilterVisitorContext> {
     public static final ComparisonOperator LIKE_OPERATOR = new ComparisonOperator("=like=", false);
+    public static final ComparisonOperator EMPTY_OPERATOR = new ComparisonOperator("=empty=", false);
 
 
     private Set<ComparisonOperator> comparisonOperators;
@@ -28,6 +29,7 @@ public class FilterVisitor implements RSQLVisitor<QueryWithParams, FilterVisitor
     public FilterVisitor() {
         comparisonOperators = RSQLOperators.defaultOperators();
         comparisonOperators.add(LIKE_OPERATOR);
+        comparisonOperators.add(EMPTY_OPERATOR);
         BASIC_TYPE_FILTER = new BasicTypeFilterVisitor();
         ENTITY_REF_TYPE_FILTER = new EntityRefTypeFilterVisitor(this);
         geminiTypeVisitors = Map.of(
