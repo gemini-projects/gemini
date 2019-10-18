@@ -25,19 +25,19 @@ import static java.util.stream.Collectors.toList;
 public class PostgresPublicPersistenceSchemaManager implements PersistenceSchemaManager {
     private static final Logger logger = LoggerFactory.getLogger(PostgresPublicPersistenceSchemaManager.class);
 
+    private String schemaName;
+
     @Override
     public void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException {
-        /* // TODO on dynamic schema (runtime)
         try {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
-            for (Module module : modules.values()) {
-                if (module.editable()) {
-                    synchronizeRuntimeModules((RuntimeModule) module, transactionImpl);
-                }
-            }
+            schemaName = transactionImpl.executeQuery("select current_schema", resultSet -> {
+                resultSet.next();
+                return resultSet.getString(1);
+            });
         } catch (SQLException e) {
             throw GeminiGenericException.wrap(e);
-        } */
+        }
     }
 
     @Override
@@ -98,7 +98,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                     "       AND    table_name =  :table_name" +
                     "   );";
             Map<String, Object> parameters = new HashMap<>();
-            parameters.put("table_schema", "public");
+            parameters.put("table_schema", schemaName);
             parameters.put("table_name", entity.getName().toLowerCase());
             boolean exist = transactionImpl.executeQuery(sqlTableExists, parameters, this::exists);
             if (exist && entity.isOneRecord()) {
@@ -311,7 +311,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 "       AND    domain_name =  :domain_name" +
                 "   );";
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("domain_schema", "public");
+        parameters.put("domain_schema", schemaName);
         parameters.put("domain_name", pkForeignKeyDomainFromEntity(entityName));
         transaction.executeQuery(sqlDomainExists, parameters, resultSet -> {
             if (!exists(resultSet)) {
@@ -339,7 +339,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 "   AND table_name   = :table_name" +
                 "   AND column_name = :col_name;";
         HashMap<String, Object> parameters = new HashMap<>();
-        parameters.put("schema", "public");
+        parameters.put("schema", schemaName);
         parameters.put("table_name", entity.getName().toLowerCase());
         parameters.put("col_name", fieldName(field, false));
 
@@ -383,7 +383,7 @@ public class PostgresPublicPersistenceSchemaManager implements PersistenceSchema
                 "   AND column_name LIKE :col_name" +
                 "   ORDER BY column_name";
         HashMap<String, Object> parameters = new HashMap<>();
-        parameters.put("schema", "public");
+        parameters.put("schema", schemaName);
         parameters.put("table_name", entity.getName().toLowerCase());
         parameters.put("col_name", "%" + fieldName(field, false));
 
