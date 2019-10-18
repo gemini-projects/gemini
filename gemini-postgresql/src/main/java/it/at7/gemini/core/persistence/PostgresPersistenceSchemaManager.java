@@ -22,8 +22,8 @@ import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.*;
 import static java.util.stream.Collectors.toList;
 
 @Service
-public class PostgresPublicPersistenceSchemaManager implements PersistenceSchemaManager {
-    private static final Logger logger = LoggerFactory.getLogger(PostgresPublicPersistenceSchemaManager.class);
+public class PostgresPersistenceSchemaManager implements PersistenceSchemaManager {
+    private static final Logger logger = LoggerFactory.getLogger(PostgresPersistenceSchemaManager.class);
 
     private String schemaName;
 
