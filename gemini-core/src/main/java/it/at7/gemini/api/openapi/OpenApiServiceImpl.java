@@ -3,7 +3,6 @@ package it.at7.gemini.api.openapi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.at7.gemini.conf.State;
-import it.at7.gemini.core.Module;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
@@ -55,7 +54,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
             builders.put("ALL", OpenAPIFile.from(new OpenAPIBuilder(), "ALL", "all.json"));
 
             // entities by module... in each dedicated file
-            schemaManager.getModules().forEach(m -> {
+            schemaManager.getAllModules().forEach(m -> {
                 String moduleName = m.getName().toUpperCase();
                 builders.put(moduleName, OpenAPIFile.from(new OpenAPIBuilder(false), moduleName, moduleName.toLowerCase() + ".json"));
             });
@@ -104,11 +103,11 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
 
     private void makeOpenAPISchema() {
         Collection<Entity> allEntities = this.schemaManager.getAllEntities();
-        Map<Module, List<Entity>> entitiesByModule = allEntities.stream().collect(Collectors.groupingBy(Entity::getModule));
-        List<Module> orderedModules = entitiesByModule.keySet().stream().sorted(Comparator.comparingInt(Module::order)).collect(Collectors.toList());
+        Map<ModuleBase, List<Entity>> entitiesByModule = allEntities.stream().collect(Collectors.groupingBy(Entity::getModule));
+        List<ModuleBase> orderedModules = entitiesByModule.keySet().stream().sorted(Comparator.comparingInt(ModuleBase::order)).collect(Collectors.toList());
         OpenAPIBuilder allEntityBuilder = this.builders.get("ALL").builder;
         allEntityBuilder.addModulesToTags(orderedModules);
-        for (Module module : orderedModules) {
+        for (ModuleBase module : orderedModules) {
             List<Entity> entities = entitiesByModule.get(module);
             entities.forEach(allEntityBuilder::handleEntity);
             String moduleName = module.getName().toUpperCase();
@@ -147,7 +146,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
         if (configurationService.isOpenapiSchema()) {
             String tokenUrl = (String) flowParameters.get("tokenUrl");
             if (tokenUrl == null || tokenUrl.equals("")) {
-                throw new GeminiRuntimeException("Unable to initialize OAuth2 Password Flow - No tokenUrl Provided");
+                throw new GeminiRuntimeException("Unable to initializeSmartModules OAuth2 Password Flow - No tokenUrl Provided");
             }
             OpenAPIBuilder.SecuritySchema securitySchema = new OpenAPIBuilder.SecuritySchema();
             securitySchema.type = "oauth2";

@@ -6,6 +6,10 @@ ENTITY-RECORD Entity Entity-Config 1
 {
      "name" : "FIELD",
      "closedDomain": true
+},
+{
+     "name": "SMARTMODULE",
+     "closedDomain": true
 }]
 
 ENTITY-RECORD FieldCommonSettings DEFAULT

@@ -7,5 +7,5 @@ import org.springframework.stereotype.Service;
         name = "IntegrationTest",
         dependencies = {},
         order = 10)
-public class IntegrationTestModule implements Module {
+public class IntegrationTestModule implements GeminiModule {
 }

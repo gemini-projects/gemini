@@ -19,7 +19,7 @@ public class EntityOperationContext {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> Optional<T> getModuleEntityOpContext(Module module) {
+    public <T> Optional<T> getModuleEntityOpContext(GeminiModule module) {
         return getModuleEntityOpContext(module.getName());
     }
 
@@ -29,7 +29,7 @@ public class EntityOperationContext {
     }
 
 
-    public void putModuleEntityOpContext(Module module, Object context) {
+    public void putModuleEntityOpContext(GeminiModule module, Object context) {
         moduleContexts.put(module.getName(), context);
     }
 }

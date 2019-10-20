@@ -1,7 +1,6 @@
 package it.at7.gemini.core.persistence;
 
 import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.Module;
 import it.at7.gemini.core.Transaction;
 import it.at7.gemini.core.TransactionImpl;
 import it.at7.gemini.exceptions.GeminiException;
@@ -28,7 +27,7 @@ public class PostgresPersistenceSchemaManager implements PersistenceSchemaManage
     private String schemaName;
 
     @Override
-    public void beforeLoadSchema(List<Module> modules, Transaction transaction) throws GeminiException {
+    public void beforeLoadSchema(Transaction transaction) throws GeminiException {
         try {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
             schemaName = transactionImpl.executeQuery("select current_schema", resultSet -> {

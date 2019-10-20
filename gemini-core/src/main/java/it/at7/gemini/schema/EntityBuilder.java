@@ -1,13 +1,13 @@
 package it.at7.gemini.schema;
 
-import it.at7.gemini.core.Module;
+import it.at7.gemini.core.ModuleBase;
 import it.at7.gemini.dsl.entities.RawEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class EntityBuilder {
-    private final Module mainModule;
+    private final ModuleBase mainModule;
     private final RawEntity rawEntity;
     private final String entityName;
     private final List<EntityFieldBuilder> fieldsBuilders = new ArrayList<>();
@@ -15,7 +15,7 @@ public class EntityBuilder {
     private List<ExtraEntity> extraEntities = new ArrayList<>();
 
 
-    public EntityBuilder(RawEntity rawEntity, Module module) {
+    public EntityBuilder(RawEntity rawEntity, ModuleBase module) {
         this.rawEntity = rawEntity;
         this.entityName = rawEntity.getName();
         this.mainModule = module;
@@ -44,7 +44,7 @@ public class EntityBuilder {
         return this;
     }
 
-    public void addExtraEntity(RawEntity rawEntity, Module module) {
+    public void addExtraEntity(RawEntity rawEntity, ModuleBase module) {
         extraEntities.add(new ExtraEntity(rawEntity, module));
     }
 
@@ -58,9 +58,9 @@ public class EntityBuilder {
 
     public static class ExtraEntity {
         RawEntity rawEntity;
-        Module module;
+        ModuleBase module;
 
-        ExtraEntity(RawEntity rawEntity, Module module) {
+        ExtraEntity(RawEntity rawEntity, ModuleBase module) {
             this.rawEntity = rawEntity;
             this.module = module;
         }
@@ -69,7 +69,7 @@ public class EntityBuilder {
             return rawEntity;
         }
 
-        public Module getModule() {
+        public ModuleBase getModule() {
             return module;
         }
     }

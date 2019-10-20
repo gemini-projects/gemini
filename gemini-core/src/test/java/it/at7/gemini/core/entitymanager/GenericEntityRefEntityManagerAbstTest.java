@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.util.List;
+import java.util.Map;
 
 import static it.at7.gemini.core.entitymanager.EntityTestUtility.testDefaultMetaValues;
 import static org.junit.Assert.assertEquals;
@@ -65,7 +66,7 @@ public class GenericEntityRefEntityManagerAbstTest {
         entityRecordG.put("genericRef", tER);
         entityManager.putIfAbsent(entityRecordG);
 
-        List<EntityRecord> listGenericRecs = entityManager.getRecordsMatching(entityManager.getEntity("WithGenericEntityRef"), new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0, null, false));
+        List<EntityRecord> listGenericRecs = entityManager.getRecordsMatching(entityManager.getEntity("WithGenericEntityRef"), new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0, null, false, Map.of()));
         assertEquals(2, listGenericRecs.size());
 
     }

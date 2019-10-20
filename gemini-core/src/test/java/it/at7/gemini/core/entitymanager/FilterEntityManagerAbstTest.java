@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -123,7 +124,7 @@ public class FilterEntityManagerAbstTest {
             entityRecord.put("numberLong", 100 - i);
             entityManager.putIfAbsent(entityRecord);
         }
-        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0, null, false);
+        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 0, null, false, Map.of());
         List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeFilterEntity(), filterContext);
         Assert.assertEquals(10, records.size());
 
@@ -132,7 +133,7 @@ public class FilterEntityManagerAbstTest {
     @Test
     public void n4_testStart() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
-        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 15, null, false);
+        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 10, 15, null, false, Map.of());
         List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeFilterEntity(), filterContext);
 
         // 6 because we have inserted 20 in test n3 and 1 in n1
@@ -142,7 +143,7 @@ public class FilterEntityManagerAbstTest {
     @Test
     public void n5_testOrderBy() throws GeminiException {
         EntityManager entityManager = Services.getEntityManager();
-        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 0, 0, new String[]{"-numberLong"}, false);
+        FilterContext filterContext = new FilterContext(FilterContext.FilterType.GEMINI, "", 0, 0, new String[]{"-numberLong"}, false, Map.of());
         List<EntityRecord> records = entityManager.getRecordsMatching(TestData.getTestDataTypeFilterEntity(), filterContext);
 
         for (int i = 0; i < 20; i++) {

@@ -15,13 +15,11 @@ public interface SchemaManager {
 
     Entity getEntity(String entity);
 
-    Module getModule(String module);
+    Collection<ModuleBase> getAllModules();
 
-    Collection<Module> getModules();
-
-    default Map<String, Module> getModulesMap() {
-        Collection<Module> modules = getModules();
-        return modules.stream().collect(Collectors.toMap(Module::getName, Function.identity()));
+    default Map<String, ModuleBase> getModulesMap() {
+        Collection<ModuleBase> modules = getAllModules();
+        return modules.stream().collect(Collectors.toMap(ModuleBase::getName, Function.identity()));
     }
 
 

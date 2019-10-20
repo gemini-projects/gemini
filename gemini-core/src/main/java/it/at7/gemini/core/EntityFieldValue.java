@@ -35,8 +35,8 @@ public class EntityFieldValue extends FieldValue {
         Object convertedPersistenceValue = FieldConverters.getConvertedFieldValue(entityField, value);
 
         if (convertedRecordValue instanceof EntityRecord && convertedPersistenceValue instanceof EntityRecord) {
-            return RecordConverters.dataToMap((EntityRecord) convertedRecordValue)
-                    .equals(RecordConverters.dataToMap((EntityRecord) convertedPersistenceValue));
+            EntityRecord convertedPersistenceValueER = (EntityRecord) convertedPersistenceValue;
+            return !((EntityRecord) convertedRecordValue).someRealUpdatedNeeded(convertedPersistenceValueER);
         }
         // converted values stores the right target type object.. equals should be consistent both for primitives
         // and for complex object... if the framework evolves in othter direction this code should be checked

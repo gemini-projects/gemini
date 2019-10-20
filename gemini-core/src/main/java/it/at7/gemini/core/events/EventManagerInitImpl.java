@@ -1,6 +1,5 @@
 package it.at7.gemini.core.events;
 
-import it.at7.gemini.core.Module;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
@@ -19,6 +18,7 @@ import java.util.*;
 public class EventManagerInitImpl implements EventManagerInit, EventManager {
     private final ApplicationContext applicationContext;
     private final SchemaManager schemaManager;
+    private final StateManager stateManager;
 
 
     /**
@@ -39,16 +39,16 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
     Map<String, List<Object>> entityEventsBeans;
 
     @Autowired
-    public EventManagerInitImpl(ApplicationContext applicationContext, SchemaManager schemaManager) {
+    public EventManagerInitImpl(ApplicationContext applicationContext, SchemaManager schemaManager, StateManager stateManager) {
         this.applicationContext = applicationContext;
         this.schemaManager = schemaManager;
+        this.stateManager = stateManager;
     }
 
     @Override
-    public void loadEvents(List<Module> modules) {
+    public void loadEvents() {
         loadEntityEventsByAnnotation();
         // checkEntityEvents(entityEvents);
-
     }
 
     private void loadEntityEventsByAnnotation() {

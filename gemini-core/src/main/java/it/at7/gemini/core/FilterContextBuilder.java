@@ -19,6 +19,7 @@ public class FilterContextBuilder {
     private int start;
     private String[] orderBy;
     private boolean count = false;
+    private Map<String, Object> params;
 
     public FilterContextBuilder() {
         this.configurationService = null;
@@ -42,6 +43,14 @@ public class FilterContextBuilder {
         this.searchString = searchString;
         return this;
     }
+
+    public FilterContextBuilder withPersistenceQueryParam(String searchString, Map<String, Object> params) {
+        this.filterType = FilterContext.FilterType.PERSISTENCE;
+        this.searchString = searchString;
+        this.params = params;
+        return this;
+    }
+
 
     public FilterContextBuilder withLimit(int limit) {
         this.limit = limit;
@@ -70,7 +79,7 @@ public class FilterContextBuilder {
     }
 
     public FilterContext build() {
-        return new FilterContext(filterType, searchString, limit, start, orderBy, count);
+        return new FilterContext(filterType, searchString, limit, start, orderBy, count, params);
     }
 
     private int getLimitFromParameters(String[] limitParams) {

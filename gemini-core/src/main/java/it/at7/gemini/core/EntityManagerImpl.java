@@ -6,7 +6,6 @@ import it.at7.gemini.core.events.EventManager;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.exceptions.*;
 import it.at7.gemini.schema.Entity;
-import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.EntityRef;
 import it.at7.gemini.schema.FieldRef;
 import org.jetbrains.annotations.Nullable;
@@ -263,22 +262,12 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         return newEntityRecord;
     }
 
-    private boolean someRealUpdatedNeeded(EntityRecord record, EntityRecord persistedRecord) {
-        for (EntityFieldValue ev : record.getOnlyDataModifiedEntityFieldValue()) {
-            EntityField entityField = ev.getEntityField();
-            Object persistedValue = persistedRecord.get(entityField);
-            if (!ev.fieldValueEquals(persistedValue)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     private EntityRecord updateRecordIfNeededHandlingEvents(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction, EntityRecord persistedRecord) throws GeminiException {
         eventManager.beforeUpdateRecord(record, persistedRecord, entityOperationContext, transaction);
         eventManager.onUpdateFields(record, persistedRecord, entityOperationContext, transaction);
-        if (someRealUpdatedNeeded(record, persistedRecord)) {
+        if (record.someRealUpdatedNeeded(persistedRecord)) {
+            // if (someRealUpdatedNeeded(record, persistedRecord)) {
             persistedRecord.update(record);
             return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
         }

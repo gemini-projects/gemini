@@ -7,5 +7,5 @@ import org.springframework.stereotype.Service;
         name = "CORE",
         dependencies = {},
         order = -700)
-public class CoreModule implements Module {
+public class CoreModule implements GeminiModule {
 }

@@ -196,4 +196,15 @@ public class EntityRecord implements RecordBase {
     public UUID getUUID() {
         return this.uuid;
     }
+
+    public boolean someRealUpdatedNeeded(EntityRecord persistedRecord) {
+        for (EntityFieldValue ev : getOnlyDataModifiedEntityFieldValue()) {
+            EntityField entityField = ev.getEntityField();
+            Object persistedValue = persistedRecord.get(entityField);
+            if (!ev.fieldValueEquals(persistedValue)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

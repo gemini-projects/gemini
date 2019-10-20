@@ -77,7 +77,7 @@ public class IntegrationTestMain {
     }
 
     /**
-     * Fully initialize Gemini as a normal start
+     * Fully initializeSmartModules Gemini as a normal start
      */
     public static ConfigurableApplicationContext initializeGemini(Class... classes) {
         ConfigurableApplicationContext context = startSpring(classes);

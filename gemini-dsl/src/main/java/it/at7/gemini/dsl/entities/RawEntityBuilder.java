@@ -14,7 +14,7 @@ public class RawEntityBuilder {
 
     public RawEntityBuilder addName(String name) {
         if (!name.matches(namePattern)) {
-            throw new RuntimeException(String.format("name %s doesn't match regexp ^[a-zA-Z]{3,}$", name));
+            throw new RuntimeException(String.format("name %s doesn't match regexp %s", name, namePattern));
         }
         this.name = name.toUpperCase();
         return this;

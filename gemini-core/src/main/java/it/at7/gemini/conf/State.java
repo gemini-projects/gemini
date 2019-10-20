@@ -3,6 +3,7 @@ package it.at7.gemini.conf;
 public enum State implements Comparable<State> {
     STARTING,
     STARTED,
+    GEMINI_MODULES_LOADED,
     SCHEMA_STORAGE_INITIALIZED,
     SCHEMA_EVENTS_LOADED,
     FRAMEWORK_SCHEMA_RECORDS_INITIALIZED,

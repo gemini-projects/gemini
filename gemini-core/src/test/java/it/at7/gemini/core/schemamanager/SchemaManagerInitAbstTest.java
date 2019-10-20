@@ -1,6 +1,5 @@
 package it.at7.gemini.core.schemamanager;
 
-import it.at7.gemini.core.Module;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import org.junit.Test;
@@ -15,7 +14,8 @@ public class SchemaManagerInitAbstTest {
         SchemaManagerInit schemaManager = (SchemaManagerInit) Services.getSchemaManager();
 
         try (Transaction transaction = transactionManager.openTransaction()) {
-            schemaManager.initializeSchemasStorage(List.of(new CoreModule(), new MetaNotUnique()), transaction);
+            schemaManager.loadGeminiModulesSchemas(List.of(new CoreModule(), new MetaNotUnique()));
+            schemaManager.initializeSchemaStorage(transaction);
         }
     }
 
@@ -24,6 +24,6 @@ public class SchemaManagerInitAbstTest {
             name = "MetaFieldsNotUnique",
             dependencies = {},
             order = -700)
-    public class MetaNotUnique implements Module {
+    public class MetaNotUnique implements GeminiModule {
     }
 }

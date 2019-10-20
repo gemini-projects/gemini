@@ -26,7 +26,7 @@ public class Gemini {
     private final SchemaManagerInit schemaManagerInit;
     private final EventManagerInit eventManagerInit;
     private final TransactionManager transactionManager;
-    private List<Module> modules;
+    private List<GeminiModule> geminiModules;
 
     @Autowired
     public Gemini(StateManagerImpl stateManager, SchemaManagerInit schemaManagerInit,
@@ -42,7 +42,7 @@ public class Gemini {
     public void init() {
         try {
             loadCoreServices();
-            loadModules();
+            loadGeminiModules();
             start();
             transactionManager.executeInSingleTrasaction(this::initializeSchemaAndEvents);
             initialize();
@@ -56,14 +56,14 @@ public class Gemini {
         context.getBean(Services.class);
     }
 
-    private void loadModules() {
-        logger.info("MODULES LOADING");
-        Map<String, Module> modulesMap = context.getBeansOfType(Module.class);
-        this.modules = modulesMap.values().stream()
-                .sorted(Comparator.comparingInt(Module::order))
+    private void loadGeminiModules() {
+        logger.info("GEMINI MODULES LOADING");
+        Map<String, GeminiModule> modulesMap = context.getBeansOfType(GeminiModule.class);
+        this.geminiModules = modulesMap.values().stream()
+                .sorted(Comparator.comparingInt(GeminiModule::order))
                 .collect(Collectors.toList());
-        for (Module module : modules) {
-            logger.info("Found module {} withGeminiSearchString dependecies {}", module.getName(), module.getDependencies());
+        for (GeminiModule module : geminiModules) {
+            logger.info("Found Module {} with dependecies {}", module.getName(), module.getDependencies());
             stateManager.register(module);
         }
     }
@@ -75,10 +75,13 @@ public class Gemini {
 
     private void initializeSchemaAndEvents(Transaction transaction) throws GeminiException {
         logger.info("SCHEMAS/EVENTS INITIALIZATION");
-        schemaManagerInit.initializeSchemasStorage(modules, transaction);
-        eventManagerInit.loadEvents(modules);
+        schemaManagerInit.loadGeminiModulesSchemas(geminiModules);
+        stateManager.changeState(State.GEMINI_MODULES_LOADED, Optional.of(transaction));
+        schemaManagerInit.initializeSchemaStorage(transaction);
+        stateManager.changeState(State.SCHEMA_STORAGE_INITIALIZED, Optional.of(transaction));
+        eventManagerInit.loadEvents();
         stateManager.changeState(State.SCHEMA_EVENTS_LOADED, Optional.of(transaction));
-        schemaManagerInit.initializeSchemaEntityRecords(modules, transaction);
+        schemaManagerInit.initializeSchemaEntityRecords(transaction);
     }
 
     private void initialize() throws GeminiException {

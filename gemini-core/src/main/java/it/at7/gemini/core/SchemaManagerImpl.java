@@ -47,13 +47,15 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private final GeminiConfigurationService geminiConfigurationService;
     private final EntityManagerImpl entityManager;
 
-    private Map<String, Module> modules;
-    private List<Module> orderedModules;
-    private Map<Module, RawSchema> schemas = new LinkedHashMap<>(); // maintain insertion order
+    private Map<String, GeminiModule> geminiModules;
+    private List<GeminiModule> geminiOrderedModules; // TODO check if it can be refactored or removed
+    private Map<GeminiModule, RawSchema> geminiSchemas = new HashMap<>();
+    private Map<ModuleBase, RawSchema> externalSchema = new HashMap<>();
+
 
     // entities are stored UPPERCASE
     private Map<String, Entity> entities = new LinkedHashMap<>();
-    private Map<Module, ModuleRawRecord> schemaRawRecordsByModule;
+    private Map<GeminiModule, ModuleRawRecord> schemaRawRecordsByGeminiModule;
 
     @Autowired
     public SchemaManagerImpl(ApplicationContext applicationContext,
@@ -71,22 +73,34 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
     @Override
-    public void initializeSchemasStorage(List<Module> modulesInOrder, Transaction transaction) throws GeminiException {
-        this.modules = modulesInOrder.stream().collect(Collectors.toMap(m -> m.getName().toUpperCase(), m -> m));
-        orderedModules = this.modules.values().stream().sorted(Comparator.comparingInt(Module::order)).collect(toList());
-        persistenceSchemaManager.beforeLoadSchema(modulesInOrder, transaction);
-        loadModuleSchemas(modulesInOrder);
-        this.schemaRawRecordsByModule = loadModuleRecords(modulesInOrder);
-        checkSchemaAndCreateEntities();
-
-        persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
-        this.stateManager.changeState(State.SCHEMA_STORAGE_INITIALIZED, Optional.of(transaction));
+    public void loadGeminiModulesSchemas(List<GeminiModule> geminiModules) throws GeminiException {
+        this.geminiModules = geminiModules.stream().collect(Collectors.toMap(m -> m.getName().toUpperCase(), m -> m));
+        this.geminiOrderedModules = this.geminiModules.values().stream().sorted(Comparator.comparingInt(GeminiModule::order)).collect(toList());
+        this.geminiSchemas.putAll(loadGeminiModuleSchemas(geminiModules));
+        this.schemaRawRecordsByGeminiModule = loadGeminiModuleRecords(geminiModules);
     }
 
     @Override
-    public void initializeSchemaEntityRecords(List<Module> modulesInOrder, Transaction transaction) throws GeminiException {
+    public void addExternalSchemas(Map<ModuleBase, RawSchema> rawSchemas) {
+        this.externalSchema.putAll(rawSchemas);
+    }
 
-        /* NB: dediced to use basic data types (no references) for common Entity/Field column types... so no need to initialize anything
+    @Override
+    public void initializeSchemaStorage(Transaction transaction) throws GeminiException {
+        persistenceSchemaManager.beforeLoadSchema(transaction);
+
+        Map<ModuleBase, RawSchema> allSchemasByBaseModule = new LinkedHashMap<>();
+        allSchemasByBaseModule.putAll(this.geminiSchemas);
+        allSchemasByBaseModule.putAll(this.externalSchema);
+
+        checkSchemaAndCreateEntities(allSchemasByBaseModule);
+        persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
+    }
+
+    @Override
+    public void initializeSchemaEntityRecords(Transaction transaction) throws GeminiException {
+
+        /* NB: dediced to use basic data types (no references) for common Entity/Field column types... so no need to initializeSmartModules anything
         //
         // lets first of all create records (domains) required by Entity/Fields... (special entities)
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, EntityRef.NAME);
@@ -106,14 +120,11 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
     @Override
-    @Nullable
-    public Module getModule(String module) {
-        return modules.get(module.toUpperCase());
-    }
-
-    @Override
-    public Collection<Module> getModules() {
-        return modules.values();
+    public Collection<ModuleBase> getAllModules() {
+        List<ModuleBase> res = new ArrayList<>();
+        res.addAll(geminiOrderedModules);
+        res.addAll(externalSchema.keySet());
+        return Collections.unmodifiableList(res);
     }
 
     @Override
@@ -230,17 +241,17 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
 
-    private void iterateThroughtRawEntitySchemas(BiConsumer<Module, RawEntity> action) {
+    private void iterateThroughtRawEntitySchemas(Map<ModuleBase, RawSchema> schemas, BiConsumer<ModuleBase, RawEntity> action) {
         schemas.entrySet().forEach(entry -> {
-            Module module = entry.getKey();
+            ModuleBase module = entry.getKey();
             RawSchema rawSchema = entry.getValue();
             rawSchema.getRawEntities().forEach(model -> action.accept(module, model));
         });
     }
 
-    private void iterateThroughtRawInterfaces(BiConsumer<Module, RawEntity> action) {
+    private void iterateThroughtRawInterfaces(Map<ModuleBase, RawSchema> schemas, BiConsumer<ModuleBase, RawEntity> action) {
         schemas.entrySet().forEach(entry -> {
-            Module module = entry.getKey();
+            ModuleBase module = entry.getKey();
             RawSchema rawSchema = entry.getValue();
             rawSchema.getRawEntityInterfaces().forEach(model -> action.accept(module, model));
         });
@@ -271,8 +282,8 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
     private void createProvidedEntityRecords(Transaction transaction) throws GeminiException {
-        for (Module m : this.orderedModules) {
-            ModuleRawRecord moduleRawRecord = this.schemaRawRecordsByModule.get(m);
+        for (GeminiModule m : this.geminiOrderedModules) {
+            ModuleRawRecord moduleRawRecord = this.schemaRawRecordsByGeminiModule.get(m);
 
             Map<String, EntityRawRecords> moduleRecordsByEntity = moduleRawRecord.getModuleRecordsByEntity();
             List<EntityRawRecords.VersionedRecords> versionsRecords = moduleRecordsByEntity.values().stream().
@@ -318,9 +329,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         }
     }
 
-    private void loadModuleSchemas(Collection<Module> modules) throws GeminiGenericException {
+    private Map<GeminiModule, RawSchema> loadGeminiModuleSchemas(Collection<GeminiModule> modules) throws GeminiGenericException {
         try {
-            for (Module module : modules) {
+            Map<GeminiModule, RawSchema> schemas = new LinkedHashMap<>();
+            for (GeminiModule module : modules) {
                 String location = module.getSchemaResourceLocation();
                 Resource resource = applicationContext.getResource(location);
                 RawSchema rawSchema;
@@ -340,15 +352,16 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                 }
                 schemas.put(module, rawSchema);
             }
+            return schemas;
         } catch (Exception e) {
             throw GeminiGenericException.wrap(e);
         }
     }
 
-    private Map<Module, ModuleRawRecord> loadModuleRecords(Collection<Module> modules) throws GeminiGenericException {
+    private Map<GeminiModule, ModuleRawRecord> loadGeminiModuleRecords(Collection<GeminiModule> modules) throws GeminiGenericException {
         try {
-            Map<Module, ModuleRawRecord> recordsByModule = new HashMap<>();
-            for (Module module : modules) {
+            Map<GeminiModule, ModuleRawRecord> recordsByModule = new HashMap<>();
+            for (GeminiModule module : modules) {
                 ModuleRawRecord moduleRawRecord = new ModuleRawRecord();
                 String location = module.getSchemaRecordResourceLocation();
                 Resource resource = applicationContext.getResource(location);
@@ -359,7 +372,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                 } else {
                     logger.info("No module records definition found for module {}: location {}", module.getName(), location);
                 }
-                RawSchema rawSchema = schemas.get(module);
+                RawSchema rawSchema = geminiSchemas.get(module);
                 if (rawSchema != null) {
                     for (RawEntity rawEntity : rawSchema.getRawEntities()) {
                         String entityName = rawEntity.getName().toLowerCase();
@@ -385,7 +398,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         }
     }
 
-    private void checkSchemaAndCreateEntities() throws FieldException {
+    private void checkSchemaAndCreateEntities(Map<ModuleBase, RawSchema> geminiSchemas) throws FieldException {
         /* TODO entità estendibii per modulo
             caricare ogni modulo a se stante.. con le entità.. poi fare il merge delle
             entries (ognuna contenente il modulo da dove viene)
@@ -395,8 +408,8 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         // first of all get all the interfaces and entities (to resolve dependencies without ordering)
         Map<String, EntityBuilder> interfaceBuilders = new HashMap<>();
         Map<String, EntityBuilder> entityBuilders = new HashMap<>();
-        iterateThroughtRawInterfaces(
-                (Module module, RawEntity rawEntityInterface) -> {
+        iterateThroughtRawInterfaces(geminiSchemas,
+                (ModuleBase module, RawEntity rawEntityInterface) -> {
                     String interfaceName = rawEntityInterface.getName().toUpperCase();
                     if (interfaceBuilders.keySet().contains(interfaceName)) {
                         EntityBuilder alreadyExistentEB = interfaceBuilders.get(interfaceName);
@@ -405,7 +418,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                         interfaceBuilders.put(interfaceName, new EntityBuilder(rawEntityInterface, module));
                     }
                 });
-        iterateThroughtRawEntitySchemas((Module module, RawEntity rawEntity) -> {
+        iterateThroughtRawEntitySchemas(geminiSchemas, (ModuleBase module, RawEntity rawEntity) -> {
             String entityName = rawEntity.getName().toUpperCase();
             EntityBuilder entityB;
             if (entityBuilders.keySet().contains(entityName)) {
@@ -417,10 +430,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
             }
 
 
-            for (Module m : orderedModules) {
+            for (GeminiModule m : geminiOrderedModules) {
                 // calculate the default entity record
                 String entityUpper = entityName.toUpperCase();
-                ModuleRawRecord moduleRawRecord = schemaRawRecordsByModule.get(m);
+                ModuleRawRecord moduleRawRecord = schemaRawRecordsByGeminiModule.get(m);
                 if (moduleRawRecord != null) {
                     Map<String, EntityRawRecords> moduleRecordsByEntity = moduleRawRecord.getModuleRecordsByEntity();
                     EntityRawRecords entityRawRecords = moduleRecordsByEntity.get(entityUpper);
@@ -451,7 +464,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
             addAllEntriesToEntityBuilder(entityBuilders, metaIntBuilder.getRawEntity(), currentEntityBuilder, Entity.CORE_META, EntityField.Scope.META);
             for (EntityBuilder.ExtraEntity externalEntity : metaIntBuilder.getExternalEntities()) {
                 RawEntity extRawEntity = externalEntity.getRawEntity();
-                Module extModule = externalEntity.getModule(); // TODO add MODULE to FIELD
+                ModuleBase extModule = externalEntity.getModule(); // TODO add MODULE to FIELD
                 addAllEntriesToEntityBuilder(entityBuilders, extRawEntity, currentEntityBuilder, Entity.CORE_META, EntityField.Scope.META);
             }
 

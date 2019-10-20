@@ -3,7 +3,6 @@ package it.at7.gemini.auth;
 import it.at7.gemini.auth.core.AuthModuleRef;
 import it.at7.gemini.auth.core.UserRef;
 import it.at7.gemini.conf.State;
-import it.at7.gemini.core.Module;
 import it.at7.gemini.core.*;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
@@ -27,7 +26,7 @@ import static it.at7.gemini.conf.State.SCHEMA_EVENTS_LOADED;
 @ComponentScan("it.at7.gemini.auth.core")
 @ComponentScan("it.at7.gemini.auth.events")
 @ConditionalOnProperty(name = "gemini.auth", havingValue = "true", matchIfMissing = true)
-public class AuthModule implements Module {
+public class AuthModule implements GeminiModule {
     private static final Logger logger = LoggerFactory.getLogger(AuthModule.class);
 
     private final SchemaManager schemaManager;

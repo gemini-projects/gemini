@@ -57,7 +57,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
         switch (actual) {
             case FRAMEWORK_SCHEMA_RECORDS_INITIALIZED:
-                // we have Entity Recors initialized withRecord ID values so we can initialize entities here
+                // we have Entity Recors initialized withRecord ID values so we can initializeSmartModules entities here
                 FieldTypePersistenceUtility.initEntities(this.schemaManager.getAllEntities());
                 break;
         }
@@ -330,19 +330,18 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
     }
 
     private void addFilter(QueryWithParams query, FilterContext filterContext, Entity entity) {
-        String sqlFilter = "";
         FilterContext.FilterType filterType = filterContext.getFilterType();
         if (filterType == FilterContext.FilterType.GEMINI && !filterContext.getSearchString().isEmpty()) {
             Node rootNode = new RSQLParser(filterVisitor.getOperators()).parse(filterContext.getSearchString());
 
             QueryWithParams queryWithParams = rootNode.accept(filterVisitor, FilterVisitor.FilterVisitorContext.of(entity));
-            sqlFilter += " WHERE " + queryWithParams.getSql();
+            query.addToSql(" WHERE " + queryWithParams.getSql());
             query.addParams(queryWithParams.getParams());
         }
         if (filterType == FilterContext.FilterType.PERSISTENCE) {
-            sqlFilter += " WHERE " + filterContext.getSearchString();
+            query.addToSql(" WHERE " + filterContext.getSearchString());
+            query.addParams(filterContext.getParams());
         }
-        query.addToSql(sqlFilter);
     }
 
     private void addOrderBy(QueryWithParams query, FilterContext filterContext, Entity entity) {

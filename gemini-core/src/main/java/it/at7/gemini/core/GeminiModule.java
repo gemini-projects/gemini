@@ -5,15 +5,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public interface Module extends StateListener {
+/**
+ * Gemini Raw Module is the entry point to organize schemas and entities.
+ */
+public interface GeminiModule extends ModuleBase {
 
     default String getName() {
-        Class<? extends Module> classModule = this.getClass();
+        Class<? extends GeminiModule> classModule = this.getClass();
         return classModule.isAnnotationPresent(ModuleDescription.class) ? classModule.getAnnotation(ModuleDescription.class).name() : classModule.getName();
     }
 
     default String[] getDependencies() {
-        Class<? extends Module> classModule = this.getClass();
+        Class<? extends GeminiModule> classModule = this.getClass();
         if (classModule.isAnnotationPresent(ModuleDescription.class)) {
             return classModule.getAnnotation(ModuleDescription.class).dependencies();
         }
@@ -21,7 +24,7 @@ public interface Module extends StateListener {
     }
 
     default boolean editable() {
-        Class<? extends Module> classModule = this.getClass();
+        Class<? extends GeminiModule> classModule = this.getClass();
         if (classModule.isAnnotationPresent(ModuleDescription.class)) {
             return classModule.getAnnotation(ModuleDescription.class).editable();
         }
@@ -29,7 +32,7 @@ public interface Module extends StateListener {
     }
 
     default int order() {
-        Class<? extends Module> classModule = this.getClass();
+        Class<? extends GeminiModule> classModule = this.getClass();
         if (classModule.isAnnotationPresent(ModuleDescription.class)) {
             return classModule.getAnnotation(ModuleDescription.class).order();
         }
@@ -59,17 +62,17 @@ public interface Module extends StateListener {
         return getSchemaResourceLocation().replace("classpath: ", "");
     }
 
-    static Collection<Module> getDependenciesClosure(Map<String, Module> modules, Module targetModule) {
+    static Collection<GeminiModule> getDependenciesClosure(Map<String, GeminiModule> modules, GeminiModule targetModule) {
         if (targetModule == null) {
             return List.of();
         }
 
-        ArrayList<Module> res = new ArrayList<>();
+        ArrayList<GeminiModule> res = new ArrayList<>();
         res.add(targetModule);
 
         String[] dependencies = targetModule.getDependencies();
         for (String dep : dependencies) {
-            Module module = modules.get(dep);
+            GeminiModule module = modules.get(dep);
             res.addAll(getDependenciesClosure(modules, module));
         }
         return res;

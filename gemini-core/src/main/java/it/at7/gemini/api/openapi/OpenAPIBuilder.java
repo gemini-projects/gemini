@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.at7.gemini.api.ApiUtility;
 import it.at7.gemini.core.FilterContextBuilder;
-import it.at7.gemini.core.Module;
+import it.at7.gemini.core.ModuleBase;
 import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
@@ -135,8 +135,8 @@ public class OpenAPIBuilder {
         return infoJson;
     }
 
-    public void addModulesToTags(List<Module> orderedModules) {
-        for (Module module : orderedModules) {
+    public void addModulesToTags(List<ModuleBase> orderedModules) {
+        for (ModuleBase module : orderedModules) {
             tags.add(Tag.from(module.getName(), String.format("Section for all Entities of Module %s", module.getName())));
         }
     }

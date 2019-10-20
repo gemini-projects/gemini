@@ -1,7 +1,7 @@
 package it.at7.gemini.schema;
 
 import it.at7.gemini.core.EntityRecord;
-import it.at7.gemini.core.Module;
+import it.at7.gemini.core.ModuleBase;
 import it.at7.gemini.core.RecordConverters;
 import it.at7.gemini.core.Services;
 import it.at7.gemini.exceptions.EntityFieldException;
@@ -25,7 +25,7 @@ public class Entity {
 
     public static final String NAME = "name";
 
-    private final Module module;
+    private final ModuleBase module;
     private final String name;
     private final Map<String, Object> defaultRecord;
     private final Set<EntityField> dataFields;
@@ -42,7 +42,7 @@ public class Entity {
 
     private boolean isClosedDomain = false;
 
-    public Entity(Module module, String name, boolean embedable, boolean oneRecord, List<String> implementsIntefaces, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
+    public Entity(ModuleBase module, String name, boolean embedable, boolean oneRecord, List<String> implementsIntefaces, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
         this.oneRecord = oneRecord;
         Assert.notNull(module, "Module must be not null");
         Assert.notNull(name, "Entity name must be not null");
@@ -73,7 +73,7 @@ public class Entity {
         return name;
     }
 
-    public Module getModule() {
+    public ModuleBase getModule() {
         return module;
     }
 

@@ -1,5 +1,6 @@
 package it.at7.gemini.core;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -8,7 +9,8 @@ import org.springframework.stereotype.Service;
         dependencies = "CORE",
         editable = true,
         order = 700)
-public class RuntimeModule implements Module {
+@ConditionalOnProperty(name = "gemini.modules.runtime", matchIfMissing = false)
+public class RuntimeModule implements GeminiModule {
 
     @Override
     public String getSchemaResourceLocation() {
