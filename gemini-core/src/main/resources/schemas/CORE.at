@@ -59,8 +59,3 @@ ENTITY FieldResolution {
     TEXT    code *
     TEXT    value
 }
-
-ENTITY SmartModule {
-    TEXT        name *
-    BOOL        dynamic
-}

@@ -1,7 +1,7 @@
 package it.at7.gemini.core;
 
 import it.at7.gemini.exceptions.GeminiException;
-import it.at7.gemini.schema.smart.SmartSchema;
+import it.at7.gemini.schema.SmartSchemaWrapper;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,7 +15,7 @@ public interface SmartModuleManagerInit {
      * @return
      * @throws GeminiException exception
      */
-    LinkedHashMap<SmartModule, SmartSchema> loadSmartResources(List<SmartModule> modulesInOrder) throws GeminiException;
+    LinkedHashMap<SmartModule, SmartSchemaWrapper> loadSmartResources(List<SmartModule> modulesInOrder) throws GeminiException;
 
     /**
      * Initialize Smart Modules Framework Entity Records
@@ -23,6 +23,6 @@ public interface SmartModuleManagerInit {
      * @param smartSchemaByModule module - schema
      * @param transaction
      */
-    void initializeSmartModulesRecords(LinkedHashMap<SmartModule, SmartSchema> smartSchemaByModule, Transaction transaction) throws GeminiException;
+    void initializeSmartModulesRecords(LinkedHashMap<SmartModule, SmartSchemaWrapper> smartSchemaByModule, Transaction transaction) throws GeminiException;
 
 }

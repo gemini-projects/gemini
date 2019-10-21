@@ -41,3 +41,9 @@ ENTITY SideBarElem {
     TEXT                icon
     LONG                sortKey
 }
+
+ENTITY SmartModule {
+    TEXT        name *
+    BOOL        dynamic
+    TEXT        schema
+}
