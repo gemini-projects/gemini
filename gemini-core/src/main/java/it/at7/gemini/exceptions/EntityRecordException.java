@@ -76,7 +76,7 @@ public class EntityRecordException extends GeminiException {
     }
 
     public static EntityRecordException LK_NOTFOUND(Entity entity, Collection<? extends FieldValue> lk) {
-        return new EntityRecordException(LK_NOTFOUND, entity, lk, String.format("Logical Key for entity %s not found: %s ", entity.getName(), lk.toString()));
+        return new LkNotFoundException(LK_NOTFOUND, entity, lk, String.format("Logical Key for entity %s not found: %s ", entity.getName(), lk.toString()));
     }
 
     public static EntityRecordException INSERTED_RECORD_NOT_FOUND(Entity entity, Set<EntityFieldValue> lk) {
@@ -97,5 +97,12 @@ public class EntityRecordException extends GeminiException {
 
     public static EntityRecordException EMPTY_LK_IN_RECORD(EntityRecord entityRecord) {
         return new EntityRecordException(EMPTY_LK_IN_RECORD, entityRecord.getEntity(), String.format("Provided a record for entity %s withRecord empty logical key -  %s", entityRecord.getEntity().getName(), entityRecord.toString()));
+    }
+
+
+    public static class LkNotFoundException extends EntityRecordException {
+        public LkNotFoundException(Code lkNotfound, Entity entity, Collection<? extends FieldValue> lk, String format) {
+            super(lkNotfound, entity, lk, format);
+        }
     }
 }

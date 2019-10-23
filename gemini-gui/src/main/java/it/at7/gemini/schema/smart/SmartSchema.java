@@ -15,15 +15,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SmartSchema {
-    public String name;
-    public String version;
+    public String title;
+    public String description;
 
     public Map<String, SmartEntity> entities;
 
 
     public RawSchema getRawSchema(SmartModule smartModule) {
         RawSchemaBuilder rawSchemaBuilder = new RawSchemaBuilder();
-        entities.forEach((key, value) -> createRowEntity(rawSchemaBuilder, smartModule, key, value));
+        if (entities != null)
+            entities.forEach((key, value) -> createRowEntity(rawSchemaBuilder, smartModule, key, value));
         return rawSchemaBuilder.build();
     }
 
@@ -34,11 +35,11 @@ public class SmartSchema {
     }
 
     public List<EntityRecord> getEntityGUIRecords(SmartModule smartModule) {
-        return entities.entrySet().stream().map(e -> creteEntityGUI(smartModule, e.getKey(), e.getValue())).collect(Collectors.toList());
+        return entities == null ? List.of() : entities.entrySet().stream().map(e -> creteEntityGUI(smartModule, e.getKey(), e.getValue())).collect(Collectors.toList());
     }
 
     public List<EntityRecord> getFieldGUIRecords(SmartModule smartModule) {
-        return entities.entrySet().stream().map(e -> creteFieldGUI(smartModule, e.getKey(), e.getValue()))
+        return entities == null ? List.of() : entities.entrySet().stream().map(e -> creteFieldGUI(smartModule, e.getKey(), e.getValue()))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }

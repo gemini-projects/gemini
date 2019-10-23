@@ -4,7 +4,11 @@ import it.at7.gemini.conf.State;
 import it.at7.gemini.core.*;
 import it.at7.gemini.dsl.entities.RawSchema;
 import it.at7.gemini.exceptions.GeminiException;
+import it.at7.gemini.gui.schema.EntityGUIRef;
+import it.at7.gemini.gui.schema.FieldGUIRef;
+import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.SmartSchemaWrapper;
+import it.at7.gemini.schema.smart.SmartSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +20,8 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static it.at7.gemini.conf.State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED;
-import static it.at7.gemini.conf.State.GEMINI_MODULES_LOADED;
+import static it.at7.gemini.conf.State.*;
+import static it.at7.gemini.core.EntityManagerImpl.DYNAMIC_SCHEMA_CONTEXT_FLAG;
 
 @Service
 @ModuleDescription(
@@ -28,12 +32,13 @@ import static it.at7.gemini.conf.State.GEMINI_MODULES_LOADED;
 @ComponentScan("it.at7.gemini.gui.core")
 @ComponentScan("it.at7.gemini.gui.events")
 @ConditionalOnProperty(name = "gemini.gui", matchIfMissing = false)
-public class GuiModule implements GeminiModule {
+public class GuiModule implements GeminiModule, SchemaManagerInitListener {
     private static final Logger logger = LoggerFactory.getLogger(GuiModule.class);
 
     private final ApplicationContext context;
     private final SmartModuleManagerInit smartModuleManagerInit;
     private final SchemaManagerInit schemaManagerInit;
+    private final EntityManager entityManager;
     private List<SmartModule> smartModules;
     private LinkedHashMap<SmartModule, SmartSchemaWrapper> smartSchemas;
 
@@ -41,17 +46,27 @@ public class GuiModule implements GeminiModule {
     @Autowired
     public GuiModule(ApplicationContext applicationContext,
                      SmartModuleManagerInit smartModuleManagerInit,
-                     SchemaManagerInit schemaManagerInit) {
+                     SchemaManagerInit schemaManagerInit,
+                     EntityManager entityManager) {
         this.context = applicationContext;
         this.smartModuleManagerInit = smartModuleManagerInit;
         this.schemaManagerInit = schemaManagerInit;
+        this.entityManager = entityManager;
     }
 
     @Override
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
         if (actual.equals(GEMINI_MODULES_LOADED)) {
-            smartSchemas = loadSmartSchemas();
+            assert transaction.isPresent();
+            smartSchemas = loadSmartSchemas(transaction.get());
             addSmartSchemasToGemini();
+        }
+
+        if (actual.equals(SCHEMA_STORAGE_INITIALIZED)) {
+            Entity guiEntity = this.entityManager.getEntity(EntityGUIRef.NAME);
+            Entity guiField = this.entityManager.getEntity(FieldGUIRef.NAME);
+            schemaManagerInit.addEntityFieldsToDelete(guiEntity.getField(EntityGUIRef.FIELDS.ENTITY));
+            schemaManagerInit.addEntityFieldsToDelete(guiField.getField(FieldGUIRef.FIELDS.FIELD));
         }
 
         if (actual.equals(FRAMEWORK_SCHEMA_RECORDS_INITIALIZED)) {
@@ -60,14 +75,28 @@ public class GuiModule implements GeminiModule {
         }
     }
 
-    private LinkedHashMap<SmartModule, SmartSchemaWrapper> loadSmartSchemas() throws GeminiException {
+    @Override
+    public void onSchemasEntityRecords(EntityOperationContext entityOperationContext) {
+        entityOperationContext.putFlag(DYNAMIC_SCHEMA_CONTEXT_FLAG);
+    }
+
+    private LinkedHashMap<SmartModule, SmartSchemaWrapper> loadSmartSchemas(Transaction transaction) throws GeminiException {
         loadSmartModules();
-        return smartModuleManagerInit.loadSmartResources(smartModules);
+        return smartModuleManagerInit.loadSmartResources(smartModules, transaction);
     }
 
     private void addSmartSchemasToGemini() {
-        Map<ModuleBase, RawSchema> rawSchemas = smartSchemas.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, s -> s.getValue().getSmartSchema().getRawSchema(s.getKey())));
-        this.schemaManagerInit.addExternalSchemas(rawSchemas);
+        Map<ModuleBase, RawSchema> rawStaticSchemas = new HashMap<>();
+        for (Map.Entry<SmartModule, SmartSchemaWrapper> entry : smartSchemas.entrySet()) {
+            SmartModule module = entry.getKey();
+            if (!module.isDynamic()) {
+                SmartSchemaWrapper wrapper = entry.getValue();
+                SmartSchema smartSchema = wrapper.getSmartSchema();
+                RawSchema optRawSchema = smartSchema.getRawSchema(module);
+                rawStaticSchemas.put(module, optRawSchema);
+            }
+        }
+        this.schemaManagerInit.addExternalSchemas(rawStaticSchemas);
     }
 
     private void loadSmartModules() {

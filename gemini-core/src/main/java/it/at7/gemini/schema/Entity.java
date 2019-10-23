@@ -121,7 +121,7 @@ public class Entity {
         return RecordConverters.entityRecordFromMap(this, copyDefaultRecord());
     }
 
-    public Set<EntityField> getALLEntityFields() {
+    public Set<EntityField> getAllRootEntityFields() {
         return Stream.concat(dataFields.stream(), metaFields.stream()).collect(collectingAndThen(Collectors.toSet(), Collections::unmodifiableSet));
     }
 

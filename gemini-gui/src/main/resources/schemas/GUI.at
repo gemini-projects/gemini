@@ -45,5 +45,7 @@ ENTITY SideBarElem {
 ENTITY SmartModule {
     TEXT        name *
     BOOL        dynamic
+    TEXT        title
+    TEXT        description
     TEXT        schema
 }

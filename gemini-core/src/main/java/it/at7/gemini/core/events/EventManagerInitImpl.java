@@ -145,7 +145,7 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         Entity entity = record.getEntity();
         String entityName = entity.getName();
 
-        Set<EntityField> metaEntityFields = entity.getALLEntityFields();
+        Set<EntityField> metaEntityFields = entity.getAllRootEntityFields();
         for (EntityField field : metaEntityFields) {
 
             // interface methods have low priority that entity events

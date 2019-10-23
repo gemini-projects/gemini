@@ -19,6 +19,7 @@ import static it.at7.gemini.conf.State.PROVIDED_CLASSPATH_RECORDS_HANDLED;
 @Service
 public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     public static final Set<String> CORE_ENTITIES = Set.of(EntityRef.NAME, FieldRef.NAME);
+    public static final String DYNAMIC_SCHEMA_CONTEXT_FLAG = "DYNAMIC_SCHEMA_CONTEXT_FLAG";
 
     private SchemaManager schemaManager;
     private TransactionManager transactionManager;
@@ -62,8 +63,8 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     public EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
-        checkDynamicSchema(record);
-        checkEntity(record.getEntity());
+        checkDynamicSchema(record, entityOperationContext);
+        checkEntity(record.getEntity(), entityOperationContext);
         checkLogicalKey(record);
         Optional<EntityRecord> rec = persistenceEntityManager.getEntityRecordByLogicalKey(record, transaction);
         if (!rec.isPresent()) {
@@ -76,9 +77,9 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     public EntityRecord putOrUpdate(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
-        checkDynamicSchema(record);
+        checkDynamicSchema(record, entityOperationContext);
         Entity entity = record.getEntity();
-        notAllowedOnClosedDomainEntity(entity);
+        notAllowedOnClosedDomainEntity(entity, entityOperationContext);
         if (entity.isOneRecord())
             return updateOneRecordEntity(record, entityOperationContext, transaction);
 
@@ -110,8 +111,8 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     public EntityRecord update(Collection<? extends FieldValue> logicalKey, EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
-        checkDynamicSchema(record);
-        notAllowedOnClosedDomainEntity(record.getEntity());
+        checkDynamicSchema(record, entityOperationContext);
+        notAllowedOnClosedDomainEntity(record.getEntity(), entityOperationContext);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(record.getEntity(), logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             // can update
@@ -124,8 +125,8 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     public EntityRecord update(UUID uuid, EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
-        checkDynamicSchema(record);
-        notAllowedOnClosedDomainEntity(record.getEntity());
+        checkDynamicSchema(record, entityOperationContext);
+        notAllowedOnClosedDomainEntity(record.getEntity(), entityOperationContext);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(record.getEntity(), uuid, transaction);
         if (persistedRecordOpt.isPresent()) {
             EntityRecord persistedRecord = persistedRecordOpt.get();
@@ -146,8 +147,8 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
     private EntityRecord updateRecordByUsingID(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         checkEnabledState();
-        checkDynamicSchema(record);
-        notAllowedOnClosedDomainEntity(record.getEntity());
+        checkDynamicSchema(record, entityOperationContext);
+        notAllowedOnClosedDomainEntity(record.getEntity(), entityOperationContext);
         return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, record);
     }
 
@@ -159,8 +160,8 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
     @Override
     public EntityRecord delete(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
-        checkDynamicSchema(record.getEntity());
-        checkEntity(record.getEntity());
+        checkDynamicSchema(record.getEntity(), entityOperationContext);
+        checkEntity(record.getEntity(), entityOperationContext);
         if (record.hasID()) {
             return deleteRecordHandlingEvents(transaction, entityOperationContext, record);
         }
@@ -172,8 +173,8 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
     @Override
     public EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
-        checkDynamicSchema(entity);
-        checkEntity(entity);
+        checkDynamicSchema(entity, entityOperationContext);
+        checkEntity(entity, entityOperationContext);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByLogicalKey(entity, logicalKey, transaction);
         if (persistedRecordOpt.isPresent()) {
             return deleteRecordHandlingEvents(transaction, entityOperationContext, persistedRecordOpt.get());
@@ -183,8 +184,8 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
     @Override
     public EntityRecord delete(Entity entity, UUID uuid, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
-        checkDynamicSchema(entity);
-        checkEntity(entity);
+        checkDynamicSchema(entity, entityOperationContext);
+        checkEntity(entity, entityOperationContext);
         Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordByUUID(entity, uuid, transaction);
         if (persistedRecordOpt.isPresent()) {
             return deleteRecordHandlingEvents(transaction, entityOperationContext, persistedRecordOpt.get());
@@ -254,7 +255,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     }
 
     private EntityRecord createNewEntityRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
-        this.checkFrameworkEntitiesCreation(record);
+        this.checkFrameworkEntitiesCreation(record, entityOperationContext);
         this.eventManager.beforeCreateRecord(record, entityOperationContext, transaction);
         this.eventManager.beforeInsertFields(record, entityOperationContext, transaction);
         EntityRecord newEntityRecord = persistenceEntityManager.createNewEntityRecord(record, transaction);
@@ -332,20 +333,28 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         }
     }
 
-    private void checkDynamicSchema(EntityRecord record) throws SchemaException {
-        checkDynamicSchema(record.getEntity());
+    private void checkDynamicSchema(EntityRecord record, EntityOperationContext entityOperationContext) throws SchemaException {
+        checkDynamicSchema(record.getEntity(), entityOperationContext);
     }
 
-    private void checkDynamicSchema(Entity entity) throws SchemaException {
+    private void checkDynamicSchema(Entity entity, EntityOperationContext entityOperationContext) throws SchemaException {
         DynamicSchema dynamicSchema = configurationService.getDynamicSchema();
+        String name = entity.getName();
         switch (dynamicSchema) {
             case ALL:
                 break;
+            case MODULE:
+                if (stateManager.getActualState().compareTo(State.INITIALIZED) >= 0
+                        && CORE_ENTITIES.contains(name)
+                        && !entityOperationContext.hasFlag(DYNAMIC_SCHEMA_CONTEXT_FLAG)) {
+                    throw SchemaException.DYNAMIC_SCHEMA_NOT_ENABLED(name);
+                }
+                break;
             case DISABLED:
-                String name = entity.getName();
                 if (stateManager.getActualState().compareTo(State.INITIALIZED) >= 0 && CORE_ENTITIES.contains(name)) {
                     throw SchemaException.DYNAMIC_SCHEMA_NOT_ENABLED(name);
                 }
+                break;
         }
     }
 
@@ -360,23 +369,23 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         }
     }
 
-    private void checkFrameworkEntitiesCreation(EntityRecord record) throws SchemaException {
+    private void checkFrameworkEntitiesCreation(EntityRecord record, EntityOperationContext entityOperationContext) throws SchemaException {
         String entityName = record.getEntity().getName();
         State actualState = stateManager.getActualState();
         if (actualState.compareTo(PROVIDED_CLASSPATH_RECORDS_HANDLED) >= 0) {
             // cannot create core entity there
-            if (CORE_ENTITIES.contains(entityName))
+            if (CORE_ENTITIES.contains(entityName) && !entityOperationContext.hasFlag(DYNAMIC_SCHEMA_CONTEXT_FLAG))
                 throw SchemaException.FRAMEWORK_SCHEMA_RECORDS_NOT_MODIFIABLE_THERE(actualState.name());
         }
     }
 
-    private void checkEntity(Entity entity) throws EntityException {
+    private void checkEntity(Entity entity, EntityOperationContext entityOperationContext) throws EntityException {
         notAllowedyOnSingleRecordEntity(entity);
-        notAllowedOnClosedDomainEntity(entity);
+        notAllowedOnClosedDomainEntity(entity, entityOperationContext);
     }
 
-    private void notAllowedOnClosedDomainEntity(Entity entity) throws EntityException {
-        if (entity.isClosedDomain()) {
+    private void notAllowedOnClosedDomainEntity(Entity entity, EntityOperationContext entityOperationContext) throws EntityException {
+        if (entity.isClosedDomain() && !entityOperationContext.hasFlag(DYNAMIC_SCHEMA_CONTEXT_FLAG)) {
             throw EntityException.API_NOT_ALLOWED_ON_CLOSED_DOMAIN(entity.getName());
         }
     }

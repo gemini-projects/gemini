@@ -47,4 +47,8 @@ public interface SmartModule extends ModuleBase {
         }
         return "";
     }
+
+    default String getDEFAULTSchemaResourceLocation() {
+        return "classpath:/smart-schema/SMART_SCHEMA_DEFAULT.yaml";
+    }
 }

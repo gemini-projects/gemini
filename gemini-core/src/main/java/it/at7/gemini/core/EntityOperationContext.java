@@ -1,8 +1,6 @@
 package it.at7.gemini.core;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * A class that is used to provide a contex to the EntityManager Operations. Contexts allows custom Gemini Modules
@@ -13,13 +11,16 @@ import java.util.Optional;
 public class EntityOperationContext {
     public static final EntityOperationContext EMPTY = new EntityOperationContext();
     private final Map<String, Object> moduleContexts;
+    private final Set<String> contextFlag;
+
 
     public EntityOperationContext() {
         this.moduleContexts = new HashMap<>();
+        this.contextFlag = new HashSet<>();
     }
 
     @SuppressWarnings("unchecked")
-    public <T> Optional<T> getModuleEntityOpContext(GeminiModule module) {
+    public <T> Optional<T> getModuleEntityOpContext(ModuleBase module) {
         return getModuleEntityOpContext(module.getName());
     }
 
@@ -28,8 +29,15 @@ public class EntityOperationContext {
         return (Optional<T>) Optional.ofNullable(moduleContexts.get(moduleName));
     }
 
-
-    public void putModuleEntityOpContext(GeminiModule module, Object context) {
+    public void putModuleEntityOpContext(ModuleBase module, Object context) {
         moduleContexts.put(module.getName(), context);
+    }
+
+    public void putFlag(String flagName) {
+        contextFlag.add(flagName.toUpperCase());
+    }
+
+    public boolean hasFlag(String flagName) {
+        return contextFlag.contains(flagName.toUpperCase());
     }
 }

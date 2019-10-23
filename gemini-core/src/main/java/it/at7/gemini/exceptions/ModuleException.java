@@ -1,20 +1,24 @@
 package it.at7.gemini.exceptions;
 
 public class ModuleException extends GeminiException {
-    ModuleException(String message) {
-        super(message);
+
+    public enum Code {
+        MODULE_NOT_FOUND,
     }
 
-    public static  ModuleException NOT_FOUND(String modelName){
-        return new ModuleException(String.format("Module %s not found", modelName));
+    public ModuleException(Code erroCodeName, String message) {
+        super(erroCodeName.name(), message);
     }
 
-    public  static ModuleException NOT_EDITABLE_MODULE(String modelName) {
-        return new ModuleException(String.format("Module %s not is not editable", modelName));
+    public ModuleNotFound MODULE_NOT_FOUND(String moduleName) {
+        return new ModuleNotFound(Code.MODULE_NOT_FOUND, moduleName);
     }
 
-    public  static ModuleException NEED_MODULE(String modelName) {
-        return new ModuleException(String.format("Module %s not is not editable", modelName));
+    public static class ModuleNotFound extends ModuleException {
+        public ModuleNotFound(Code errorCode, String message) {
+            super(errorCode, message);
+        }
     }
+
 }
 

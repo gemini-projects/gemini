@@ -19,7 +19,6 @@ public class EntityField extends Field {
     private final Scope scope;
     private final String interfaceName;
     private final int lkOrder;
-    private Object idValue;
 
     public EntityField(Entity entity, FieldType fieldType, String fieldName, boolean isLogicalKey, int lkOrder, String entityRefName, String interfaceName, Scope scope) {
         super(fieldType, fieldName, entityRefName);
@@ -52,24 +51,8 @@ public class EntityField extends Field {
         return lkOrder;
     }
 
-    /**
-     * Optional setter, used to set an ID Value to better identity the field. ID should be setted accordingly to the
-     * persistence strategy.
-     * Useful for example for schema checking.
-     *
-     * @param idValue
-     */
-    public void setFieldIDValue(Object idValue) {
-        this.idValue = idValue;
-    }
-
     public Scope getScope() {
         return scope;
-    }
-
-    @Nullable
-    public Object getIDValue() {
-        return idValue;
     }
 
     @Nullable

@@ -1,6 +1,5 @@
 package it.at7.gemini.core.persistence;
 
-import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.Transaction;
 import it.at7.gemini.core.TransactionImpl;
 import it.at7.gemini.exceptions.GeminiException;
@@ -52,7 +51,7 @@ public class PostgresPersistenceSchemaManager implements PersistenceSchemaManage
     }
 
     @Override
-    public void deleteUnnecessaryEntites(Collection<Entity> entities, Transaction transaction) throws GeminiException {
+    public void deleteUnnecessaryEntites(Collection<Entity> entities, List<EntityField> schemaFieldsToDelete, Transaction transaction) throws GeminiException {
         try {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
             // NB - we are using fields that should be existed in entity/fields (generalize ? )
@@ -72,9 +71,16 @@ public class PostgresPersistenceSchemaManager implements PersistenceSchemaManage
                 if (found) {
                     String deleteEntitiesSql = String.format("DELETE FROM entity WHERE %s NOT IN (:ids)", Field.ID_NAME);
                     String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE entity NOT IN (:ids)");
-                    // TODO ed i record dipendenti ? forse conviene passare dal manager ?
                     transactionImpl.executeUpdate(deleteEntitiesSql, parameters);
                     transactionImpl.executeUpdate(deleteEntitiesFieldsSql, parameters);
+                    for (EntityField entityField : schemaFieldsToDelete) {
+                        if (entityField.getEntityRef() != null && entityField.getEntityRef().getName().toUpperCase().equals("ENTITY")) {
+                            String deletesql = String.format("DELETE FROM %s WHERE %s NOT IN (SELECT _id from entity)", getEntityNameForSQL(entityField.getEntity()), fieldName(entityField, true));
+                            transactionImpl.executeUpdate(deletesql);
+                        } else {
+                            logger.warn("Found a Field to Delete that is not a foreign key to Entity: {} - {}", entityField.getEntity().getName(), entityField.getName());
+                        }
+                    }
                 }
             });
 
@@ -122,14 +128,13 @@ public class PostgresPersistenceSchemaManager implements PersistenceSchemaManage
     }
 
     @Override
-    public void deleteUnnecessaryFields(Entity entity, List<EntityRecord> fields, Transaction transaction) throws GeminiException {
+    public void deleteUnnecessaryFields(Entity entity, List<Object> fields, List<EntityField> schemaFieldsToDelete, Transaction transaction) throws GeminiException {
         try {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
-            List<Long> fieldsID = fields.stream().map(EntityRecord::getID).map(Long.class::cast).collect(toList());
-            if (!fieldsID.isEmpty()) {
+            if (!fields.isEmpty()) {
                 String sql = String.format("SELECT name, type FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
                 HashMap<String, Object> parameters = new HashMap<>();
-                parameters.put("ids", fieldsID);
+                parameters.put("ids", fields);
                 parameters.put("entityId", entity.getIDValue());
                 transactionImpl.executeQuery(sql, parameters, rs -> {
 
@@ -147,6 +152,17 @@ public class PostgresPersistenceSchemaManager implements PersistenceSchemaManage
                         transactionImpl.executeUpdate(drop);
                         */
                     if (rs.next()) {
+                        for (EntityField entityField : schemaFieldsToDelete) {
+                            if (entityField.getEntityRef() != null && entityField.getEntityRef().getName().toUpperCase().equals("FIELD")) {
+                                String deletesql = String.format("" +
+                                                "DELETE FROM %s WHERE %s IN ( " +
+                                                "   SELECT _id FROM field WHERE _id NOT IN (:ids) AND entity = :entityId )",
+                                        getEntityNameForSQL(entityField.getEntity()), fieldName(entityField, true));
+                                transactionImpl.executeUpdate(deletesql, parameters);
+                            } else {
+                                logger.warn("Found a Field to Delete that is not a foreign key to Entity: {} - {}", entityField.getEntity().getName(), entityField.getName());
+                            }
+                        }
                         String deleteEntitiesFieldsSql = String.format("DELETE FROM field WHERE %s NOT IN (:ids) AND entity = :entityId", Field.ID_NAME);
                         transactionImpl.executeUpdate(deleteEntitiesFieldsSql, parameters);
                     }

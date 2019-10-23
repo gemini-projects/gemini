@@ -108,7 +108,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
             Iterator<EntityRecord> recordIterator = records.iterator();
             EntityRecord first = recordIterator.next();
             Entity targetEntity = first.getEntity();
-            for (EntityField f : targetEntity.getALLEntityFields()) {
+            for (EntityField f : targetEntity.getAllRootEntityFields()) {
                 if (f.getType().equals(FieldType.ENTITY_EMBEDED)) {
                     throw new GeminiRuntimeException("Batch Insert - Entity with embedable not supported yet");
                 }
@@ -502,7 +502,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
             if (transactionCacheOpt.isPresent()) {
                 transactionCacheOpt.get().put(er);
             }
-            for (EntityField field : entity.getALLEntityFields()) {
+            for (EntityField field : entity.getAllRootEntityFields()) {
                 FieldType type = field.getType();
                 String fieldName = fieldName(field, false);
                 boolean handled = false;
@@ -630,7 +630,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
 
     private String makeInsertNamedQuery(Entity entity) {
         StringBuilder sql = new StringBuilder(String.format("INSERT INTO %s", wrapDoubleQuotes(entity.getName().toLowerCase())));
-        List<EntityField> sortedFields = sortFields(entity.getALLEntityFields());
+        List<EntityField> sortedFields = sortFields(entity.getAllRootEntityFields());
         boolean first = true;
         if (!entity.isEmbedable()) {
             sql.append("(").append(Field.UUID_NAME);

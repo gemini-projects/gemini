@@ -3,6 +3,7 @@ package it.at7.gemini.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.at7.gemini.core.persistence.PersistenceEntityFilterUtilityService;
+import it.at7.gemini.exceptions.EntityRecordException;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.exceptions.GeminiGenericException;
 import it.at7.gemini.schema.Entity;
@@ -17,6 +18,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,17 +34,27 @@ public class SmartModuleManagerInitImpl implements SmartModuleManagerInit {
     private final ApplicationContext applicationContext;
     private final EntityManager entityManager;
     private final SchemaManagerInit schemaManagerInit;
+    private final SchemaManager schemaManager;
     private final PersistenceEntityFilterUtilityService persistenceEntityFilterUtilityService;
+
+    private static final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
     @Autowired
     public SmartModuleManagerInitImpl(ApplicationContext applicationContext,
                                       EntityManager entityManager,
                                       SchemaManagerInit schemaManagerInit,
+                                      SchemaManager schemaManager,
                                       PersistenceEntityFilterUtilityService persistenceEntityFilterUtilityService) {
         this.applicationContext = applicationContext;
         this.entityManager = entityManager;
         this.schemaManagerInit = schemaManagerInit;
+        this.schemaManager = schemaManager;
         this.persistenceEntityFilterUtilityService = persistenceEntityFilterUtilityService;
+    }
+
+    @Override
+    public SmartSchema parseSmartModule(String text) throws IOException {
+        return yamlMapper.readValue(text, SmartSchema.class);
     }
 
     @Override
@@ -52,9 +64,32 @@ public class SmartModuleManagerInitImpl implements SmartModuleManagerInit {
             SmartModule module = entry.getKey();
             SmartSchemaWrapper schemaWrapper = entry.getValue();
 
-            SmartModuleEntity mEntity = SmartModuleEntity.of(module, schemaWrapper.getSmartSchemaAsString());
-            EntityRecord er = mEntity.toEntityRecord();
-            this.entityManager.putOrUpdate(er, operationContext, transaction);
+            if (!module.isDynamic()) {
+                // static module have been handled by Gemini previous states
+                SmartModuleEntity mEntity = SmartModuleEntity.of(module, schemaWrapper.getSmartSchema(), schemaWrapper.getSmartSchemaAsString());
+                EntityRecord er = mEntity.toEntityRecord();
+                this.entityManager.putOrUpdate(er, operationContext, transaction);
+            } else {
+                // dynamic module need to be checked and initialized once Gemini is UP
+                // so let's check if we are in dynamic module initialization (creating the default schema)
+                SmartSchema schema;
+                try {
+                    EntityRecord dynamicSmartModule = this.entityManager.get(SmartModuleEntityRef.NAME, module.getName().toUpperCase(), transaction);
+                    String schemaString = dynamicSmartModule.get(SmartModuleEntityRef.FIELDS.SCHEMA);
+                    try {
+                        schema = yamlMapper.readValue(schemaString, SmartSchema.class);
+                    } catch (IOException e) {
+                        throw GeminiGenericException.wrap(e);
+                    }
+                    // create schema
+                } catch (EntityRecordException.LkNotFoundException e) {
+                    SmartModuleEntity mEntity = SmartModuleEntity.of(module, schemaWrapper.getSmartSchema(), schemaWrapper.getSmartSchemaAsString());
+                    EntityRecord er = mEntity.toEntityRecord();
+                    this.entityManager.putIfAbsent(er, operationContext, transaction);
+                    schema = schemaWrapper.getSmartSchema();
+                }
+                schemaManager.addOrUpdateDynamicSchema(module, schema.getRawSchema(module), operationContext, transaction);
+            }
         }
         if (!schemasByModule.isEmpty()) {
             Entity smartModuleEntity = entityManager.getEntity(SmartModuleEntityRef.NAME);
@@ -73,7 +108,7 @@ public class SmartModuleManagerInitImpl implements SmartModuleManagerInit {
     }
 
     @Override
-    public LinkedHashMap<SmartModule, SmartSchemaWrapper> loadSmartResources(List<SmartModule> modulesInOrder) throws GeminiException {
+    public LinkedHashMap<SmartModule, SmartSchemaWrapper> loadSmartResources(List<SmartModule> modulesInOrder, Transaction transaction) throws GeminiException {
         LinkedHashMap<SmartModule, SmartSchemaWrapper> smartSchemas = new LinkedHashMap<>();
         try {
             for (SmartModule module : modulesInOrder) {
@@ -81,25 +116,31 @@ public class SmartModuleManagerInitImpl implements SmartModuleManagerInit {
                     String location = module.getSchemaResourceLocation();
                     Resource resource = applicationContext.getResource(location);
                     if (resource.exists()) {
-                        InputStream schemaStream = resource.getInputStream();
                         logger.info("Smart Schema definition found for Smart Module {}: location {}", module.getName(), location);
 
-                        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-                        SmartSchema smartSchema = yamlMapper.readValue(schemaStream, SmartSchema.class);
+                        smartSchemas.put(module, loadSmartSchemaFromResource(yamlMapper, resource));
 
-                        Scanner scanner = new Scanner(resource.getInputStream()).useDelimiter("\\A");
-                        String smartSchemaString = scanner.hasNext() ? scanner.next() : "";
-
-                        smartSchemas.put(module, SmartSchemaWrapper.of(smartSchema, smartSchemaString));
                     } else {
                         logger.info("NO Smart Schema definition found for Smart Module {}: location {}", module.getName(), location);
                     }
+                } else {
+                    Resource resource = applicationContext.getResource(module.getDEFAULTSchemaResourceLocation());
+                    assert resource.exists();
+                    smartSchemas.put(module, loadSmartSchemaFromResource(yamlMapper, resource));
                 }
             }
             return smartSchemas;
         } catch (Exception e) {
             throw GeminiGenericException.wrap(e);
         }
+    }
+
+    private SmartSchemaWrapper loadSmartSchemaFromResource(ObjectMapper yamlMapper, Resource resource) throws IOException {
+        InputStream schemaStream = resource.getInputStream();
+        SmartSchema smartSchema = yamlMapper.readValue(schemaStream, SmartSchema.class);
+        Scanner scanner = new Scanner(resource.getInputStream()).useDelimiter("\\A");
+        String smartSchemaString = scanner.hasNext() ? scanner.next() : "";
+        return SmartSchemaWrapper.of(smartSchema, smartSchemaString);
     }
 
     private void handleGUIEntityRecords(Map.Entry<SmartModule, SmartSchemaWrapper> moduleSchemaEntry, Transaction transaction) throws GeminiException {

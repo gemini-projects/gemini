@@ -468,6 +468,15 @@ public interface EntityManager {
         });
     }
 
+    default EntityRecord get(String entityName, Object logicalKey, Transaction transaction) throws GeminiException {
+        return get(getEntity(entityName), logicalKey, transaction);
+    }
+
+    default EntityRecord get(Entity entity, Object lk, Transaction transaction) throws GeminiException {
+        EntityReferenceRecord entityReferenceRecord = FieldConverters.logicalKeyFromObject(entity, lk);
+        return get(entity, entityReferenceRecord, transaction);
+    }
+
     EntityRecord get(Entity entity, Collection<? extends FieldValue> logicalKey, Transaction transaction) throws GeminiException;
 
     EntityRecord get(Entity e, UUID uuid) throws GeminiException;
