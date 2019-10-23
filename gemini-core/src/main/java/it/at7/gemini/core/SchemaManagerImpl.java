@@ -177,8 +177,8 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
             persistenceSchemaManager.handleSchemaStorage(transaction, targetEntities.values()); // create storage for entities
             SchemaEntityRecords schemaEntityRecords = handleSchemasEntityRecords(targetEntities.values(), transaction);// update framework records (ENTITY, FIELD, ..)
             deleteUnnecessaryFrameworkEntityRecords(targetEntities.values(), allNewEntities.values(), schemaEntityRecords, transaction);
-            loadEntityRecordsForFrameworkEntities(transaction); // reload entity record and assign them to framework objects
             this.entities = allNewEntities;
+            loadEntityRecordsForFrameworkEntities(transaction); // reload entity record and assign them to framework objects
         }
         this.externalDynamicSchema = newExternalDynamicSchema;
     }
