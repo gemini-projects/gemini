@@ -31,5 +31,5 @@ public interface SchemaManager {
 
     void addOrUpdateDynamicSchema(ModuleBase module, RawSchema rawSchema, EntityOperationContext operationContext, Transaction transaction) throws GeminiException;
 
-    void updateDynamicSchema(ModuleBase module, RawSchema rawSchema, Transaction transaction) throws GeminiException;
+    void updateDynamicSchema(ModuleBase module, RawSchema rawSchema, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 }

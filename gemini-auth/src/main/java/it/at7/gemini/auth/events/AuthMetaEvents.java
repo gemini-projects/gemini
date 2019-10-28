@@ -96,7 +96,7 @@ public class AuthMetaEvents implements SchemaManagerInitListener, RestAPIControl
      * Extract the logged request user and add it to the EntityOperation Context (to be used when insert/update)
      */
     @Override
-    public void onEntityOperationContextCreate(String entity, Object body, HttpServletRequest request, EntityOperationContext entityOperationContext) {
+    public void onEntityOperationContextCreate(HttpServletRequest request, EntityOperationContext entityOperationContext, String entity, Object body) {
         String remoteUser = request.getRemoteUser();
         AuthEntityOperationContext opContext = new AuthEntityOperationContext(remoteUser);
         entityOperationContext.putModuleEntityOpContext(authModule, opContext);

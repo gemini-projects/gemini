@@ -27,9 +27,10 @@ import static it.at7.gemini.api.RestAPIController.API_URL;
 
 @RestController
 @RequestMapping(API_URL + "/{entity}")
-public class RestAPIController {
+public class RestAPIController implements RestAPIControllerInterface {
 
     public static final String API_URL = "/api";
+    public static final String ENTITY_URL = API_URL + "/{entity}";
 
     private EntityManager entityManager;
     private GeminiConfigurationService configurationService;
@@ -79,7 +80,7 @@ public class RestAPIController {
         ensurePathsAreConsistent(paths, entity);
         Map<String, String[]> parameters = request.getParameterMap(); // query string params
         List<String> geminiHeader = getGeminiHeader(request);
-        EntityOperationContext entityOperationContext = createEntityOperationContext(entityString, body, request);
+        EntityOperationContext entityOperationContext = createEntityOperationContext(request, entityString, body);
         if (paths.size() == 2) {
             // this is a root entity requet - METHOD ALLOWED POST AND GET (for list)
             switch (method) {
@@ -133,10 +134,11 @@ public class RestAPIController {
         throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
     }
 
-    private EntityOperationContext createEntityOperationContext(String entity, Object body, HttpServletRequest request) {
+    @Override
+    public EntityOperationContext createEntityOperationContext(HttpServletRequest request, String entity, Object body) {
         EntityOperationContext entityOperationContext = new EntityOperationContext();
         for (RestAPIControllerListener apiControllerListener : apiListenersManager.getApiControllerListeners()) {
-            apiControllerListener.onEntityOperationContextCreate(entity, body, request, entityOperationContext);
+            apiControllerListener.onEntityOperationContextCreate(request, entityOperationContext, entity, body);
         }
         return entityOperationContext;
     }

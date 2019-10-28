@@ -1,6 +1,7 @@
 package it.at7.gemini.auth.api;
 
 
+import it.at7.gemini.auth.core.GeminiSecurityConfigurationInitImpl;
 import it.at7.gemini.auth.core.NoRedirectStrategy;
 import it.at7.gemini.auth.core.TokenAuthenticationFilter;
 import it.at7.gemini.auth.core.TokenAuthenticationProvider;
@@ -8,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +28,9 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static it.at7.gemini.auth.api.LoginController.LOGIN_PATH;
 import static it.at7.gemini.auth.api.LoginController.REFRESH_TOKEN_PATH;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -33,17 +39,28 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class GeminiSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    private final TokenAuthenticationProvider authenticationProvider;
+
+    private RequestMatcher PUBLIC_URLS;
+    private RequestMatcher PROTECTED_URLS;
 
     @Autowired
-    private TokenAuthenticationProvider authenticationProvider;
+    public GeminiSecurityConfiguration(TokenAuthenticationProvider authenticationProvider, GeminiSecurityConfigurationInitImpl geminiSecurityConfigurationInit) {
+        this.authenticationProvider = authenticationProvider;
+        makePublicURLS(geminiSecurityConfigurationInit.getUrls());
+    }
 
-    private static final RequestMatcher PUBLIC_URLS = new OrRequestMatcher(
-            new AntPathRequestMatcher(LOGIN_PATH),
-            new AntPathRequestMatcher(REFRESH_TOKEN_PATH)
-    );
-    private static final RequestMatcher PROTECTED_URLS = new NegatedRequestMatcher(PUBLIC_URLS);
-
+    private void makePublicURLS(List<String> publicUrls) {
+        List<RequestMatcher> reList = new ArrayList<>();
+        reList.add(new AntPathRequestMatcher(LOGIN_PATH));
+        reList.add(new AntPathRequestMatcher(REFRESH_TOKEN_PATH));
+        publicUrls.forEach(u -> reList.add(new AntPathRequestMatcher(u)));
+        this.PUBLIC_URLS = new OrRequestMatcher(reList);
+        this.PROTECTED_URLS = new NegatedRequestMatcher(PUBLIC_URLS);
+    }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) {
@@ -58,6 +75,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+                .cors().and()
                 .sessionManagement().sessionCreationPolicy(STATELESS)
                 .and()
                 .exceptionHandling()
@@ -68,7 +86,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .anyRequest()
                 .authenticated().and()
-                .cors().and()
                 .csrf().disable()
                 .formLogin().disable()
                 .httpBasic().disable()
@@ -82,7 +99,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             public void addCorsMappings(CorsRegistry registry) {
                 registry
                         .addMapping("/**")
-                        .allowedMethods("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS");
+                        .allowedMethods("*")
+                        .allowedHeaders("*")
+                        .allowedOrigins("*");
             }
         };
     }

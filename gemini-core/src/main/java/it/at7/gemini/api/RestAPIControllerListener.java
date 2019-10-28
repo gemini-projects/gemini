@@ -1,6 +1,7 @@
 package it.at7.gemini.api;
 
 import it.at7.gemini.core.EntityOperationContext;
+import org.springframework.lang.Nullable;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,5 +17,5 @@ public interface RestAPIControllerListener {
      * @param request                full request
      * @param entityOperationContext the entity operation context you can extend
      */
-    void onEntityOperationContextCreate(String entity, Object body, HttpServletRequest request, EntityOperationContext entityOperationContext);
+    void onEntityOperationContextCreate(HttpServletRequest request, EntityOperationContext entityOperationContext, @Nullable String entity, @Nullable Object body);
 }

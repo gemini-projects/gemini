@@ -148,12 +148,8 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
 
-    public synchronized void updateDynamicSchema(ModuleBase module, RawSchema rawSchema, Transaction transaction) throws GeminiException {
-        if (!this.externalDynamicSchema.containsKey(module)) {
-
-        }
-        EntityOperationContext operationContextForInitSchema = getOperationContextForInitSchema();
-        addOrUpdateDynamicSchema(module, rawSchema, operationContextForInitSchema, transaction);
+    public synchronized void updateDynamicSchema(ModuleBase module, RawSchema rawSchema, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        addOrUpdateDynamicSchema(module, rawSchema, entityOperationContext, transaction);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package it.at7.gemini.gui.api;
 
 
+import it.at7.gemini.api.RestAPIControllerInterface;
 import it.at7.gemini.core.*;
 import it.at7.gemini.dsl.entities.RawSchema;
 import it.at7.gemini.exceptions.GeminiException;
@@ -10,8 +11,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Optional;
+
+import static it.at7.gemini.core.EntityManagerImpl.DYNAMIC_SCHEMA_CONTEXT_FLAG;
 
 @RestController
 public class DynamicSmartModule {
@@ -21,22 +25,26 @@ public class DynamicSmartModule {
     private final SchemaManager schemaManager;
     private final TransactionManager transactionManager;
     private final EntityManager entityManager;
+    private final RestAPIControllerInterface restAPIControllerInterface;
 
     public DynamicSmartModule(SmartModuleManagerInit smartModuleManagerInit,
                               SchemaManager schemaManager,
                               TransactionManager transactionManager,
-                              EntityManager entityManager) {
+                              EntityManager entityManager,
+                              RestAPIControllerInterface restAPIControllerInterface) {
         this.smartModuleManagerInit = smartModuleManagerInit;
         this.schemaManager = schemaManager;
         this.transactionManager = transactionManager;
         this.entityManager = entityManager;
+        this.restAPIControllerInterface = restAPIControllerInterface;
     }
 
 
     @PutMapping(value = PATH, consumes = MediaType.TEXT_PLAIN_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public String updateSchema(@PathVariable("module_name") String moduleName,
-                               @RequestBody String yamlString) throws GeminiException {
+                               @RequestBody String yamlString,
+                               HttpServletRequest request) throws GeminiException {
         try {
             SmartSchema smartSchema = this.smartModuleManagerInit.parseSmartModule(yamlString);
             Optional<ModuleBase> module = schemaManager.getModule(moduleName);
@@ -46,10 +54,12 @@ public class DynamicSmartModule {
             RawSchema rawSchema = smartSchema.getRawSchema(smartModule);
             transactionManager.executeInSingleTrasaction(t ->
             {
-                this.schemaManager.updateDynamicSchema(moduleBase, rawSchema, t);
+                EntityOperationContext entityOperationContext = restAPIControllerInterface.createEntityOperationContext(request);
+                entityOperationContext.putFlag(DYNAMIC_SCHEMA_CONTEXT_FLAG);
+                this.schemaManager.updateDynamicSchema(moduleBase, rawSchema, entityOperationContext, t);
                 SmartModuleEntity mEntity = SmartModuleEntity.of(smartModule, smartSchema, yamlString);
                 EntityRecord entityRecord = mEntity.toEntityRecord();
-                this.entityManager.update(entityRecord, new EntityOperationContext(), t);
+                this.entityManager.update(entityRecord, entityOperationContext, t);
             });
         } catch (IOException e) {
             return "RCAMADONNA";
