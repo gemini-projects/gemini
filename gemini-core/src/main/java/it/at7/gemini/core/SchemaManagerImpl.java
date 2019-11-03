@@ -1,6 +1,7 @@
 package it.at7.gemini.core;
 
 import it.at7.gemini.ModuleRawRecord;
+import it.at7.gemini.conf.SchemaMode;
 import it.at7.gemini.conf.State;
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.core.persistence.PersistenceSchemaManager;
@@ -47,6 +48,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     private final PersistenceEntityManager persistenceEntityManager;
     private final GeminiConfigurationService geminiConfigurationService;
     private final EntityManagerImpl entityManager;
+    private final SchemaMode schemaMode;
 
     private Map<String, GeminiModule> geminiModules;
     private List<GeminiModule> geminiOrderedModules; // TODO check if it can be refactored or removed
@@ -73,6 +75,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         this.persistenceEntityManager = persistenceEntityManager;
         this.geminiConfigurationService = geminiConfigurationService;
         this.entityManager = entityManager;
+        schemaMode = this.geminiConfigurationService.getSchemaMode();
     }
 
     @Override
@@ -84,12 +87,8 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
     @Override
-    public void addExternalSchemas(Map<ModuleBase, RawSchema> rawSchemas) {
-        this.externalStaticSchema.putAll(rawSchemas);
-    }
-
-    @Override
     public void initializeSchemaStorage(Transaction transaction) throws GeminiException {
+        logger.info(String.format("Schema MODE: %s", schemaMode.name()));
         persistenceSchemaManager.beforeLoadSchema(transaction);
 
         Map<ModuleBase, RawSchema> allSchemasByBaseModule = new LinkedHashMap<>();
@@ -97,7 +96,17 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         allSchemasByBaseModule.putAll(this.externalStaticSchema);
 
         this.entities = checkSchemaAndCreateEntities(allSchemasByBaseModule);
-        persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
+
+        if (schemaMode.equals(SchemaMode.VALIDATE)) {
+            logger.info("Ignoring Persistence Schema Storage Handler");
+        } else {
+            persistenceSchemaManager.handleSchemaStorage(transaction, entities.values()); // create storage for entities
+        }
+    }
+
+    @Override
+    public void addExternalSchemas(Map<ModuleBase, RawSchema> rawSchemas) {
+        this.externalStaticSchema.putAll(rawSchemas);
     }
 
     @Override
@@ -109,11 +118,17 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, EntityRef.NAME);
         // entityRecordForHardCodedEntity(transaction, recordsByEntity, FieldRef.NAME);
         */
-        Collection<Entity> allEntities = entities.values();
-        SchemaEntityRecords schemaEntityRecords = handleSchemasEntityRecords(allEntities, transaction);// add core entityRecord i.e. ENTITY and FIELD
-        stateManager.changeState(State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED, Optional.of(transaction));
-        deleteUnnecessaryFrameworkEntityRecords(allEntities, allEntities, schemaEntityRecords, transaction);
-        createProvidedEntityRecords(transaction); // add entity record provided as resources
+        if (schemaMode.equals(SchemaMode.VALIDATE)) {
+            logger.info("Ignoring Schema Entity Records Handler");
+            stateManager.changeState(State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED, Optional.of(transaction));
+        } else {
+            Collection<Entity> currentEntities = entities.values();
+            SchemaEntityRecords schemaEntityRecords = handleSchemasEntityRecords(currentEntities, transaction);// add core entityRecord i.e. ENTITY and FIELD
+            stateManager.changeState(State.FRAMEWORK_SCHEMA_RECORDS_INITIALIZED, Optional.of(transaction));
+            // attention - here entities may be changed by outside modules tha injected dynamic modules/schema
+            deleteUnnecessaryFrameworkEntityRecords(currentEntities, entities.values(), schemaEntityRecords, transaction);
+            createProvidedEntityRecords(transaction); // add entity record provided as resources
+        }
         loadEntityRecordsForFrameworkEntities(transaction); // reload entity record and assign them to framework objects
         stateManager.changeState(State.PROVIDED_CLASSPATH_RECORDS_HANDLED, Optional.of(transaction));
     }
@@ -148,12 +163,18 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
 
+    @Override
     public synchronized void updateDynamicSchema(ModuleBase module, RawSchema rawSchema, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
-        addOrUpdateDynamicSchema(module, rawSchema, entityOperationContext, transaction);
+        dynamicSchemaHandler(module, rawSchema, entityOperationContext, transaction, DynamicSchemaState.STARTED);
     }
 
     @Override
-    public synchronized void addOrUpdateDynamicSchema(ModuleBase module, RawSchema rawSchema, EntityOperationContext operationContext, Transaction transaction) throws GeminiException {
+    public synchronized void initDynamicSchema(ModuleBase module, RawSchema rawSchema, EntityOperationContext operationContext, Transaction transaction) throws GeminiException {
+        dynamicSchemaHandler(module, rawSchema, operationContext, transaction, DynamicSchemaState.INITIALIZATION);
+
+    }
+
+    private synchronized void dynamicSchemaHandler(ModuleBase module, RawSchema rawSchema, EntityOperationContext operationContext, Transaction transaction, DynamicSchemaState dynamicState) throws GeminiException {
         logger.info(String.format("Adding Dynamic Schema for Module %s", module.getName()));
         Map<ModuleBase, RawSchema> allSchemasByBaseModule = new LinkedHashMap<>();
         allSchemasByBaseModule.putAll(this.geminiSchemas);
@@ -170,9 +191,12 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
             return rawSchema.getRawEntitiesByName().keySet().contains(entity.getName());
         }).collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
         if (!targetEntities.isEmpty()) {
-            persistenceSchemaManager.handleSchemaStorage(transaction, targetEntities.values()); // create storage for entities
-            SchemaEntityRecords schemaEntityRecords = handleSchemasEntityRecords(targetEntities.values(), transaction);// update framework records (ENTITY, FIELD, ..)
-            deleteUnnecessaryFrameworkEntityRecords(targetEntities.values(), allNewEntities.values(), schemaEntityRecords, transaction);
+            if (dynamicState.equals(DynamicSchemaState.STARTED) ||
+                    (dynamicState.equals(DynamicSchemaState.INITIALIZATION) && !schemaMode.equals(SchemaMode.VALIDATE))) {
+                persistenceSchemaManager.handleSchemaStorage(transaction, targetEntities.values()); // create storage for entities
+                SchemaEntityRecords schemaEntityRecords = handleSchemasEntityRecords(targetEntities.values(), transaction);// update framework records (ENTITY, FIELD, ..)
+                deleteUnnecessaryFrameworkEntityRecords(targetEntities.values(), allNewEntities.values(), schemaEntityRecords, transaction);
+            }
             this.entities = allNewEntities;
             loadEntityRecordsForFrameworkEntities(transaction); // reload entity record and assign them to framework objects
         }
@@ -429,7 +453,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                     InputStream schemaRecordStream = resource.getInputStream();
                     moduleRawRecord.addModuleRecords(RecordParser.parse(new InputStreamReader(schemaRecordStream)));
                 } else {
-                    logger.info("No module records definition found for module {}: location {}", module.getName(), location);
+                    // logger.info("No module records definition found for module {}: location {}", module.getName(), location);
                 }
                 RawSchema rawSchema = geminiSchemas.get(module);
                 if (rawSchema != null) {
@@ -445,7 +469,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
                             moduleRawRecord.addEntityRecords(rawEntity, specificResourceRecords);
                             // mergeModuleRecordsWithSpecificEntityRecords(moduleRecords, specificResourceRecords);
                         } else {
-                            logger.info("No entity records definition found for module/entity {}/{}: location {}", module.getName(), capitalizedEntityName, entityLocation);
+                            // logger.info("No entity records definition found for module/entity {}/{}: location {}", module.getName(), capitalizedEntityName, entityLocation);
                         }
                     }
                 }
@@ -663,5 +687,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         public void addFields(Entity entity, List<EntityRecord> fieldRecords) {
             fieldsByEntity.put(entity.getName().toUpperCase(), fieldRecords);
         }
+    }
+
+    enum DynamicSchemaState {
+        INITIALIZATION,
+        STARTED
     }
 }

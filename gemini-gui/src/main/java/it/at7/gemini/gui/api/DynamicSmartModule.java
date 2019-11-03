@@ -1,6 +1,7 @@
 package it.at7.gemini.gui.api;
 
 
+import it.at7.gemini.api.ApiError;
 import it.at7.gemini.api.RestAPIControllerInterface;
 import it.at7.gemini.core.*;
 import it.at7.gemini.dsl.entities.RawSchema;
@@ -10,6 +11,7 @@ import it.at7.gemini.schema.smart.SmartSchema;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -40,11 +42,11 @@ public class DynamicSmartModule {
     }
 
 
-    @PutMapping(value = PATH, consumes = MediaType.TEXT_PLAIN_VALUE)
+    @PutMapping(value = PATH, consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public String updateSchema(@PathVariable("module_name") String moduleName,
                                @RequestBody String yamlString,
-                               HttpServletRequest request) throws GeminiException {
+                               HttpServletRequest request) throws GeminiException, ApiError {
         try {
             SmartSchema smartSchema = this.smartModuleManagerInit.parseSmartModule(yamlString);
             Optional<ModuleBase> module = schemaManager.getModule(moduleName);
@@ -62,7 +64,7 @@ public class DynamicSmartModule {
                 this.entityManager.update(entityRecord, entityOperationContext, t);
             });
         } catch (IOException e) {
-            return "RCAMADONNA";
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
         }
         return "OK";
     }

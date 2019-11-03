@@ -69,4 +69,15 @@ public interface SchemaManagerInit {
      */
     void addEntityFieldsToDelete(EntityField entityField);
 
+
+    /**
+     * Initialize a Dynamic Schema.
+     *
+     * @param module
+     * @param rawSchema
+     * @param operationContext
+     * @param transaction
+     * @throws GeminiException
+     */
+    void initDynamicSchema(ModuleBase module, RawSchema rawSchema, EntityOperationContext operationContext, Transaction transaction) throws GeminiException;
 }

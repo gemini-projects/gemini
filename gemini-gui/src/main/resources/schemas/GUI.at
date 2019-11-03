@@ -23,12 +23,17 @@ ENTITY GUISettings {
     TEXT                displayName
     GuiSettingsType     type
     GENERIC_ENTITY_REF  genericRef
+    LONG                sorKey
 }
 
 ENTITY ONEREC SideBarSettings {
     BOOL     active
     TEXT     mode
     BOOL     isCollapsed
+}
+
+ENTITY ONEREC GeneralSettings {
+    TEXT    appName
 }
 
 ENTITY SideBarElemType IMPLEMENTS Domain
@@ -48,4 +53,9 @@ ENTITY SmartModule {
     TEXT        title
     TEXT        description
     TEXT        schema
+}
+
+ENTITY CustomComponents {
+    TEXT        name *
+    TEXT        description
 }

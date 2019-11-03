@@ -224,6 +224,9 @@ public class Entity {
     public void actualEntityRecord(EntityRecord e) {
         this.actualEntityRecord = e;
         this.isClosedDomain = e.getFieldOrDefault(EntityRef.FIELDS.CLOSED_DOMAIN, false);
+        if (idValue == null) {
+            idValue = e.getID();
+        }
     }
 
     /**

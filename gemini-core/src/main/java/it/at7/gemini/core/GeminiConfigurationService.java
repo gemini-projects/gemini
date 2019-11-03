@@ -1,6 +1,7 @@
 package it.at7.gemini.core;
 
 import it.at7.gemini.conf.DynamicSchema;
+import it.at7.gemini.conf.SchemaMode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -48,4 +49,12 @@ public class GeminiConfigurationService {
     public boolean isDevMode() {
         return devMode;
     }
+
+    @Value("${gemini.schema.mode:UPDATE}")
+    private String schemaMode;
+
+    public SchemaMode getSchemaMode() {
+        return SchemaMode.valueOf(this.schemaMode);
+    }
+
 }

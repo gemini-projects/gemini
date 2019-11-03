@@ -13,7 +13,8 @@ public class SmartEntity {
     public RawEntity toRawEntity(String entityName) {
         RawEntityBuilder builder = new RawEntityBuilder();
         builder.addName(entityName);
-        fields.entrySet().forEach(f -> builder.addEntry(f.getValue().toEntry(builder, f.getKey())));
+        if (fields != null)
+            fields.entrySet().forEach(f -> builder.addEntry(f.getValue().toEntry(builder, f.getKey())));
         return builder.build();
     }
 }

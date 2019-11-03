@@ -18,16 +18,36 @@ ENTITY-RECORD GUISETTINGSTYPE INIT-GUISETTINGSTYPE 1
 [{
     "code" : "FROM_ENTITY",
     "description": "Settings stored in Entity"
+},
+{
+    "code" : "CUSTOM_COMPONENT",
+    "description": "Use a Custom Component"
 }]
 
+ENTITY-RECORD CUSTOMCOMPONENTS INIT-CUSTOMCOMPONENTS 1
+{
+    "name": "SidebarSettingsComponent",
+    "description": "Settings for Sidebar Menu"
+}
+
 ENTITY-RECORD GUISETTINGS INIT-GUISETTING 1
-[{
-    "code" : "SIDE_BAR",
-    "description": "Side Bar",
+[
+{
+    "code" : "GENERAL",
+    "displayName": "General Settings",
     "type": "FROM_ENTITY",
     "genericRef":  {
         "entity": "ENTITY",
-        "ref": "SIDEBARSETTINGS"
+        "ref": "GENERALSETTINGS"
+    }
+},
+{
+    "code" : "SIDE_BAR",
+    "displayName": "Side Bar",
+    "type": "CUSTOM_COMPONENT",
+    "genericRef":  {
+            "entity": "CUSTOMCOMPONENTS",
+            "ref": "SidebarSettingsComponent"
     }
 }]
 
@@ -35,4 +55,6 @@ ENTITY-RECORD SIDEBARSETTINGS INIT-SIDEBARSETTINGS 1
 {
     "active": true
 }
+
+
 

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.Node;
-import it.at7.gemini.conf.State;
 import it.at7.gemini.core.*;
 import it.at7.gemini.core.type.Password;
 import it.at7.gemini.exceptions.*;
@@ -39,7 +38,7 @@ import static it.at7.gemini.core.FieldConverters.logicalKeyFromObject;
 import static it.at7.gemini.core.persistence.FieldTypePersistenceUtility.*;
 
 @Service
-public class PersistenceEntityManagerImpl implements PersistenceEntityManager, StateListener {
+public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     private static final Logger logger = LoggerFactory.getLogger(PersistenceEntityManagerImpl.class);
 
     private final SchemaManager schemaManager;
@@ -50,17 +49,6 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                                         StateManager stateManager) {
         this.schemaManager = schemaManager;
         this.filterVisitor = new FilterVisitor(); // is a singleton insede the persistence entity manager
-        stateManager.register(this);
-    }
-
-    @Override
-    public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
-        switch (actual) {
-            case FRAMEWORK_SCHEMA_RECORDS_INITIALIZED:
-                // we have Entity Recors initialized withRecord ID values so we can initializeSmartModules entities here
-                FieldTypePersistenceUtility.initEntities(this.schemaManager.getAllEntities());
-                break;
-        }
     }
 
     @Override
@@ -588,15 +576,20 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager, S
                     Object entityIdValue = rs.getObject(genericRefEntityFieldName(field, false));
                     EntityReferenceRecord entityReferenceRecord = null;
                     if (entityIdValue != null && (Number.class.isAssignableFrom(entityIdValue.getClass()) && ((Long) entityIdValue) != 0)) {
-                        Entity targetEntity = getEntityByID((Long) entityIdValue);
-                        Object refId = rs.getObject(genericRefActualRefFieldName(field, false));
-                        Optional<EntityRecord> entityRecordByPersistedID = getEntityRecordById(targetEntity, (long) refId, transaction);
-                        // TODO resolutions -- if the entityrecord is not found probably the target record was deleted
-                        // TODO             but the field was generic and we cannot statically resolve deletion at delete time
-                        if (entityRecordByPersistedID.isPresent()) {
-                            entityReferenceRecord = createEntityReferenceRecordFromER(targetEntity, refId, entityRecordByPersistedID.get());
+                        Optional<Entity> targetEntityOpt = getEntityByID(schemaManager.getAllEntities(), (Long) entityIdValue);
+                        if (targetEntityOpt.isPresent()) {
+                            Entity targetEntity = targetEntityOpt.get();
+                            Object refId = rs.getObject(genericRefActualRefFieldName(field, false));
+                            Optional<EntityRecord> entityRecordByPersistedID = getEntityRecordById(targetEntity, (long) refId, transaction);
+                            // TODO resolutions -- if the entityrecord is not found probably the target record was deleted
+                            // TODO             but the field was generic and we cannot statically resolve deletion at delete time
+                            if (entityRecordByPersistedID.isPresent()) {
+                                entityReferenceRecord = createEntityReferenceRecordFromER(targetEntity, refId, entityRecordByPersistedID.get());
+                            } else {
+                                entityReferenceRecord = null;
+                            }
                         } else {
-                            entityReferenceRecord = null;
+                            logger.error(String.format("Entity with id %s not found", entityIdValue));
                         }
                     }
                     er.put(field, entityReferenceRecord);

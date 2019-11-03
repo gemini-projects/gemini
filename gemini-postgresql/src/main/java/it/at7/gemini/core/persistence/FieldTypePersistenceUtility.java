@@ -3,24 +3,15 @@ package it.at7.gemini.core.persistence;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import it.at7.gemini.schema.FieldType;
+import org.springframework.lang.Nullable;
 
 import java.util.Collection;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toMap;
+import java.util.Optional;
 
 public class FieldTypePersistenceUtility {
     public static final String META_PREFIX = "_meta_";
     public static final String ENTITY_PREFIX = "_entity_";
     public static final String REF_PREFIX = "_ref_";
-
-    private static Map<Long, Entity> entities;
-
-    public static void initEntities(Collection<Entity> allEntities) {
-        entities = allEntities.stream().collect(Collectors.toMap(e -> (Long) e.getIDValue(), Function.identity()));
-    }
 
     public static boolean oneToOneType(FieldType type) {
         switch (type) {
@@ -80,8 +71,9 @@ public class FieldTypePersistenceUtility {
         return pkForeignKeyDomainFromEntity(entityName) + "[]";
     }
 
-    public static Entity getEntityByID(Long entityIDValue) {
-        return entities.get(entityIDValue);
+    @Nullable
+    public static Optional<Entity> getEntityByID(Collection<Entity> allEntities, Long idValue) {
+        return allEntities.stream().filter(e -> e.getIDValue() == idValue).findFirst();
     }
 
     public static String pkForeignKeyDomainFromEntity(Entity entity) {

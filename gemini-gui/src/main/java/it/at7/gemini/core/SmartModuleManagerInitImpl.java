@@ -88,7 +88,7 @@ public class SmartModuleManagerInitImpl implements SmartModuleManagerInit {
                     this.entityManager.putIfAbsent(er, operationContext, transaction);
                     schema = schemaWrapper.getSmartSchema();
                 }
-                schemaManager.addOrUpdateDynamicSchema(module, schema.getRawSchema(module), operationContext, transaction);
+                schemaManagerInit.initDynamicSchema(module, schema.getRawSchema(module), operationContext, transaction);
             }
         }
         if (!schemasByModule.isEmpty()) {

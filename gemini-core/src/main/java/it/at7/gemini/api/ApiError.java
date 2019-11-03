@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
-class  ApiError {
+public class ApiError extends Throwable {
     HttpStatus status;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss")
     LocalDateTime timestamp;
@@ -19,23 +19,23 @@ class  ApiError {
         timestamp = LocalDateTime.now();
     }
 
-    ApiError(HttpStatus status) {
+    public ApiError(HttpStatus status) {
         this();
         this.status = status;
     }
 
-    ApiError(HttpStatus status, String errorCode, String message) {
+    public ApiError(HttpStatus status, String errorCode, String message) {
         this(status);
         this.errorcode = errorCode;
         this.message = message;
     }
 
-    ApiError(HttpStatus status, DynamicRecord record) {
+    public ApiError(HttpStatus status, DynamicRecord record) {
         this(status);
         this.records = List.of(record);
     }
 
-    ApiError(HttpStatus status, List<? extends DynamicRecord> records) {
+    public ApiError(HttpStatus status, List<? extends DynamicRecord> records) {
         this(status);
         this.records = records;
     }
