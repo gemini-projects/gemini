@@ -107,3 +107,7 @@ ENTITY WithGenericEntityRef {
 }
 
 ENTITY Closed_Domain IMPLEMENTS Domain
+
+ENTITY TREE TreeData {
+    TEXT    code    *
+}

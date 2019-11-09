@@ -18,6 +18,7 @@ ENTITY Entity {
     TEXT            module
     BOOL            embedable
     BOOL            onerecord
+    BOOL            tree
     BOOL            closedDomain
 }
 

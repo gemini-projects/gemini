@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.*;
 public class Entity {
     public static final String ENTITY = "ENTITY";
     public static final String FIELD_RESOLUTION = "FIELDRESOLUTION";
-    public static final String CORE_META = "COREMETA";
+    public static final String CORE_META_INTERFACE = "COREMETA";
 
     public static final String NAME = "name";
 
@@ -36,19 +36,21 @@ public class Entity {
     private final EntityField idField;
     private final boolean embedable;
     private final boolean oneRecord;
+    private final boolean tree;
     private final List<String> implementsIntefaces;
     private Object idValue;
     private EntityRecord actualEntityRecord;
 
     private boolean isClosedDomain = false;
 
-    public Entity(ModuleBase module, String name, boolean embedable, boolean oneRecord, List<String> implementsIntefaces, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
+    public Entity(ModuleBase module, String name, boolean embedable, boolean oneRecord, boolean tree, List<String> implementsIntefaces, List<EntityFieldBuilder> fieldsBuilders, @Nullable Object defaultRecord) {
         this.oneRecord = oneRecord;
         Assert.notNull(module, "Module must be not null");
         Assert.notNull(name, "Entity name must be not null");
         this.module = module;
         this.name = name;
         this.embedable = embedable;
+        this.tree = tree;
         this.defaultRecord = defaultRecord == null ? new HashMap<>() : (Map<String, Object>) defaultRecord;
         fieldsBuilders.forEach(f -> f.setEntity(this));
         this.dataFields = fieldsBuilders.stream().filter(e -> e.getScope().equals(EntityField.Scope.DATA)).map(EntityFieldBuilder::build).collect(toSet());
@@ -88,6 +90,10 @@ public class Entity {
      */
     public boolean isOneRecord() {
         return oneRecord;
+    }
+
+    public boolean isTree() {
+        return tree;
     }
 
     public boolean isClosedDomain() {
@@ -173,6 +179,7 @@ public class Entity {
         values.put("module", module.getName());
         values.put("embedable", embedable);
         values.put("onerecord", oneRecord);
+        values.put("tree", tree);
         Entity entity = Services.getSchemaManager().getEntity(ENTITY);
         assert entity != null;
         return RecordConverters.entityRecordFromMap(entity, values);

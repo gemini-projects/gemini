@@ -538,12 +538,12 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
 
             // add the meta information to the current entity
             // NB: (CORE_META must be found... otherwise its ok to have a null runtime excp)
-            EntityBuilder metaIntBuilder = interfaceBuilders.get(Entity.CORE_META);
-            addAllEntriesToEntityBuilder(entityBuilders, metaIntBuilder.getRawEntity(), currentEntityBuilder, Entity.CORE_META, EntityField.Scope.META);
+            EntityBuilder metaIntBuilder = interfaceBuilders.get(Entity.CORE_META_INTERFACE);
+            addAllEntriesToEntityBuilder(entityBuilders, metaIntBuilder.getRawEntity(), currentEntityBuilder, Entity.CORE_META_INTERFACE, EntityField.Scope.META);
             for (EntityBuilder.ExtraEntity externalEntity : metaIntBuilder.getExternalEntities()) {
                 RawEntity extRawEntity = externalEntity.getRawEntity();
                 ModuleBase extModule = externalEntity.getModule(); // TODO add MODULE to FIELD
-                addAllEntriesToEntityBuilder(entityBuilders, extRawEntity, currentEntityBuilder, Entity.CORE_META, EntityField.Scope.META);
+                addAllEntriesToEntityBuilder(entityBuilders, extRawEntity, currentEntityBuilder, Entity.CORE_META_INTERFACE, EntityField.Scope.META);
             }
 
             // merging Gemini interface if found
@@ -554,6 +554,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
             for (EntityBuilder.ExtraEntity externalEntity : currentEntityBuilder.getExternalEntities()) {
                 addALLImplementingInterfaceToEntityBuilder(entityBuilders, currentEntityBuilder, externalEntity.getRawEntity(), interfaceBuilders);
                 addAllEntriesToEntityBuilder(entityBuilders, externalEntity.getRawEntity(), currentEntityBuilder, null, EntityField.Scope.DATA);
+            }
+
+            if (currentEntityBuilder.getRawEntity().isTree()) {
+                addTreeFieldToEntityBuild(currentEntityBuilder);
             }
         }
 
@@ -585,6 +589,10 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         for (RawEntity.Entry currentEntry : entity.getEntries()) {
             checkAndCreateField(allEntityBuilders, currentEntityBuilder, currentEntry, interfaceName, entityFieldScopes);
         }
+    }
+
+    private void addTreeFieldToEntityBuild(EntityBuilder entityBuilder) {
+        entityBuilder.addField(ENTITY_REF, Field.PARENT_NAME, entityBuilder.getName(), null, EntityField.Scope.DATA);
     }
 
     private void checkAndCreateField(Map<String, EntityBuilder> entityBuilders, EntityBuilder entityBuilder, RawEntity.Entry entry, String interfaceName, EntityField.Scope scope) throws TypeNotFoundException, FieldException {

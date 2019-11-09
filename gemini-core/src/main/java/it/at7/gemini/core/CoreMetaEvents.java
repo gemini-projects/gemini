@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 
-@Events(entityName = Entity.CORE_META, order = -100)
+@Events(entityName = Entity.CORE_META_INTERFACE, order = -100)
 public class CoreMetaEvents {
 
     @BeforeInsertField(field = "created")

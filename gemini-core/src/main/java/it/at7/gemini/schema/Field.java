@@ -10,6 +10,7 @@ import java.util.Objects;
 public class Field {
     public static final String ID_NAME = "_id";
     public static final String UUID_NAME = "_uuid";
+    public static final String PARENT_NAME = "_parent";
 
     private final FieldType fieldType;
     private final String fieldName;

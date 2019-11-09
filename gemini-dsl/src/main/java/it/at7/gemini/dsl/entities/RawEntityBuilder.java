@@ -9,6 +9,7 @@ public class RawEntityBuilder {
     private String name;
     private boolean embedable = false;
     private boolean oneRecord = false;
+    private boolean tree;
     private List<RawEntity.Entry> entries = new ArrayList<>();
     private List<String> implementsIntefaces = new ArrayList<>();
 
@@ -41,6 +42,11 @@ public class RawEntityBuilder {
         return this;
     }
 
+    public RawEntityBuilder isTree() {
+        this.tree = true;
+        return this;
+    }
+
     public String getName() {
         return name;
     }
@@ -50,7 +56,7 @@ public class RawEntityBuilder {
     }
 
     public RawEntity build() {
-        return new RawEntity(name, embedable, oneRecord, entries, implementsIntefaces);
+        return new RawEntity(name, embedable, oneRecord, tree, entries, implementsIntefaces);
     }
 
     public static class EntryBuilder {

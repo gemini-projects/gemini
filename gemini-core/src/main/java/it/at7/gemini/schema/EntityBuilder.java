@@ -39,6 +39,11 @@ public class EntityBuilder {
         return this;
     }
 
+    public EntityBuilder addField(FieldType fieldType, String fieldName, String refEntityName, String interfaceName, EntityField.Scope scope) {
+        fieldsBuilders.add(new EntityFieldBuilder(fieldType, fieldName, false, 0, refEntityName, interfaceName, scope));
+        return this;
+    }
+
     public EntityBuilder setDefaultRecord(Object defRecord) {
         this.defaultRecord = defRecord;
         return this;
@@ -49,7 +54,7 @@ public class EntityBuilder {
     }
 
     public Entity build() {
-        return new Entity(mainModule, entityName, rawEntity.isEmbedable(), rawEntity.isOneRecord(), rawEntity.getImplementsIntefaces(), fieldsBuilders, defaultRecord);
+        return new Entity(mainModule, entityName, rawEntity.isEmbedable(), rawEntity.isOneRecord(), rawEntity.isTree(), rawEntity.getImplementsIntefaces(), fieldsBuilders, defaultRecord);
     }
 
     public List<ExtraEntity> getExternalEntities() {

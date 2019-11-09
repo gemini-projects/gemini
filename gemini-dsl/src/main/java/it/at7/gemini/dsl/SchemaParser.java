@@ -36,7 +36,6 @@ public class SchemaParser {
 
     private RawEntity parseEntity() throws SyntaxError {
         RawEntityBuilder builder = new RawEntityBuilder();
-        nextToken();
         parseEntityModifiers(builder);
         expect(TokenType.WORD);
         builder.addName(lexer.getVal());
@@ -66,14 +65,17 @@ public class SchemaParser {
         boolean foundAny;
         do {
             foundAny = false;
+            nextToken();
             if (currentToken.equals(EMBEDABLE)) {
                 builder.isEmbedable();
-                nextToken();
                 foundAny = true;
             }
             if (currentToken.equals(ONEREC)) {
                 builder.isOneRec();
-                nextToken();
+                foundAny = true;
+            }
+            if (currentToken.equals(TREE)) {
+                builder.isTree();
                 foundAny = true;
             }
         } while (foundAny);

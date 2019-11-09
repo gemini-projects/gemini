@@ -38,7 +38,7 @@ ENTITY ONEREC GeneralSettings {
 
 ENTITY SideBarElemType IMPLEMENTS Domain
 
-ENTITY SideBarElem {
+ENTITY TREE SideBarElem {
     TEXT                code *
     TEXT                displayName
     SideBarElemType     type

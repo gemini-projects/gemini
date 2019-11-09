@@ -8,13 +8,15 @@ public class RawEntity {
     private final String name;
     private final boolean embedable;
     private final boolean oneRecord;
+    private final boolean tree;
     private final List<Entry> entries;
     private final List<String> implementsIntefaces;
 
-    public RawEntity(String name, boolean embedable, boolean oneRecord, List<Entry> entries, List<String> implementsIntefaces) {
+    public RawEntity(String name, boolean embedable, boolean oneRecord, boolean tree, List<Entry> entries, List<String> implementsIntefaces) {
         this.name = name;
         this.embedable = embedable;
         this.oneRecord = oneRecord;
+        this.tree = tree;
         this.entries = Collections.unmodifiableList(entries);
         this.implementsIntefaces = Collections.unmodifiableList(implementsIntefaces);
     }
@@ -29,6 +31,10 @@ public class RawEntity {
 
     public boolean isOneRecord() {
         return oneRecord;
+    }
+
+    public boolean isTree() {
+        return tree;
     }
 
     public List<Entry> getEntries() {

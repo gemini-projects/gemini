@@ -13,6 +13,7 @@ public class Lexer {
         EMBEDABLE("EMBEDABLE"),
         IMPLEMENTS("IMPLEMENTS"),
         ONEREC("ONEREC"),
+        TREE("TREE"),
         L_BRACE("\\{"),
         R_BRACE("\\}"),
         ASTERISK("\\*[0-9]*"),
