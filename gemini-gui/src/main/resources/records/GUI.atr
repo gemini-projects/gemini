@@ -12,6 +12,14 @@ ENTITY-RECORD SIDEBARELEMTYPE INIT-SIDEBARELEMTYPE 1
 [{
      "code" : "ENTITY_PAGE",
      "description": "Entity Route"
+},
+{
+     "code" : "SUB_MENU",
+     "description": "Sub Menu"
+},
+{
+     "code" : "MENU_GROUP",
+     "description": "Menu Group"
 }]
 
 ENTITY-RECORD GUISETTINGSTYPE INIT-GUISETTINGSTYPE 1

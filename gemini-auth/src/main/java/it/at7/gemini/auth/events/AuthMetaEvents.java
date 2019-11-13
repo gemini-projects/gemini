@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Events(entityName = Entity.CORE_META, order = -100)
+@Events(entityName = Entity.CORE_META_INTERFACE, order = -100)
 public class AuthMetaEvents implements SchemaManagerInitListener, RestAPIControllerListener {
 
     private final AuthModule authModule;
