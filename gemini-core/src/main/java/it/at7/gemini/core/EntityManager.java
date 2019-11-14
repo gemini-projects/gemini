@@ -468,6 +468,12 @@ public interface EntityManager {
         });
     }
 
+    default EntityRecord get(String entityName, Object logicalKey) throws GeminiException {
+        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+            return get(entityName, logicalKey, transaction);
+        });
+    }
+
     default EntityRecord get(String entityName, Object logicalKey, Transaction transaction) throws GeminiException {
         return get(getEntity(entityName), logicalKey, transaction);
     }

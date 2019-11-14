@@ -2,11 +2,16 @@ package it.at7.gemini.gui.components.common;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import it.at7.gemini.core.EntityManager;
+import it.at7.gemini.exceptions.GeminiException;
+import it.at7.gemini.exceptions.GeminiRuntimeException;
 import it.at7.gemini.gui.annotation.GeminiGuiComponent;
 import it.at7.gemini.gui.annotation.GeminiGuiComponentHook;
+import it.at7.gemini.gui.schema.EntityGUIRef;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -21,12 +26,32 @@ public class QuickSearchComponent implements GeminiGuiComponentHook {
     }
 
     @Override
-    public Optional<Object> onInit() {
+    public Optional<Object> onInit(@Nullable Map<String, Object> body) {
+
+        // TODO filter could be specialized with parametric data
+        Object filterObj = body == null ? null : body.get("filter");
+        String filter = (!(filterObj instanceof String)) ? "" : (String) filterObj;
 
         List<SearchElement> elements = entityManager.getAllEntities().stream()
-                // todo add a filter for the entity based on some flag ??s
+                .filter(entity -> {
+                    switch (filter) {
+                        case "ONLY_CUSTOM":
+                            return !List.of("CORE", "AUTH", "GUI").contains(entity.getModule().getName().toUpperCase());
+                        case "ALL":
+                            return true;
+                        default:
+                            return false;
+                    }
+                })
                 .filter(entity -> !entity.isEmbedable())
-                .map(e -> SearchElement.of(SearchType.ENTITY, e.getName()))
+                .map(e -> {
+                    try {
+                        return SearchElement.of(SearchType.ENTITY, e.getName(),
+                                this.entityManager.get(EntityGUIRef.NAME, e.getName()).get(EntityGUIRef.FIELDS.DISPLAY_NAME));
+                    } catch (GeminiException ex) {
+                        throw new GeminiRuntimeException(ex);
+                    }
+                })
                 .collect(Collectors.toList());
 
         /* add other elements type here */
@@ -51,9 +76,9 @@ public class QuickSearchComponent implements GeminiGuiComponentHook {
             this.searchName = searchName == null ? searchRoute : searchName;
         }
 
-        static SearchElement of(SearchType elementType, String elementRoute) {
+        static SearchElement of(SearchType elementType, String elementRoute, String displayName) {
             // TODO ADD entity displayName
-            return new SearchElement(elementType, elementRoute, null);
+            return new SearchElement(elementType, elementRoute, displayName);
         }
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -25,7 +26,8 @@ public class GuiComponentsController {
     @ResponseStatus(HttpStatus.OK)
     Object allRequestHandler(@PathVariable String component,
                              @PathVariable String event,
-                             @RequestBody(required = false) Object body,
+                             @RequestParam(required = false) Map<String, Object> requestParams,
+                             @RequestBody(required = false) Map<String, Object> body,
                              HttpServletRequest request,
                              HttpServletResponse response) throws GeminiException {
         Optional<GeminiGuiComponentHook> optHook = guiComponentsManager.getHook(component);
@@ -33,7 +35,7 @@ public class GuiComponentsController {
             GeminiGuiComponentHook hook = optHook.get();
             switch (EventMapping.valueOf(event.toUpperCase())) {
                 case ONINIT:
-                    return hook.onInit();
+                    return hook.onInit(requestParams);
             }
             throw ComponentException.EVENT_NOT_FOUND(component, event);
         }

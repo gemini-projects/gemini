@@ -81,7 +81,7 @@ public class GeminiSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .exceptionHandling()
                 .defaultAuthenticationEntryPointFor(forbiddenEntryPoint(), PROTECTED_URLS)
                 .and()
-                .authenticationProvider(authenticationProvider)
+                // .authenticationProvider(authenticationProvider)
                 .addFilterBefore(restAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
                 .anyRequest()
