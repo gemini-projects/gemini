@@ -1,7 +1,5 @@
 package it.at7.gemini.auth;
 
-import it.at7.gemini.api.AuthEventsAPIAbstTest;
-import it.at7.gemini.api.LoginAndBearerAbstTest;
 import it.at7.gemini.api.MockMVCUtils;
 import it.at7.gemini.boot.IntegrationTestMain;
 import org.junit.AfterClass;
@@ -21,8 +19,6 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @Suite.SuiteClasses({
         AuhtModuleAbstTest.class,
         AuthMetaEventsAbstTest.class,
-        LoginAndBearerAbstTest.class,
-        AuthEventsAPIAbstTest.class
 })
 public class SuiteTestAuth {
 

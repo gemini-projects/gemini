@@ -17,7 +17,7 @@ services:
       - postgres
     image: dpage/pgadmin4
     ports:
-      - "8081:80"
+      - "8881:80"
     volumes:
       - ./config/pg-admin-servers.json:/pgadmin4/servers.json
     environment:

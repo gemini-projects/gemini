@@ -23,7 +23,7 @@ ENTITY GUISettings {
     TEXT                displayName
     GuiSettingsType     type
     GENERIC_ENTITY_REF  genericRef
-    LONG                sorKey
+    LONG                sortKey
 }
 
 ENTITY ONEREC SideBarSettings {

@@ -1,7 +1,12 @@
 dependencies {
     implementation project(':gemini-core')
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'com.auth0:java-jwt:3.8.1'
+    implementation 'org.springframework.security.oauth:spring-security-oauth2:2.3.5.RELEASE'
+    implementation 'org.springframework.security:spring-security-jwt:1.0.9.RELEASE'
+    implementation 'javax.xml.bind:jaxb-api:2.3.0'
+    implementation 'com.sun.xml.bind:jaxb-core:2.3.0'
+    implementation 'com.sun.xml.bind:jaxb-impl:2.3.0'
+    implementation 'javax.activation:activation:1.1.1'
 
     compileTestJava.dependsOn tasks.getByPath(':gemini-core:testClasses')
     testCompile files(project(':gemini-core').sourceSets.test.output)

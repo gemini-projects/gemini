@@ -2,6 +2,7 @@ package it.at7.gemini.core;
 
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
 import it.at7.gemini.exceptions.EntityRecordException;
+import it.at7.gemini.exceptions.EntityRecordException.LkNotFoundException;
 import it.at7.gemini.exceptions.GeminiException;
 import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
@@ -468,6 +469,15 @@ public interface EntityManager {
         });
     }
 
+    /**
+     * Get a recordy by its entity and its logical key
+     *
+     * @param entityName name of entity (case insensitive)
+     * @param logicalKey logical key object for the specified entity
+     * @return
+     * @throws LkNotFoundException if the specified logical key is not found
+     * @throws GeminiException     if some error generic errors occurs
+     */
     default EntityRecord get(String entityName, Object logicalKey) throws GeminiException {
         return getTransactionManager().executeInSingleTrasaction(transaction -> {
             return get(entityName, logicalKey, transaction);

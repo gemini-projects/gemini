@@ -6,7 +6,12 @@ ENTITY-RECORD Entity Entity-GUI-Config 1
 {
      "name" : "GUISETTINGSTYPE",
      "closedDomain": true
-}]
+},
+{
+     "name": "SMARTMODULE",
+     "closedDomain": true
+}
+]
 
 ENTITY-RECORD SIDEBARELEMTYPE INIT-SIDEBARELEMTYPE 1
 [{
@@ -33,10 +38,14 @@ ENTITY-RECORD GUISETTINGSTYPE INIT-GUISETTINGSTYPE 1
 }]
 
 ENTITY-RECORD CUSTOMCOMPONENTS INIT-CUSTOMCOMPONENTS 1
-{
+[{
     "name": "SidebarSettingsComponent",
     "description": "Settings for Sidebar Menu"
-}
+},
+{
+    "name": "SearchSettingsComponent",
+    "description": "Search by all Entities"
+}]
 
 ENTITY-RECORD GUISETTINGS INIT-GUISETTING 1
 [
@@ -47,7 +56,8 @@ ENTITY-RECORD GUISETTINGS INIT-GUISETTING 1
     "genericRef":  {
         "entity": "ENTITY",
         "ref": "GENERALSETTINGS"
-    }
+    },
+    "sortKey": 1
 },
 {
     "code" : "SIDE_BAR",
@@ -56,7 +66,18 @@ ENTITY-RECORD GUISETTINGS INIT-GUISETTING 1
     "genericRef":  {
             "entity": "CUSTOMCOMPONENTS",
             "ref": "SidebarSettingsComponent"
-    }
+    },
+    "sortKey": 2
+},
+{
+    "code" : "SEARCH_ALL_ENTITY",
+    "displayName": "Search ALL",
+    "type": "CUSTOM_COMPONENT",
+    "genericRef":  {
+            "entity": "CUSTOMCOMPONENTS",
+            "ref": "SearchSettingsComponent"
+    },
+    "sortKey": 3
 }]
 
 ENTITY-RECORD SIDEBARSETTINGS INIT-SIDEBARSETTINGS 1

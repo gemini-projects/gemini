@@ -83,6 +83,7 @@ public class AuthModule implements GeminiModule {
             adminUer.put(UserRef.FIELDS.DESCRIPTION, adminiDescription);
             adminUer.put(UserRef.FIELDS.FRAMEWORK, false);
             adminUer.put(UserRef.FIELDS.PASSWORD, adminUsername);
+            adminUer.put("clearPassword", adminUsername);
             entityManager.putIfAbsent(adminUer, t);
         }
     }

@@ -14,8 +14,6 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.Optional;
 
-import static it.at7.gemini.auth.api.LoginController.LOGIN_PATH;
-import static it.at7.gemini.auth.api.LoginController.REFRESH_TOKEN_PATH;
 import static it.at7.gemini.conf.State.API_INITIALIZATION;
 
 @Service
@@ -35,8 +33,7 @@ public class AuthModuleAPI implements StateListener {
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
         if (actual == API_INITIALIZATION) {
             Map<String, Object> parameters = Map.of(
-                    "tokenUrl", LOGIN_PATH,
-                    "refreshUrl", REFRESH_TOKEN_PATH);
+                    "tokenUrl", "/oauth/token");
             this.openApiService.addOAuth2PasswordFlow("OAuth2PwdAPI", parameters);
             this.openApiService.secureAllEntities("OAuth2PwdAPI");
         }

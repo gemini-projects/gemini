@@ -152,8 +152,7 @@ public class OpenApiServiceImpl implements OpenApiService, StateListener {
             securitySchema.type = "oauth2";
             securitySchema.description = (String) flowParameters.getOrDefault("description", "See https://developers.getbase.com/docs/rest/articles/oauth2/requests");
             securitySchema.flows = Map.of("password",
-                    Map.of("tokenUrl", tokenUrl,
-                            "refreshUrl", flowParameters.get("refreshUrl"))
+                    Map.of("tokenUrl", tokenUrl)
             );
             iterateOverBuilders(b -> b.builder.addSecurityComponent(name, securitySchema));
         }

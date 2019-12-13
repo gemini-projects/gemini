@@ -56,7 +56,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     @Nullable
     public Entity getEntity(String entity) {
-        return schemaManager.getEntity(entity);
+        return schemaManager.getEntity(entity.toUpperCase());
     }
 
 

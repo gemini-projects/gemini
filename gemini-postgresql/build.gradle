@@ -1,42 +1,14 @@
-import org.springframework.boot.gradle.tasks.bundling.BootJar
-
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-jdbc")
     compile 'org.postgresql:postgresql:42.2.5'
     compile project(':gemini-core')
-    compile project(':gemini-auth')
-    compile project(':gemini-gui')
 
     compileTestJava.dependsOn tasks.getByPath(':gemini-core:testClasses')
     testCompile files(project(':gemini-core').sourceSets.test.output)
-
-    compileTestJava.dependsOn tasks.getByPath(':gemini-auth:testClasses')
-    testCompile files(project(':gemini-auth').sourceSets.test.output)
 }
 
-jar {
-    enabled true
-    doLast {
-        copy {
-            from outputs
-            into 'dist'
-        }
-    }
-}
-
-bootJar {
-    mainClassName = 'it.at7.gemini.boot.PostgresqlGeminiMain'
-    archiveClassifier = 'standalone'
-    destinationDirectory = file('dist')
-}
-
-task executableJar(type: BootJar) {
-    mainClassName = "it.at7.gemini.boot.PostgresqlGeminiMain"
-    archiveClassifier = 'executable'
-    destinationDirectory = file('dist')
-    launchScript()
-    with bootJar
-}
+jar.enabled = true
+bootJar.enabled = false
 
 clean {
     delete 'dist'
