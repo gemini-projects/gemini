@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -23,12 +24,16 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private UserDetailsService userDetailsService;
+
 
     // Configure the token store and authentication manager
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints
                 .tokenStore(tokenStore())
+                .userDetailsService(userDetailsService)        // for refresh token
                 .accessTokenConverter(accessTokenConverter()) // added for JWT
                 .authenticationManager(authenticationManager); // added for password grant
     }
@@ -51,7 +56,7 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
                 .inMemory()
                 .withClient("client-gui")
                 // .secret(passwordEncoder.encode(""))
-                .authorizedGrantTypes("password") // TODO add refresh token
+                .authorizedGrantTypes("password", "refresh_token") // TODO add refresh token
                 .scopes("read")
                 .accessTokenValiditySeconds(86400); // 24 hours
 
