@@ -49,7 +49,7 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
 
         clients
                 .inMemory()
-                .withClient("customer-gui")
+                .withClient("client-gui")
                 // .secret(passwordEncoder.encode(""))
                 .authorizedGrantTypes("password") // TODO add refresh token
                 .scopes("read")
