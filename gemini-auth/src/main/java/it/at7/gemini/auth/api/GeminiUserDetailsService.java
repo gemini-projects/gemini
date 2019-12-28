@@ -1,5 +1,6 @@
 package it.at7.gemini.auth.api;
 
+import it.at7.gemini.auth.core.UserRef;
 import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.exceptions.EntityRecordException;
@@ -29,9 +30,13 @@ public class GeminiUserDetailsService implements UserDetailsService {
             EntityRecord user = entityManager.get("USER", username);
             // Password pwd = user.get("password");
 
+            if (user.getFieldOrDefault(UserRef.FIELDS.FRAMEWORK, false)) {
+                throw new UsernameNotFoundException("Framework User");
+            }
+
             return User.builder()
                     .username(username)
-                    .password(Objects.requireNonNull(user.get("clearPassword", String.class)))
+                    .password(Objects.requireNonNull(user.get("password", String.class)))
                     .authorities("CUSTOMER_USER")
                     .build();
         } catch (EntityRecordException.LkNotFoundException e) {

@@ -13,7 +13,6 @@ ENTITY User {
     TEXT        username    *
     TEXT        displayName
     TEXT        description
-    PASSWORD    password
-    TEXT        clearPassword
+    TEXT        password
     BOOL        framework
 }

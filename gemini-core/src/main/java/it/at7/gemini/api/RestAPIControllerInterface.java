@@ -28,7 +28,7 @@ public interface RestAPIControllerInterface {
      * implements custom APIs but want to use the Gemini API context (for example to add users information, specific
      * behaviour and so on.
      *
-     * @param request @{@link HttpServletRequest} request
+     * @param request {@link HttpServletRequest} request
      * @param entity  optional entity name
      * @param body    optional body object
      * @return

@@ -79,6 +79,10 @@ public class GeminiPostgresql {
         return root;
     }
 
+    public static ConfigurableApplicationContext syncRootContext(String[] args, Set<Class> coreBean) {
+        return getGeminiRootContext(args, coreBean);
+    }
+
     @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class})
     public static class AutoConfiguration {
     }

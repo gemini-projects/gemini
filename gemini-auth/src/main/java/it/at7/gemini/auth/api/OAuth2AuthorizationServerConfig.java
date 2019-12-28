@@ -41,7 +41,7 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) {
         security
-                .passwordEncoder(NoOpPasswordEncoder.getInstance())
+                .passwordEncoder(NoOpPasswordEncoder.getInstance()) // client id and secret dont need encryption
                 .tokenKeyAccess("permitAll()")
                 .checkTokenAccess("isAuthenticated()")
                 .allowFormAuthenticationForClients(); // enable client_id / secret on request body form url encoded
@@ -56,7 +56,7 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
                 .inMemory()
                 .withClient("client-gui")
                 // .secret(passwordEncoder.encode(""))
-                .authorizedGrantTypes("password", "refresh_token") // TODO add refresh token
+                .authorizedGrantTypes("password", "refresh_token")
                 .scopes("read")
                 .accessTokenValiditySeconds(86400); // 24 hours
 

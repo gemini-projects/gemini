@@ -50,7 +50,7 @@ public class GeminiConfigurationService {
         return devMode;
     }
 
-    @Value("${gemini.schema.mode:UPDATE}")
+    @Value("${gemini.schema.mode:VALIDATE}")
     private String schemaMode;
 
     public SchemaMode getSchemaMode() {

@@ -75,7 +75,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
         this.persistenceEntityManager = persistenceEntityManager;
         this.geminiConfigurationService = geminiConfigurationService;
         this.entityManager = entityManager;
-        schemaMode = this.geminiConfigurationService.getSchemaMode();
+        this.schemaMode = this.geminiConfigurationService.getSchemaMode();
     }
 
     @Override

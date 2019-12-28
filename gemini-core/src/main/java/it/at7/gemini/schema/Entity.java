@@ -60,7 +60,7 @@ public class Entity {
         Assert.isTrue(uniqueMetaAndDataField(dataFieldsByName.keySet(), metaFieldsByName.keySet()), "Data/Meta Fields names are not unique");
         this.logicalKey = extractLogicalKeyFrom(dataFields);
         this.idField = EntityFieldBuilder.ID(this);
-        this.implementsIntefaces = List.copyOf(implementsIntefaces);
+        this.implementsIntefaces = new ArrayList<>(implementsIntefaces);
         idValue = null;
     }
 

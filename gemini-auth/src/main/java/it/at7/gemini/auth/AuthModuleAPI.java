@@ -24,18 +24,20 @@ public class AuthModuleAPI implements StateListener {
     private final OpenApiService openApiService;
 
     @Autowired
-    public AuthModuleAPI(OpenApiService openApiService, StateManager stateManager) {
-        this.openApiService = openApiService;
+    public AuthModuleAPI(Optional<OpenApiService> openApiService, StateManager stateManager) {
+        this.openApiService = openApiService.orElse(null);
         stateManager.register(this);
     }
 
     @Override
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
         if (actual == API_INITIALIZATION) {
-            Map<String, Object> parameters = Map.of(
-                    "tokenUrl", "/oauth/token");
-            this.openApiService.addOAuth2PasswordFlow("OAuth2PwdAPI", parameters);
-            this.openApiService.secureAllEntities("OAuth2PwdAPI");
+            if (openApiService != null) {
+                Map<String, Object> parameters = Map.of(
+                        "tokenUrl", "/oauth/token");
+                this.openApiService.addOAuth2PasswordFlow("OAuth2PwdAPI", parameters);
+                this.openApiService.secureAllEntities("OAuth2PwdAPI");
+            }
         }
     }
 }

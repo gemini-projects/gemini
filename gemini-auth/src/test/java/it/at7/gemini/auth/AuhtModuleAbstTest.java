@@ -15,6 +15,14 @@ import org.junit.runners.MethodSorters;
 
 import java.util.List;
 
+import static it.at7.gemini.api.MockMVCUtils.mockMvc;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AuhtModuleAbstTest {
 
@@ -26,5 +34,17 @@ public class AuhtModuleAbstTest {
         Assert.assertEquals(1, records.size());
         EntityRecord geminiUserRec = records.get(0);
         Assert.assertNotNull(geminiUserRec);
+    }
+
+    @Test
+    public void n2_testUserPwdAuthWorks() throws Exception {
+        mockMvc.perform(post("/oauth/token")
+                .contentType(APPLICATION_FORM_URLENCODED)
+                .content("client_id=client-gui&grant_type=password&username=Admin&password=Admin")
+                .accept(APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("access_token").exists())
+                .andExpect(jsonPath("refresh_token").exists());
     }
 }
