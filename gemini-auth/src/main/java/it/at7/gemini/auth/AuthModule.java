@@ -32,9 +32,15 @@ public class AuthModule implements GeminiModule {
     private static final Logger logger = LoggerFactory.getLogger(AuthModule.class);
 
 
+    @Value("${gemini.auth.admin.create:true}")
+    private boolean createAdmin;
+
+
+    @Value("${gemini.auth.admin.user:Admin}")
+    private String adminUsername;
+
     @Value("${gemini.auth.admin.pwd:Admin}")
     private String adminPWD;
-
 
     private final SchemaManager schemaManager;
     private final EntityManager entityManager;
@@ -52,13 +58,14 @@ public class AuthModule implements GeminiModule {
 
     @Override
     public void onChange(State previous, State actual, Optional<Transaction> transaction) throws GeminiException {
-        if (actual == SCHEMA_EVENTS_LOADED && this.geminiConfigurationService.getSchemaMode().equals(SchemaMode.UPDATE)) {
+        if (actual == SCHEMA_EVENTS_LOADED &&
+                this.geminiConfigurationService.getSchemaMode().equals(SchemaMode.UPDATE)) {
             checkOrcreatePredefinedUsers(transaction);
         }
     }
 
     private void checkOrcreatePredefinedUsers(Optional<Transaction> transaction) throws GeminiException {
-        logger.info("Check/Create predefined Users");
+        logger.info("Check/Create predefined Users - Gemini Core");
         assert transaction.isPresent();
         Transaction t = transaction.get();
         Entity userEntity = schemaManager.getEntity(UserRef.NAME);
@@ -76,18 +83,21 @@ public class AuthModule implements GeminiModule {
             entityManager.putIfAbsent(geminiFrameworkUser, t);
         }
 
-        // Admin
-        String adminUsername = AuthModuleRef.USERS.ADMINISTRATOR;
-        entityReferenceRecord = FieldConverters.logicalKeyFromObject(userEntity, adminUsername);
-        Optional<EntityRecord> adminRec = entityManager.getOptional(userEntity, entityReferenceRecord, t);
-        if (!adminRec.isPresent()) {
-            String adminiDescription = "Auto generated user for " + adminUsername;
-            EntityRecord adminUer = new EntityRecord(userEntity);
-            adminUer.put(UserRef.FIELDS.USERNAME, adminUsername);
-            adminUer.put(UserRef.FIELDS.DESCRIPTION, adminiDescription);
-            adminUer.put(UserRef.FIELDS.FRAMEWORK, false);
-            adminUer.put(UserRef.FIELDS.PASSWORD, new BCryptPasswordEncoder().encode(adminPWD));
-            entityManager.putIfAbsent(adminUer, t);
+        if (this.createAdmin) {
+            logger.info("Check/Create predefined Users - Admin");
+
+            // Admin
+            entityReferenceRecord = FieldConverters.logicalKeyFromObject(userEntity, adminUsername);
+            Optional<EntityRecord> adminRec = entityManager.getOptional(userEntity, entityReferenceRecord, t);
+            if (!adminRec.isPresent()) {
+                String adminiDescription = "Auto generated Admin user: " + adminUsername;
+                EntityRecord adminUer = new EntityRecord(userEntity);
+                adminUer.put(UserRef.FIELDS.USERNAME, adminUsername);
+                adminUer.put(UserRef.FIELDS.DESCRIPTION, adminiDescription);
+                adminUer.put(UserRef.FIELDS.FRAMEWORK, false);
+                adminUer.put(UserRef.FIELDS.PASSWORD, new BCryptPasswordEncoder().encode(adminPWD));
+                entityManager.putIfAbsent(adminUer, t);
+            }
         }
     }
 

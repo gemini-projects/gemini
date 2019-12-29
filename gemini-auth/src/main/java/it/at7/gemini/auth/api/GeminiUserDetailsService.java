@@ -31,7 +31,7 @@ public class GeminiUserDetailsService implements UserDetailsService {
             // Password pwd = user.get("password");
 
             if (user.getFieldOrDefault(UserRef.FIELDS.FRAMEWORK, false)) {
-                throw new UsernameNotFoundException("Framework User");
+                throw new UsernameNotFoundException("You cannot login with a Framework User");
             }
 
             return User.builder()
