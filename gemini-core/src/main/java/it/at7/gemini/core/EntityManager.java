@@ -478,7 +478,7 @@ public interface EntityManager {
      * @throws LkNotFoundException if the specified logical key is not found
      * @throws GeminiException     if some error generic errors occurs
      */
-    default EntityRecord get(String entityName, Object logicalKey) throws GeminiException {
+    default EntityRecord get(String entityName, Object logicalKey) throws LkNotFoundException, GeminiException {
         return getTransactionManager().executeInSingleTrasaction(transaction -> {
             return get(entityName, logicalKey, transaction);
         });

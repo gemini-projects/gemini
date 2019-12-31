@@ -16,3 +16,10 @@ ENTITY User {
     TEXT        password
     BOOL        framework
 }
+
+ENTITY OAuthClient {
+    TEXT        clientId    *
+    TEXT        clientSecret
+    [TEXT]      grants
+    [TEXT]      scope
+}

@@ -2,10 +2,12 @@ package it.at7.gemini.auth.core;
 
 public interface UserRef {
     String NAME = "USER";
-    class FIELDS {
-        public static final String USERNAME = "username";
-        public static final String DESCRIPTION = "description";
-        public static final String FRAMEWORK = "framework";
-        public static final String PASSWORD = "password";
+
+    interface FIELDS {
+        String USERNAME = "username";
+        String DISPLAY_NAME = "displayName";
+        String DESCRIPTION = "description";
+        String FRAMEWORK = "framework";
+        String PASSWORD = "password";
     }
 }

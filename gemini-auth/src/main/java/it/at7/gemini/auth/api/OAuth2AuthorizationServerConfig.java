@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -25,7 +24,10 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private UserDetailsService userDetailsService;
+    private GeminClientDetailsService clientDetailsService;
+
+    @Autowired
+    private GeminiUserDetailsService userDetailsService;
 
 
     // Configure the token store and authentication manager
@@ -52,13 +54,14 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
 
-        clients
+        /* clients
                 .inMemory()
                 .withClient("client-gui")
                 // .secret(passwordEncoder.encode(""))
                 .authorizedGrantTypes("password", "refresh_token")
                 .scopes("read")
-                .accessTokenValiditySeconds(86400); // 24 hours
+                .accessTokenValiditySeconds(86400); // 24 hours */
+        clients.withClientDetails(this.clientDetailsService);
 
     }
 

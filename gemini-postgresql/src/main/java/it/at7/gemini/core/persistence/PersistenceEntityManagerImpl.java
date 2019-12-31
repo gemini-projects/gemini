@@ -501,8 +501,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                         object = rs.getObject(fieldName, specificType);
                     } else if (specificType != null && specificType.isArray()) {
                         Array array = rs.getArray(fieldName);
-                        assert array != null;
-                        object = specificType.cast(array.getArray());
+                        object = array == null ? null : specificType.cast(array.getArray());
                     } else {
                         // try the default resolution
                         object = rs.getObject(fieldName);
