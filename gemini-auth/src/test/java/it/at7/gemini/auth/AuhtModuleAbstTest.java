@@ -34,6 +34,10 @@ public class AuhtModuleAbstTest {
         Assert.assertEquals(1, records.size());
         EntityRecord geminiUserRec = records.get(0);
         Assert.assertNotNull(geminiUserRec);
+
+        EntityRecord oAuthClient = new EntityRecord(entityManager.getEntity("OAuthClient"));
+        oAuthClient.put("clientId", "client-gui");
+        entityManager.putIfAbsent(oAuthClient);
     }
 
     @Test
