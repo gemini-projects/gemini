@@ -92,4 +92,11 @@ public class DynamicRecord implements RecordBase {
     public int hashCode() {
         return Objects.hash(store, fields);
     }
+
+    @Override
+    public String toString() {
+        return "DynamicRecord{" +
+                "store=" + store +
+                '}';
+    }
 }

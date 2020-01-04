@@ -365,6 +365,7 @@ public class SchemaManagerImpl implements SchemaManager, SchemaManagerInit {
     }
 
     private void createProvidedEntityRecords(Transaction transaction) throws GeminiException {
+        // load record by module
         for (GeminiModule m : this.geminiOrderedModules) {
             ModuleRawRecord moduleRawRecord = this.schemaRawRecordsByGeminiModule.get(m);
 

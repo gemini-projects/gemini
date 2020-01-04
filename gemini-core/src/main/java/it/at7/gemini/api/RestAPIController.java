@@ -58,20 +58,6 @@ public class RestAPIController implements RestAPIControllerInterface {
         return handleGeminiDataTypeResponse(results, request, response);
     }
 
-    private Object handleGeminiDataTypeResponse(Object results, HttpServletRequest request, HttpServletResponse response) throws InvalidRequesException {
-        response.setHeader(GEMINI_HEADER, GEMINI_API_META_TYPE);
-        if (results instanceof EntityRecord) {
-            return GeminiWrappers.EntityRecordApiType.of((EntityRecord) results);
-        }
-        if (results instanceof GeminiWrappers.EntityRecordsList) {
-            return GeminiWrappers.EntityRecordListApiType.of((GeminiWrappers.EntityRecordsList) results);
-        }
-        if (results instanceof GeminiWrappers.CountRequest) {
-            return GeminiWrappers.CountRequestApiType.of((GeminiWrappers.CountRequest) results);
-        }
-        throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
-    }
-
     private Object requestHandler(String entityString, Object body, HttpServletRequest request, HttpServletResponse response) throws GeminiException {
         String method = request.getMethod();
         Entity entity = checkEntity(entityString.toUpperCase(), method);
