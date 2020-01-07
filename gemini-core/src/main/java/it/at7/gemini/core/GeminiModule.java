@@ -1,5 +1,7 @@
 package it.at7.gemini.core;
 
+import org.springframework.lang.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -39,6 +41,7 @@ public interface GeminiModule extends ModuleBase {
         return 0;
     }
 
+    @Nullable
     default String getSchemaResourceLocation() {
         String pattern = "classpath:/schemas/%s.at";
         return String.format(pattern, getName());
@@ -58,6 +61,7 @@ public interface GeminiModule extends ModuleBase {
         return false;
     }
 
+    @Nullable
     default String getSchemaLocation() {
         return getSchemaResourceLocation().replace("classpath: ", "");
     }
