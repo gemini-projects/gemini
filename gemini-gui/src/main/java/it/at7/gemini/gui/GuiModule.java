@@ -31,7 +31,7 @@ import static it.at7.gemini.core.EntityManagerImpl.DYNAMIC_SCHEMA_CONTEXT_FLAG;
 @ComponentScan("it.at7.gemini.gui.components")
 @ComponentScan("it.at7.gemini.gui.core")
 @ComponentScan("it.at7.gemini.gui.events")
-@ConditionalOnProperty(name = "gemini.gui", matchIfMissing = false)
+@ConditionalOnProperty(name = "gemini.gui", havingValue = "true")
 public class GuiModule implements GeminiModule, SchemaManagerInitListener {
     private static final Logger logger = LoggerFactory.getLogger(GuiModule.class);
 

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @ComponentScan({"it.at7.gemini.gui.api"})
-@ConditionalOnProperty(name = "gemini.gui", matchIfMissing = false)
+@ConditionalOnProperty(name = "gemini.gui", havingValue = "true")
 public class GuiAPI implements ApplicationListener<ApplicationReadyEvent> {
 
     @Autowired

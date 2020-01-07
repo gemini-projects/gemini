@@ -35,7 +35,6 @@ public class AuthModule implements GeminiModule {
     @Value("${gemini.auth.admin.create:true}")
     private boolean createAdmin;
 
-
     @Value("${gemini.auth.admin.user:Admin}")
     private String adminUsername;
 

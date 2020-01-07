@@ -42,12 +42,14 @@ public class UserEvents {
     @BeforeCreateRecord
     @BeforeDeleteRecord
     public void checkAdminPermission(EventContext eventContext) throws GeminiException {
+        /*
         Optional<AuthEntityOperationContext> authEntityOperationContext = AuthEntityOperationContext.extractAuthOperationContext(eventContext);
         if (authEntityOperationContext.isPresent()) {
             if (!authEntityOperationContext.get().getUsername().equals("Admin")) {
                 throw AuthException.ADMIN_REQUIRED();
             }
         }
+        */
     }
 
     @OnUpdateField(field = "username")

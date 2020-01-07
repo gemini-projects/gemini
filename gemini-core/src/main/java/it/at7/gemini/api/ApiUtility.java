@@ -1,5 +1,10 @@
 package it.at7.gemini.api;
 
+import it.at7.gemini.core.EntityRecord;
+import it.at7.gemini.exceptions.InvalidRequesException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 public class ApiUtility {
@@ -18,6 +23,20 @@ public class ApiUtility {
             return true;
         }
         return false;
+    }
+
+    public static Object handleGeminiDataTypeResponse(Object results, HttpServletRequest request, HttpServletResponse response) throws InvalidRequesException {
+        response.setHeader(GEMINI_HEADER, GEMINI_API_META_TYPE);
+        if (results instanceof EntityRecord) {
+            return GeminiWrappers.EntityRecordApiType.of((EntityRecord) results);
+        }
+        if (results instanceof GeminiWrappers.EntityRecordsList) {
+            return GeminiWrappers.EntityRecordListApiType.of((GeminiWrappers.EntityRecordsList) results);
+        }
+        if (results instanceof GeminiWrappers.CountRequest) {
+            return GeminiWrappers.CountRequestApiType.of((GeminiWrappers.CountRequest) results);
+        }
+        throw InvalidRequesException.CANNOT_HANDLE_REQUEST();
     }
 
     public static boolean geminiDataType(List<String> geminiHeader) {
