@@ -1,7 +1,7 @@
 language: java
-jdk: openjdk10
+jdk: openjdk9
 before_install:
-  - wget http://services.gradle.org/distributions/gradle-5.4.1-bin.zip
+  - wget http://services.gradle.org/distributions/gradle-5.5.1-bin.zip
   - unzip -qq gradle-5.4.1-bin.zip
   - export GRADLE_HOME=$PWD/gradle-5.4.1
   - export PATH=$GRADLE_HOME/bin:$PATH
