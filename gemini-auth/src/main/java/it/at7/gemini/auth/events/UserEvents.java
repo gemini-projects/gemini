@@ -6,12 +6,16 @@ import it.at7.gemini.auth.exceptions.AuthException;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.core.events.*;
 import it.at7.gemini.exceptions.GeminiException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
 @Events(entityName = UserRef.NAME, order = -100)
 public class UserEvents {
+
+    @Value("${gemini.auth.userchecks:true}")
+    private boolean CHECK_USER;
 
     @BeforeInsertField(field = "displayName")
     public String defaultDisplayName(EventContext context) {
@@ -25,16 +29,18 @@ public class UserEvents {
 
     @BeforeUpdateRecord
     public void checkUserPermission(EventContext eventContext) throws GeminiException {
-        Optional<AuthEntityOperationContext> authEntityOperationContext = AuthEntityOperationContext.extractAuthOperationContext(eventContext);
-        if (authEntityOperationContext.isPresent()) {
-            AuthEntityOperationContext opc = authEntityOperationContext.get();
-            Optional<EntityRecord> persistedEntityRecord = eventContext.getPersistedEntityRecord();
-            assert persistedEntityRecord.isPresent();
-            EntityRecord pr = persistedEntityRecord.get();
-            String username = opc.getUsername();
-            if (!username.equals("Admin")
-                    && !username.equals(pr.get(UserRef.FIELDS.USERNAME))) {
-                throw AuthException.OPEARTION_NOT_PERMITTED_FOR_USER(username);
+        if (CHECK_USER) {
+            Optional<AuthEntityOperationContext> authEntityOperationContext = AuthEntityOperationContext.extractAuthOperationContext(eventContext);
+            if (authEntityOperationContext.isPresent()) {
+                AuthEntityOperationContext opc = authEntityOperationContext.get();
+                Optional<EntityRecord> persistedEntityRecord = eventContext.getPersistedEntityRecord();
+                assert persistedEntityRecord.isPresent();
+                EntityRecord pr = persistedEntityRecord.get();
+                String username = opc.getUsername();
+                if (!username.equals("Admin")
+                        && !username.equals(pr.get(UserRef.FIELDS.USERNAME))) {
+                    throw AuthException.OPEARTION_NOT_PERMITTED_FOR_USER(username);
+                }
             }
         }
     }
@@ -42,14 +48,14 @@ public class UserEvents {
     @BeforeCreateRecord
     @BeforeDeleteRecord
     public void checkAdminPermission(EventContext eventContext) throws GeminiException {
-        /*
-        Optional<AuthEntityOperationContext> authEntityOperationContext = AuthEntityOperationContext.extractAuthOperationContext(eventContext);
-        if (authEntityOperationContext.isPresent()) {
-            if (!authEntityOperationContext.get().getUsername().equals("Admin")) {
-                throw AuthException.ADMIN_REQUIRED();
+        if (CHECK_USER) {
+            Optional<AuthEntityOperationContext> authEntityOperationContext = AuthEntityOperationContext.extractAuthOperationContext(eventContext);
+            if (authEntityOperationContext.isPresent()) {
+                if (!authEntityOperationContext.get().getUsername().equals("Admin")) {
+                    throw AuthException.ADMIN_REQUIRED();
+                }
             }
         }
-        */
     }
 
     @OnUpdateField(field = "username")

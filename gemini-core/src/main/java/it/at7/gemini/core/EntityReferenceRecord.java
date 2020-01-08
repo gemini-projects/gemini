@@ -13,6 +13,8 @@ public class EntityReferenceRecord {
     private Object primaryKey;
     private DynamicRecord logicalKeyValue;
     private Entity entity;
+    private boolean hasFullEntityRecord = false;
+    private EntityRecord fullEntityRecord;
 
     private EntityReferenceRecord() {
         this.storedTypeSet = new HashSet<>();
@@ -45,8 +47,16 @@ public class EntityReferenceRecord {
         return storedTypeSet.contains(StoredType.LOGICAL_KEY);
     }
 
+    public boolean hasFullEntityRecord() {
+        return hasFullEntityRecord;
+    }
+
     public DynamicRecord getLogicalKeyRecord() {
         return logicalKeyValue;
+    }
+
+    public EntityRecord getFullEntityRecord() {
+        return fullEntityRecord;
     }
 
     public void addLogicalKeyValue(String fieldName, Object value) throws EntityFieldException {
@@ -80,6 +90,10 @@ public class EntityReferenceRecord {
         return entityReferenceRecord;
     }
 
+    public void addFullEntityRecord(EntityRecord lkEntityRecord) {
+        this.hasFullEntityRecord = true;
+        this.fullEntityRecord = lkEntityRecord;
+    }
 
     @Override
     public boolean equals(Object o) {

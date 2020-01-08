@@ -116,7 +116,7 @@ public class FieldConverters {
                     Entity objValueEntity = entityRecord.getEntity();
                     assert fieldEntity != null && fieldEntity.equals(objValueEntity);
                     pkValue = logicalKeyFromEntityRecord(entityRecord);
-                    // TODO BOO sbagliato qua misa... meglio create il ref anche con l'oggetto di partenza
+                    pkValue.addFullEntityRecord(entityRecord);
                 } else {
                     pkValue = logicalKeyFromObject(field.getEntityRef(), objValue);
                 }
@@ -257,7 +257,9 @@ public class FieldConverters {
         entityReferenceRecord = new EntityReferenceRecord(entity);
         entityReferenceRecord.addPKValue(pkValue);
 
-        // TODO put the entity instead of the entityreference ??
+        entityReferenceRecord.addFullEntityRecord(lkEntityRecord);
+
+        // add logical key
         for (Field entityLkField : entity.getLogicalKey().getLogicalKeyList()) {
             entityReferenceRecord.addLogicalKeyValue(entityLkField, lkEntityRecord.get(entityLkField));
         }

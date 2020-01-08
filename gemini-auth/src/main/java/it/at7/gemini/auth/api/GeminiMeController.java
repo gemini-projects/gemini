@@ -6,6 +6,7 @@ import it.at7.gemini.core.EntityManager;
 import it.at7.gemini.core.EntityRecord;
 import it.at7.gemini.exceptions.GeminiException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +19,8 @@ import static it.at7.gemini.api.RestAPIController.API_URL;
 
 @RestController
 @RequestMapping(API_URL + "/me")
-public class MeController {
+@ConditionalOnProperty(name = "gemini.auth.mecontroller", havingValue = "true", matchIfMissing = true)
+public class GeminiMeController {
 
     @Autowired
     private EntityManager entityManager;

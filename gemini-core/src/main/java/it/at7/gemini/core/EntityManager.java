@@ -1,6 +1,7 @@
 package it.at7.gemini.core;
 
 import it.at7.gemini.core.persistence.PersistenceEntityManager;
+import it.at7.gemini.exceptions.EntityException;
 import it.at7.gemini.exceptions.EntityRecordException;
 import it.at7.gemini.exceptions.EntityRecordException.LkNotFoundException;
 import it.at7.gemini.exceptions.GeminiException;
@@ -500,6 +501,14 @@ public interface EntityManager {
     default List<EntityRecord> getRecordsMatching(Entity entity, DynamicRecord searchRecord) throws GeminiException {
         assert searchRecord != null;
         return getRecordsMatching(entity, searchRecord.getFieldValues());
+    }
+
+    default List<EntityRecord> getRecordsMatching(String entity, String field, Object value) throws GeminiException {
+        Entity realEntity = getEntity(entity);
+        if (realEntity == null) {
+            throw EntityException.ENTITY_NOT_FOUND(entity);
+        }
+        return getRecordsMatching(realEntity, field, value);
     }
 
     default List<EntityRecord> getRecordsMatching(Entity entity, String field, Object value) throws GeminiException {

@@ -11,6 +11,7 @@ import org.springframework.lang.Nullable;
 
 import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static it.at7.gemini.core.utils.DateTimeUtility.Formatter.*;
 
@@ -106,12 +107,21 @@ public class RecordConverters {
         return dataToMap(record.getDataEntityFieldValues());
     }
 
+    public static Map<String, Object> dataToMap(DynamicRecord record) {
+        return dataToMap(record.getFieldValues());
+    }
+
+
     public static Map<String, Object> dataToMap(Collection<? extends FieldValue> fieldValues) {
         Map<String, Object> convertedMap = new HashMap<>();
         for (FieldValue fieldValue : fieldValues) {
             convertSingleFieldTOJSONValue(convertedMap, fieldValue);
         }
         return convertedMap;
+    }
+
+    public static List<Map<String, Object>> dataToListMap(Collection<EntityRecord> records) {
+        return records.stream().map(RecordConverters::dataToMap).collect(Collectors.toList());
     }
 
     static void putValueToRecord(DynamicRecord r, Field field, @Nullable Object objValue) {
