@@ -8,14 +8,14 @@ public interface ModuleBase extends StateListener {
     /**
      * Module name
      *
-     * @return
+     * @return Module name
      */
     String getName();
 
     /**
      * Module dependencies
      *
-     * @return
+     * @return Module dependencies
      */
     String[] getDependencies();
 
@@ -23,7 +23,7 @@ public interface ModuleBase extends StateListener {
     /**
      * Module order
      *
-     * @return
+     * @return Module order
      */
     int order();
 }

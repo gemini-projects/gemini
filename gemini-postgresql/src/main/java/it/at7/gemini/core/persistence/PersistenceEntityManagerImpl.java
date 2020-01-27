@@ -20,6 +20,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterUtils;
 import org.springframework.jdbc.core.namedparam.ParsedSql;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -68,6 +69,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
             QueryWithParams queryWithParams = createInsertQuery(record, transaction);
             long recordId = transactionImpl.executeInsert(queryWithParams.getSql(), queryWithParams.getParams());
+            updateSequenceIfNeeded(transactionImpl, record);
             Optional<EntityRecord> insertedRecord = getEntityRecordById(record.getEntity(), recordId, transaction);
             checkInsertedRecord(recordId, record, insertedRecord);
             return insertedRecord.get();
@@ -83,9 +85,24 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
             TransactionImpl transactionImpl = (TransactionImpl) transaction;
             QueryWithParams queryWithParams = createInsertQuery(record, transaction);
             transactionImpl.executeInsertNoResult(queryWithParams.getSql(), queryWithParams.getParams());
+            updateSequenceIfNeeded(transactionImpl, record);
         } catch (GeminiException e) {
             logger.error("createNewEntityRecordNoResults SQL Exception", e);
             throw e;
+        }
+    }
+
+    private void updateSequenceIfNeeded(TransactionImpl transactionImpl, EntityRecord record) throws GeminiException {
+        if (record.hasID()) {
+            String tableName = record.getEntity().getName().toLowerCase();
+            String sqName = tableName + "_" + Field.ID_NAME + "_seq";
+            String q = "SELECT setval('" + sqName + "', (SELECT MAX(" + Field.ID_NAME + ") FROM " + wrapDoubleQuotes(tableName) + "))";
+            try {
+                transactionImpl.executeQuery(q, resultSet -> {
+                });
+            } catch (SQLException e) {
+                throw GeminiGenericException.wrap(e);
+            }
         }
     }
 
@@ -105,8 +122,8 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 if (!r.getEntity().equals(targetEntity))
                     throw new GeminiRuntimeException("Batch Insert - Entity record must belong to the same Entity");
             }
-            String namedQuery = makeInsertNamedQuery(targetEntity);
             Map<String, Object> parameters = creteParametersMapForNamedQuery(first, Map.of(), transaction);
+            String namedQuery = makeInsertNamedQuery(targetEntity, null);
             try {
                 SqlParameterSource paramSource = new MapSqlParameterSource(parameters);
                 ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(namedQuery);
@@ -615,17 +632,22 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     private QueryWithParams makeInsertQuery(EntityRecord record, Transaction transaction) throws GeminiException {
         Entity entity = record.getEntity();
         Map<EntityField, EntityRecord> embededEntityRecords = checkAndCreateEmbededEntity(record, transaction);
-        String sql = makeInsertNamedQuery(entity);
+        String sql = makeInsertNamedQuery(entity, record);
         Map<String, Object> parameters = creteParametersMapForNamedQuery(record, embededEntityRecords, transaction);
         return new QueryWithParams(sql, parameters);
     }
 
-    private String makeInsertNamedQuery(Entity entity) {
+    private String makeInsertNamedQuery(Entity entity, @Nullable EntityRecord record) {
         StringBuilder sql = new StringBuilder(String.format("INSERT INTO %s", wrapDoubleQuotes(entity.getName().toLowerCase())));
         List<EntityField> sortedFields = sortFields(entity.getAllRootEntityFields());
         boolean first = true;
+        if (record != null && record.hasID()) {
+            sql.append("(").append(Field.ID_NAME);
+            first = false;
+        }
         if (!entity.isEmbedable()) {
-            sql.append("(").append(Field.UUID_NAME);
+            sql.append(first ? "(" : ",");
+            sql.append(Field.UUID_NAME);
             first = false;
         }
         for (EntityField entityField : sortedFields) {
@@ -651,9 +673,14 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
         sql.append(") VALUES ");
         first = true;
-        if (!entity.isEmbedable()) {
+        if (record != null && record.hasID()) {
+            sql.append("(:").append(Field.ID_NAME);
             first = false;
-            sql.append("(:").append(Field.UUID_NAME);
+        }
+        if (!entity.isEmbedable()) {
+            sql.append(first ? "(" : ",");
+            first = false;
+            sql.append(":").append(Field.UUID_NAME);
         }
         for (EntityField entityField : sortedFields) {
             boolean fieldHandled = false;
@@ -690,6 +717,9 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
         Map<String, Object> params = new HashMap<>();
         List<EntityFieldValue> sortedFields = sortFieldsValue(record.getALLEntityFieldValues());
+        if (record.hasID()) {
+            params.put(Field.ID_NAME, record.getID());
+        }
         if (!entity.isEmbedable()) {
             params.put(Field.UUID_NAME, record.getUUID());
         }

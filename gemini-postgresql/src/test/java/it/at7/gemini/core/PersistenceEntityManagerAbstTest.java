@@ -88,6 +88,27 @@ public class PersistenceEntityManagerAbstTest {
             Optional<EntityRecord> deletedRecord = persistenceEntityManager.getEntityRecordByLogicalKey(newrec, t);
             assertFalse(deletedRecord.isPresent());
         });
+
+        // test insert with ID
+        EntityRecord recWithID = new EntityRecord(dataTypeEntity);
+        recWithID.put("_id", 777);
+        recWithID.put("text", "textStringWithID");
+        transactionManager.executeInSingleTrasaction(t -> {
+            // new record
+            EntityRecord r = persistenceEntityManager.createNewEntityRecord(recWithID, t);
+            assertEquals("textStringWithID", r.get("text"));
+            assertEquals(Long.valueOf(777), r.get("_id"));
+        });
+        EntityRecord recWithIDIncremented = new EntityRecord(dataTypeEntity);
+        recWithIDIncremented.put("text", "textStringWithID_Inc");
+        transactionManager.executeInSingleTrasaction(t -> {
+            // new record
+            EntityRecord r = persistenceEntityManager.createNewEntityRecord(recWithIDIncremented, t);
+            assertEquals("textStringWithID_Inc", r.get("text"));
+            assertEquals(Long.valueOf(778), r.get("_id"));
+        });
+
+
     }
 
 

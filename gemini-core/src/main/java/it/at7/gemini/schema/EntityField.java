@@ -45,7 +45,7 @@ public class EntityField extends Field {
     }
 
     /**
-     * Logical key order gives an order when the entity have more than one logical key
+     * @return  Logical key order gives an order when the entity have more than one logical key
      */
     public int getLkOrder() {
         return lkOrder;

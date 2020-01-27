@@ -14,17 +14,17 @@ import java.util.*;
 public interface EntityManager {
 
     /**
-     * Get all the entities handled by Gemini
+     * @return Get all the entities handled by Gemini
      */
     Collection<Entity> getAllEntities();
 
     /**
-     * Return the transaction manager (useful to implement default interface methods)
+     * @return the transaction manager (useful to implement default interface methods)
      */
     TransactionManager getTransactionManager();
 
     /**
-     * Return the persistence entity manager (useful to implement default interface methods)
+     * @return the persistence entity manager (useful to implement default interface methods)
      */
     PersistenceEntityManager getPersistenceEntityManager();
 
@@ -41,6 +41,7 @@ public interface EntityManager {
      * Create a new empty Entity Record
      *
      * @param entity target entity
+     * @return the new entity Record
      */
     default EntityRecord getNewEntityRecord(String entity) {
         return new EntityRecord(getEntity(entity));

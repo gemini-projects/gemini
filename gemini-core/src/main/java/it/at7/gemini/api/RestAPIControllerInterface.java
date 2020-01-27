@@ -15,7 +15,7 @@ public interface RestAPIControllerInterface {
      * implements custom APIs but want to use the Gemini API context (for example to add users information, specific
      * behaviour and so on.
      *
-     * @param request
+     * @param request {@link HttpServletRequest} request
      * @return Entity Operation Context to use
      */
     default EntityOperationContext createEntityOperationContext(HttpServletRequest request) {
@@ -31,7 +31,7 @@ public interface RestAPIControllerInterface {
      * @param request {@link HttpServletRequest} request
      * @param entity  optional entity name
      * @param body    optional body object
-     * @return
+     * @return Entity Operation Context to use
      */
     EntityOperationContext createEntityOperationContext(HttpServletRequest request, String entity, Object body);
 

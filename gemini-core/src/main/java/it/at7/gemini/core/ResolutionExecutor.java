@@ -49,7 +49,7 @@ public class ResolutionExecutor {
                 case EMPTY:
                     for (EntityRecord record : recordsToResolve) {
                         record.put(field, null);
-                        persistenceEntityManager.createOrUpdateEntityRecord(record, transaction);
+                        persistenceEntityManager.updateEntityRecordByID(record, transaction);
                     }
                     break;
 

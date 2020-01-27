@@ -48,12 +48,12 @@ public interface GeminiModule extends ModuleBase {
     }
 
     default String getSchemaRecordResourceLocation() {
-        String pattern = "/records/%s.atr";
+        String pattern = "classpath:/records/%s.atr";
         return String.format(pattern, getName());
     }
 
     default String getEntityRecordResourceLocation(String entityName) {
-        String pattern = "/records/%s.atr";
+        String pattern = "classpath:/records/%s.atr";
         return String.format(pattern, entityName);
     }
 

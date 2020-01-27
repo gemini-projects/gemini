@@ -237,9 +237,7 @@ public class Entity {
     }
 
     /**
-     * The entity record of this Entity.
-     *
-     * @return
+     * @return The entity record of this Entity.
      */
     @Nullable
     public EntityRecord getActualEntityRecord() {
