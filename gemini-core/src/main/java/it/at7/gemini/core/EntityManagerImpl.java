@@ -149,7 +149,12 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         checkEnabledState();
         checkDynamicSchema(record, entityOperationContext);
         notAllowedOnClosedDomainEntity(record.getEntity(), entityOperationContext);
-        return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, record);
+
+        Optional<EntityRecord> persistedRecordOpt = persistenceEntityManager.getEntityRecordById(record.getEntity(), (long) record.getID(), transaction);
+        if (persistedRecordOpt.isPresent()) {
+            return updateRecordIfNeededHandlingEvents(record, entityOperationContext, transaction, persistedRecordOpt.get());
+        }
+        throw EntityRecordException.ID_RECORD_NOT_FOUND(record);
     }
 
     private EntityRecord updateOneRecordEntity(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
