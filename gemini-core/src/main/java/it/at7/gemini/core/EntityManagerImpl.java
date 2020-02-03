@@ -207,6 +207,13 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         return persistedRecord;
     }
 
+
+    @Override
+    public void getALLRecords(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction, EntityRecordCallback callback) throws GeminiException {
+        // TODO use entityOperation Context
+        persistenceEntityManager.getALLEntityRecords(entity, transaction, callback);
+    }
+
     @Override
     public EntityRecord get(Entity entity, UUID uuid) throws GeminiException {
         checkEnabledState();

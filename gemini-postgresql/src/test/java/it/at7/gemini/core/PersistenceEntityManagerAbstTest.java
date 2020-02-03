@@ -9,6 +9,8 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
@@ -155,6 +157,22 @@ public class PersistenceEntityManagerAbstTest {
             return savedDomain;
         });
 
+    }
+
+    @Test
+    public void n4_getALLEntityRecord() throws GeminiException {
+        Map<String, Long> counter = new HashMap<>();
+        counter.put("counter", 0L);
+        transactionManager.executeInSingleTrasaction(t -> {
+            dataTypeEntity = Services.getSchemaManager().getEntity("TESTDATATYPE");
+            persistenceEntityManager.getALLEntityRecords(dataTypeEntity, t, new EntityRecordCallback() {
+                @Override
+                public void exec(EntityRecord entityRecord) throws GeminiException {
+                    counter.put("counter", counter.get("counter") + 1);
+                }
+            });
+        });
+        assertEquals(Long.valueOf(3L), counter.get("counter"));
     }
 
 

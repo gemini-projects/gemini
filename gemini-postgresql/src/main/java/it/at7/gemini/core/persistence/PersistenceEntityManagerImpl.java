@@ -53,6 +53,19 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
+    public void getALLEntityRecords(Entity entity, Transaction transaction, EntityRecordCallback callback) throws GeminiException {
+        TransactionImpl transactionImpl = (TransactionImpl) transaction;
+        try {
+            QueryWithParams query = createSelectQueryFor(entity);
+            transactionImpl.executeQuery(query.getSql(), query.getParams(), resultSet -> {
+                fromResultSetToEntityRecordCallback(resultSet, entity, transaction, callback);
+            });
+        } catch (SQLException e) {
+            throw GeminiGenericException.wrap(e);
+        }
+    }
+
+    @Override
     public Optional<EntityRecord> getEntityRecordByLogicalKey(EntityRecord record, Transaction transaction) throws GeminiException {
         Set<EntityFieldValue> logicalKeyValues = record.getLogicalKeyValue();
         return getRecordByLogicalKeyInner(transaction, record.getEntity(), logicalKeyValues);
@@ -494,129 +507,142 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return size == 0 ? Optional.empty() : Optional.of(recordsMatching.get(0));
     }
 
+    private void fromResultSetToEntityRecordCallback(ResultSet resultSet, Entity entity, Transaction transaction, EntityRecordCallback callback) throws SQLException, GeminiException {
+        while (resultSet.next()) {
+            EntityRecord er = rsRowToEntityRecord(resultSet, entity, transaction);
+            callback.exec(er);
+        }
+    }
+
     private List<EntityRecord> fromResultSetToEntityRecord(ResultSet rs, Entity entity, Transaction transaction) throws SQLException, GeminiException {
         List<EntityRecord> ret = new ArrayList<>();
         while (rs.next()) {
-            EntityRecord er = new EntityRecord(entity);
-            if (!entity.isEmbedable()) {
-                er.setUUID(rs.getObject(Field.UUID_NAME, UUID.class));
-            }
-            long sourceID = rs.getLong(entity.getIdEntityField().getName());
-            er.put(entity.getIdEntityField(), sourceID);
-            Optional<TransactionCache> transactionCacheOpt = transaction.getTransactionCache();
-            if (transactionCacheOpt.isPresent()) {
-                transactionCacheOpt.get().put(er);
-            }
-            for (EntityField field : entity.getAllRootEntityFields()) {
-                FieldType type = field.getType();
-                String fieldName = fieldName(field, false);
-                boolean handled = false;
-                if (oneToOneType(type)) {
-                    Class specificType = typeClass(type);
-                    Object object;
-                    if (specificType != null && !specificType.isArray()) {
-                        object = rs.getObject(fieldName, specificType);
-                    } else if (specificType != null && specificType.isArray()) {
-                        Array array = rs.getArray(fieldName);
-                        object = array == null ? null : specificType.cast(array.getArray());
-                    } else {
-                        // try the default resolution
-                        object = rs.getObject(fieldName);
-                    }
-                    er.put(field, object == null ? handleNullValueForField(field.getType()) : object);
-                    handled = true;
-                }
-                if (type.equals(FieldType.ENTITY_REF)) {
-                    EntityReferenceRecord entityReferenceRecord = null;
-                    Object pkValue = rs.getObject(fieldName);
-                    if (pkValue != null && (Number.class.isAssignableFrom(pkValue.getClass()) && ((Long) pkValue) != 0)) {
-                        Entity entityRef = field.getEntityRef();
-                        assert entityRef != null;
-                        Optional<EntityRecord> entityRecordOpt = getEntityRecordById(entityRef, (long) pkValue, transaction);
-                        if (entityRecordOpt.isPresent()) {
-                            EntityRecord lkEntityRecord = entityRecordOpt.get();
-                            entityReferenceRecord = createEntityReferenceRecordFromER(field.getEntityRef(), pkValue, lkEntityRecord);
-                        } else {
-                            logger.warn("No Entity Record found for Entity: {} id {} - Source {} id {}", entityRef.getName(), pkValue, entity.getName(), sourceID);
-                        }
-                    }
-                    er.put(field, entityReferenceRecord);
-                    handled = true;
-                }
-                if (type.equals(FieldType.ENTITY_EMBEDED)) {
-                    Object pkValue = rs.getObject(fieldName);
-                    EntityRecord recordEmbeded = null;
-                    if (pkValue != null && (Number.class.isAssignableFrom(pkValue.getClass()) && ((Long) pkValue) != 0)) {
-                        recordEmbeded = getEntityRecordByPersistedID(transaction, field, pkValue);
-                    }
-                    er.put(field, recordEmbeded);
-                    handled = true;
-                }
-                if (type.equals(FieldType.ENTITY_REF_ARRAY)) {
-                    Array array = rs.getArray(fieldName);
-                    if (array == null) {
-                        er.put(field, List.<EntityRef>of());
-                    } else {
-                        ResultSet rsArray = array.getResultSet(); // TODO ENTITY RESOLUTION CONTEXT
-                        List<EntityReferenceRecord> erList = new ArrayList<>();
-                        while (rsArray.next()) {
-                            long entityID = rsArray.getLong(2);// index 2 contains the value (JDBC spec)
-                            Optional<EntityRecord> entityRecordById = getEntityRecordById(field.getEntityRef(), entityID, transaction);
-                            if (entityRecordById.isPresent()) {
-                                erList.add(EntityReferenceRecord.fromEntityRecord(entityRecordById.get()));
-                            } else {
-                                throw new RuntimeException("TODO -- Critical exception, Inconsistent DB");
-                            }
-                        }
-                        er.put(field, erList);
-                    }
-                    // TODO query effective resolution
-                    handled = true;
-                }
-                if (type == FieldType.PASSWORD) {
-                    handled = true;
-                    String jsonST = rs.getString(fieldName);
-                    Password pwd = null;
-                    if (jsonST != null) {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        try {
-                            pwd = objectMapper.readValue(jsonST, Password.class);
-                        } catch (IOException e) {
-                            throw new GeminiRuntimeException("Unable to convert Password from DB");
-                        }
-                    }
-                    er.put(field, pwd);
-                }
-                if (type == FieldType.GENERIC_ENTITY_REF) {
-                    handled = true;
-                    Object entityIdValue = rs.getObject(genericRefEntityFieldName(field, false));
-                    EntityReferenceRecord entityReferenceRecord = null;
-                    if (entityIdValue != null && (Number.class.isAssignableFrom(entityIdValue.getClass()) && ((Long) entityIdValue) != 0)) {
-                        Optional<Entity> targetEntityOpt = getEntityByID(schemaManager.getAllEntities(), (Long) entityIdValue);
-                        if (targetEntityOpt.isPresent()) {
-                            Entity targetEntity = targetEntityOpt.get();
-                            Object refId = rs.getObject(genericRefActualRefFieldName(field, false));
-                            Optional<EntityRecord> entityRecordByPersistedID = getEntityRecordById(targetEntity, (long) refId, transaction);
-                            // TODO resolutions -- if the entityrecord is not found probably the target record was deleted
-                            // TODO             but the field was generic and we cannot statically resolve deletion at delete time
-                            if (entityRecordByPersistedID.isPresent()) {
-                                entityReferenceRecord = createEntityReferenceRecordFromER(targetEntity, refId, entityRecordByPersistedID.get());
-                            } else {
-                                entityReferenceRecord = null;
-                            }
-                        } else {
-                            logger.error(String.format("Entity with id %s not found", entityIdValue));
-                        }
-                    }
-                    er.put(field, entityReferenceRecord);
-                }
-                if (!handled) {
-                    throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
-                }
-            }
+            EntityRecord er = rsRowToEntityRecord(rs, entity, transaction);
             ret.add(er);
         }
         return ret;
+    }
+
+    @NotNull
+    private EntityRecord rsRowToEntityRecord(ResultSet rs, Entity entity, Transaction transaction) throws SQLException, GeminiException {
+        EntityRecord er = new EntityRecord(entity);
+        if (!entity.isEmbedable()) {
+            er.setUUID(rs.getObject(Field.UUID_NAME, UUID.class));
+        }
+        long sourceID = rs.getLong(entity.getIdEntityField().getName());
+        er.put(entity.getIdEntityField(), sourceID);
+        Optional<TransactionCache> transactionCacheOpt = transaction.getTransactionCache();
+        if (transactionCacheOpt.isPresent()) {
+            transactionCacheOpt.get().put(er);
+        }
+        for (EntityField field : entity.getAllRootEntityFields()) {
+            FieldType type = field.getType();
+            String fieldName = fieldName(field, false);
+            boolean handled = false;
+            if (oneToOneType(type)) {
+                Class specificType = typeClass(type);
+                Object object;
+                if (specificType != null && !specificType.isArray()) {
+                    object = rs.getObject(fieldName, specificType);
+                } else if (specificType != null && specificType.isArray()) {
+                    Array array = rs.getArray(fieldName);
+                    object = array == null ? null : specificType.cast(array.getArray());
+                } else {
+                    // try the default resolution
+                    object = rs.getObject(fieldName);
+                }
+                er.put(field, object == null ? handleNullValueForField(field.getType()) : object);
+                handled = true;
+            }
+            if (type.equals(FieldType.ENTITY_REF)) {
+                EntityReferenceRecord entityReferenceRecord = null;
+                Object pkValue = rs.getObject(fieldName);
+                if (pkValue != null && (Number.class.isAssignableFrom(pkValue.getClass()) && ((Long) pkValue) != 0)) {
+                    Entity entityRef = field.getEntityRef();
+                    assert entityRef != null;
+                    Optional<EntityRecord> entityRecordOpt = getEntityRecordById(entityRef, (long) pkValue, transaction);
+                    if (entityRecordOpt.isPresent()) {
+                        EntityRecord lkEntityRecord = entityRecordOpt.get();
+                        entityReferenceRecord = createEntityReferenceRecordFromER(field.getEntityRef(), pkValue, lkEntityRecord);
+                    } else {
+                        logger.warn("No Entity Record found for Entity: {} id {} - Source {} id {}", entityRef.getName(), pkValue, entity.getName(), sourceID);
+                    }
+                }
+                er.put(field, entityReferenceRecord);
+                handled = true;
+            }
+            if (type.equals(FieldType.ENTITY_EMBEDED)) {
+                Object pkValue = rs.getObject(fieldName);
+                EntityRecord recordEmbeded = null;
+                if (pkValue != null && (Number.class.isAssignableFrom(pkValue.getClass()) && ((Long) pkValue) != 0)) {
+                    recordEmbeded = getEntityRecordByPersistedID(transaction, field, pkValue);
+                }
+                er.put(field, recordEmbeded);
+                handled = true;
+            }
+            if (type.equals(FieldType.ENTITY_REF_ARRAY)) {
+                Array array = rs.getArray(fieldName);
+                if (array == null) {
+                    er.put(field, List.<EntityRef>of());
+                } else {
+                    ResultSet rsArray = array.getResultSet(); // TODO ENTITY RESOLUTION CONTEXT
+                    List<EntityReferenceRecord> erList = new ArrayList<>();
+                    while (rsArray.next()) {
+                        long entityID = rsArray.getLong(2);// index 2 contains the value (JDBC spec)
+                        Optional<EntityRecord> entityRecordById = getEntityRecordById(field.getEntityRef(), entityID, transaction);
+                        if (entityRecordById.isPresent()) {
+                            erList.add(EntityReferenceRecord.fromEntityRecord(entityRecordById.get()));
+                        } else {
+                            throw new RuntimeException("TODO -- Critical exception, Inconsistent DB");
+                        }
+                    }
+                    er.put(field, erList);
+                }
+                // TODO query effective resolution
+                handled = true;
+            }
+            if (type == FieldType.PASSWORD) {
+                handled = true;
+                String jsonST = rs.getString(fieldName);
+                Password pwd = null;
+                if (jsonST != null) {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    try {
+                        pwd = objectMapper.readValue(jsonST, Password.class);
+                    } catch (IOException e) {
+                        throw new GeminiRuntimeException("Unable to convert Password from DB");
+                    }
+                }
+                er.put(field, pwd);
+            }
+            if (type == FieldType.GENERIC_ENTITY_REF) {
+                handled = true;
+                Object entityIdValue = rs.getObject(genericRefEntityFieldName(field, false));
+                EntityReferenceRecord entityReferenceRecord = null;
+                if (entityIdValue != null && (Number.class.isAssignableFrom(entityIdValue.getClass()) && ((Long) entityIdValue) != 0)) {
+                    Optional<Entity> targetEntityOpt = getEntityByID(schemaManager.getAllEntities(), (Long) entityIdValue);
+                    if (targetEntityOpt.isPresent()) {
+                        Entity targetEntity = targetEntityOpt.get();
+                        Object refId = rs.getObject(genericRefActualRefFieldName(field, false));
+                        Optional<EntityRecord> entityRecordByPersistedID = getEntityRecordById(targetEntity, (long) refId, transaction);
+                        // TODO resolutions -- if the entityrecord is not found probably the target record was deleted
+                        // TODO             but the field was generic and we cannot statically resolve deletion at delete time
+                        if (entityRecordByPersistedID.isPresent()) {
+                            entityReferenceRecord = createEntityReferenceRecordFromER(targetEntity, refId, entityRecordByPersistedID.get());
+                        } else {
+                            entityReferenceRecord = null;
+                        }
+                    } else {
+                        logger.error(String.format("Entity with id %s not found", entityIdValue));
+                    }
+                }
+                er.put(field, entityReferenceRecord);
+            }
+            if (!handled) {
+                throw new RuntimeException(String.format("Field %s of type %s not handled", field.getName(), field.getType()));
+            }
+        }
+        return er;
     }
 
     private EntityRecord getEntityRecordByPersistedID(Transaction transaction, EntityField field, Object pkValue) throws

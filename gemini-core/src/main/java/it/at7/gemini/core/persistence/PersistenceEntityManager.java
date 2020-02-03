@@ -11,6 +11,8 @@ import java.util.UUID;
 
 public interface PersistenceEntityManager {
 
+    void getALLEntityRecords(Entity entity, Transaction transaction, EntityRecordCallback callback) throws GeminiException;
+
     List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException;
 
     List<EntityRecord> getEntityRecordsMatching(Entity entity, FilterContext filterContex, Transaction transaction) throws GeminiException;

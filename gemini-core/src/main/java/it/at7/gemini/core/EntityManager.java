@@ -432,6 +432,41 @@ public interface EntityManager {
      */
     EntityRecord getOneRecordEntity(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
+    /**
+     * Execute a callback function to each record of an Entity opening a new transaction and wth a default operation context. Attention may be slow
+     *
+     * @param entity   target Entity
+     * @param callback callback function
+     * @throws GeminiException
+     */
+    default void getALLRecords(Entity entity, EntityRecordCallback callback) throws GeminiException {
+        getALLRecords(entity, EntityOperationContext.EMPTY, callback);
+    }
+
+    /**
+     * Execute a callback function to each record of an Entity openinig a new transaction. Attention may be slow
+     *
+     * @param entity                 target Entity
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @param callback               callback function
+     * @throws GeminiException
+     */
+    default void getALLRecords(Entity entity, EntityOperationContext entityOperationContext, EntityRecordCallback callback) throws GeminiException {
+        getTransactionManager().executeInSingleTrasaction(transaction -> {
+            getALLRecords(entity, entityOperationContext, transaction, callback);
+        });
+    }
+
+    /**
+     * Execute a callback function to each record of an Entity. Attention may be slow
+     *
+     * @param entity                 target Entity
+     * @param entityOperationContext the operationContext to retrieve information and custom logic
+     * @param transaction            he transaction to be used to retrieve records
+     * @param callback               callback function
+     * @throws GeminiException
+     */
+    void getALLRecords(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction, EntityRecordCallback callback) throws GeminiException;
 
     // TODO from here improve documentation and add entityOperationContext
 
