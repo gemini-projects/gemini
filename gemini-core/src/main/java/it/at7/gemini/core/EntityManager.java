@@ -432,6 +432,20 @@ public interface EntityManager {
      */
     EntityRecord getOneRecordEntity(Entity entity, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
+
+    /**
+     * Execute a callback function to each record of an Entity opening a new transaction and wth a default operation context. Attention may be slow
+     *
+     * @param entity   target Entity string
+     * @param callback callback function
+     * @throws GeminiException
+     */
+    default void getALLRecords(String entity, EntityRecordCallback callback) throws GeminiException {
+        Entity targetEntity = this.getEntity(entity);
+        assert targetEntity != null;
+        getALLRecords(targetEntity, EntityOperationContext.EMPTY, callback);
+    }
+
     /**
      * Execute a callback function to each record of an Entity opening a new transaction and wth a default operation context. Attention may be slow
      *
