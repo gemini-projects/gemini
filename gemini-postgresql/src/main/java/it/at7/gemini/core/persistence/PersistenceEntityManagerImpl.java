@@ -1063,7 +1063,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 List<EntityField> lkv = entityRef.getLogicalKey().getLogicalKeyList();
                 StringBuilder res = new StringBuilder();
                 for (EntityField lkPieceField : lkv) {
-                    EntityFieldValue entityFieldValue = EntityFieldValue.create(lkPieceField, logicalKeyRecord.getFieldValue(lkPieceField));
+                    EntityFieldValue entityFieldValue = EntityFieldValue.create(lkPieceField, logicalKeyRecord.getFieldValue(lkPieceField).getValue());
                     res.append(fromEntityFieldToUUID(entityFieldValue));
                 }
                 return res.toString();
