@@ -57,7 +57,7 @@ public class RecordConverters {
         if (idValue != null) {
             try {
                 // this sould not happen because of the loop on the entityschemafields - chiamare la Madonna
-                entityRecord.put(entityRecord.getEntity().getIdEntityField(), idValue);
+                entityRecord.put(entityRecord.getEntity().getIdEntityField(), Services.getPersistenceEntityManager().convertToPrimaryKey(idValue));
             } catch (EntityFieldException e) {
                 throw new RuntimeException("record from JSON MAP critical bug");
             }

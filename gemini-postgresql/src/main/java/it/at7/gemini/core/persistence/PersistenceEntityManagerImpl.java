@@ -53,6 +53,20 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
+    public Object convertToPrimaryKey(Object value) throws RuntimeException {
+        if (value instanceof Long) {
+            return value;
+        }
+        if (value instanceof String) {
+            return Long.valueOf((String) value);
+        }
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        throw new RuntimeException(String.format("%s Unable to convert to type Long", value));
+    }
+
+    @Override
     public void getALLEntityRecords(Entity entity, Transaction transaction, EntityRecordCallback callback) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         try {
@@ -170,7 +184,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
 
     private QueryWithParams createInsertQuery(EntityRecord record, Transaction transaction) throws GeminiException {
         if (!record.getEntity().isEmbedable())
-            record.setUUID(getUUIDforEntityRecord(record));
+            record.setUUID(getUUIDforEntityRecord(record, transaction));
         return makeInsertQuery(record, transaction);
     }
 
@@ -1027,12 +1041,12 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
-    public UUID getUUIDforEntityRecord(EntityRecord record) {
+    public UUID getUUIDforEntityRecord(EntityRecord record, Transaction transaction) throws GeminiException {
         // uuid: EntityName + LogicalKey --> it should be unique
         StringBuilder uuidString = new StringBuilder(record.getEntity().getName());
         Set<EntityFieldValue> logicalKeyValues = record.getLogicalKeyValue();
         for (EntityFieldValue lkValue : logicalKeyValues) {
-            uuidString.append(fromEntityFieldToUUID(lkValue));
+            uuidString.append(fromEntityFieldToUUID(lkValue, transaction));
         }
         if (logicalKeyValues.isEmpty() && !record.getEntity().isOneRecord()) {
             uuidString.append(System.currentTimeMillis());
@@ -1040,7 +1054,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         return UUID.nameUUIDFromBytes(uuidString.toString().getBytes(StandardCharsets.UTF_8));
     }
 
-    private String fromEntityFieldToUUID(EntityFieldValue lkValue) {
+    private String fromEntityFieldToUUID(EntityFieldValue lkValue, Transaction transaction) throws GeminiException {
         EntityField field = lkValue.getEntityField();
         FieldType type = field.getType();
         Object value = lkValue.getValue();
@@ -1064,11 +1078,23 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
                 StringBuilder res = new StringBuilder();
                 for (EntityField lkPieceField : lkv) {
                     EntityFieldValue entityFieldValue = EntityFieldValue.create(lkPieceField, logicalKeyRecord.getFieldValue(lkPieceField).getValue());
-                    res.append(fromEntityFieldToUUID(entityFieldValue));
+                    res.append(fromEntityFieldToUUID(entityFieldValue, transaction));
                 }
                 return res.toString();
-            } else {
-                logger.warn(String.format("Using primary key to generate the UUID for %s.%s - may be an error", field.getEntity().getName(), field.getName()));
+            }
+            if (refRecord.hasPrimaryKey()) {
+                Optional<EntityRecord> recByIDOpt = getEntityRecordById(entityRef, (long) refRecord.getPrimaryKey(), transaction);
+                if (recByIDOpt.isPresent()) {
+                    EntityRecord entityRecord = recByIDOpt.get();
+                    Set<EntityFieldValue> lkv = entityRecord.getLogicalKeyValue();
+                    StringBuilder res = new StringBuilder();
+                    for (EntityFieldValue entityFieldValue : lkv) {
+                        res.append(fromEntityFieldToUUID(entityFieldValue, transaction));
+                    }
+                    return res.toString();
+                } else {
+                    throw new RuntimeException(String.format("fromEntityFieldToUUID - Recognized primary key Reference %s - not found on DB", refRecord.getPrimaryKey()));
+                }
             }
         }
         throw new RuntimeException(String.format("fromEntityFieldToUUID - Not implemented %s", field.getType()));

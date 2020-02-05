@@ -18,7 +18,7 @@ public class EntityRecord implements RecordBase {
     private UUID uuid;
 
     public EntityRecord(Entity entity) {
-        Assert.notNull(entity, "Entity required for Entity DynamicRecord");
+        Assert.notNull(entity, "Entity required for EntityRecord");
         this.store = new HashMap<>();
         this.fields = new HashSet<>();
         this.entity = entity;

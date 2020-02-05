@@ -117,6 +117,12 @@ public class FieldConverters {
                     assert fieldEntity != null && fieldEntity.equals(objValueEntity);
                     pkValue = logicalKeyFromEntityRecord(entityRecord);
                     pkValue.addFullEntityRecord(entityRecord);
+                }
+                if (stValue.startsWith("$pk_")) {
+                    String pkStringValue = stValue.substring(4);
+                    Object pkRealValue = Services.getPersistenceEntityManager().convertToPrimaryKey(pkStringValue);
+                    pkValue = new EntityReferenceRecord(field.getEntityRef());
+                    pkValue.addPKValue(pkRealValue);
                 } else {
                     pkValue = logicalKeyFromObject(field.getEntityRef(), objValue);
                 }
