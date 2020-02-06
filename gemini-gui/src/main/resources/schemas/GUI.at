@@ -27,9 +27,8 @@ ENTITY GUISettings {
 }
 
 ENTITY ONEREC SideBarSettings {
-    BOOL     active
-    TEXT     mode
-    BOOL     isCollapsed
+    BOOL     menuEnabled
+    BOOL     searchEnabled
 }
 
 ENTITY ONEREC GeneralSettings {
@@ -59,4 +58,17 @@ ENTITY SmartModule {
 ENTITY CustomComponents {
     TEXT        name *
     TEXT        description
+}
+
+ENTITY RouteReference {
+    TEXT    key *
+}
+
+ENTITY RouteRefType IMPLEMENTS Domain
+
+ENTITY RouteReferenceValue {
+    RouteReference         refKey
+    RouteRefType           refType
+    GENERIC_ENTITY_REF     refValue
+    NUMBER                 sortKey
 }

@@ -82,8 +82,13 @@ ENTITY-RECORD GUISETTINGS INIT-GUISETTING 1
 
 ENTITY-RECORD SIDEBARSETTINGS INIT-SIDEBARSETTINGS 1
 {
-    "active": true
+    "searchEnabled": true,
+    "menuEnabled": true
 }
 
-
-
+ENTITY-RECORD ROUTEREFTYPE INIT-RRTYPE 1
+[{
+    "_id": 1,
+    "code": "ENTITY",
+    "description": "Link to an Entity"
+}]
