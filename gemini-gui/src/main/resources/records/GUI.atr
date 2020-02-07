@@ -86,9 +86,8 @@ ENTITY-RECORD SIDEBARSETTINGS INIT-SIDEBARSETTINGS 1
     "menuEnabled": true
 }
 
-ENTITY-RECORD ROUTEREFTYPE INIT-RRTYPE 1
+ENTITY-RECORD RouteRefType INIT-ROUTEREFTYPE 1
 [{
-    "_id": 1,
-    "code": "ENTITY",
-    "description": "Link to an Entity"
+    "code": "ENTITY_REF",
+    "description": "Entity Reference"
 }]

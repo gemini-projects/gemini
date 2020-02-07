@@ -62,13 +62,14 @@ ENTITY CustomComponents {
 
 ENTITY RouteReference {
     TEXT    key *
-}
+ }
 
-ENTITY RouteRefType IMPLEMENTS Domain
+ ENTITY RouteRefType IMPLEMENTS Domain
 
-ENTITY RouteReferenceValue {
-    RouteReference         refKey
-    RouteRefType           refType
-    GENERIC_ENTITY_REF     refValue
-    NUMBER                 sortKey
-}
+ ENTITY RouteReferenceValue {
+     TEXT                   _lk          *
+     RouteReference         refKey
+     RouteRefType           refType
+     GENERIC_ENTITY_REF     refValue
+     NUMBER                 sortKey
+ }
