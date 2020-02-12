@@ -220,11 +220,21 @@ public class FieldConverters {
         if (logicalKeyList.size() == 1 && !Map.class.isAssignableFrom(value.getClass())) {
             // logicalKeyValue is the value
             Field field = logicalKeyList.get(0);
-            if (RecordBase.class.isAssignableFrom(value.getClass())) {
-                RecordBase rval = (RecordBase) value;
-                value = rval.get(field);
+
+            if (EntityRecord.class.isAssignableFrom(value.getClass()) && field.getType().equals(FieldType.ENTITY_REF)) {
+                // try to see if we have and entity record for this reference field
+                Entity entityRef = field.getEntityRef();
+                assert entityRef != null;
+                // don't need to touch the value
             } else {
-                value = getConvertedFieldValue(field, value);
+                // otherwise it may be a dynamic record
+                if (RecordBase.class.isAssignableFrom(value.getClass())) {
+                    RecordBase rval = (RecordBase) value;
+                    value = rval.get(field);
+                } else {
+                    // try the simplest conversion
+                    value = getConvertedFieldValue(field, value);
+                }
             }
             // TODO be careful here, we are re-converting the passed objec
             record.addLogicalKeyValue(field, value);
