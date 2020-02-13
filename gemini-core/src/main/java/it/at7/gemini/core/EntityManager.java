@@ -198,6 +198,20 @@ public interface EntityManager {
     }
 
     /**
+     * Update the provided record in a new fresh transaction and using the default EnittyOperationContext.
+     *
+     * @param record      record to update. If the record contains the persistence ID the implementation must allow
+     *                    the update of logical key fields. Otherwise the record is firts of all retrieved (from persistence
+     *                    manager) by its logical key and then updated.
+     * @param transaction the transaction to be used to update the record
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong withRecord persistence operations
+     */
+    default EntityRecord update(EntityRecord record, Transaction transaction) throws GeminiException {
+        return update(record, EntityOperationContext.EMPTY, transaction);
+    }
+
+    /**
      * Update the provided record in a new fresh transaction and using the provided EnittyOperationContext.
      *
      * @param record                 record to update. If the record contains the persistence ID the implementation must allow
@@ -223,6 +237,19 @@ public interface EntityManager {
      */
     default EntityRecord update(Collection<? extends FieldValue> logicalKey, EntityRecord record) throws GeminiException {
         return update(logicalKey, record, EntityOperationContext.EMPTY);
+    }
+
+    /**
+     * Update the entity record retrieved by the logicalKey in a new fresh transaction and using default EnittyOperationContext.
+     *
+     * @param logicalKey  fields to retrieve the persisted entity record to update
+     * @param record      record to be used to ovveride the persisted entity record returned by logical key.
+     * @param transaction the transaction to be used to update the record
+     * @return record updated
+     * @throws GeminiException if the record is not found or something goes wrong withRecord persistence operations
+     */
+    default EntityRecord update(Collection<? extends FieldValue> logicalKey, EntityRecord record, Transaction transaction) throws GeminiException {
+        return update(logicalKey, record, EntityOperationContext.EMPTY, transaction);
     }
 
     /**

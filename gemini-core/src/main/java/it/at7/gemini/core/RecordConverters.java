@@ -284,7 +284,7 @@ public class RecordConverters {
         DynamicRecord lkValue = pkRefRec.getLogicalKeyRecord();
         Entity.LogicalKey lk = pkRefRec.getEntity().getLogicalKey();
         List<EntityField> lkFields = lk.getLogicalKeyList();
-        if (lkFields.size() == 1) {
+        if (lkFields.size() == 1 && !lkFields.get(0).getType().equals(FieldType.ENTITY_REF)) {
             Object lkSingleValue = lkValue.get(lkFields.get(0));
             assert lkSingleValue != null;
             return lkSingleValue;
