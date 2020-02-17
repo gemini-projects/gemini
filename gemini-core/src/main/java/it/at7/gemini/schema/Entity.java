@@ -211,7 +211,7 @@ public class Entity {
     @Override
     public int hashCode() {
         // no ID Value / Fields in Equals
-        return Objects.hash(module, name, embedable);
+        return Objects.hash(module, name);
     }
 
     private Map<String, Object> copyDefaultRecord() {

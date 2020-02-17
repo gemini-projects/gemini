@@ -47,7 +47,7 @@ public class PerformanceEntityManagerTest extends GeminiPostgresqlTestBase {
 
     public static void executeInSingleTransaction(long howMany) throws GeminiException {
         Entity dataTypeEntity = schemaManager.getEntity("TESTDATATYPE");
-        transactionManager.executeInSingleTrasaction(new VoidTransactionCallback() {
+        transactionManager.executeEntityManagedTransaction(new VoidTransactionCallback() {
             @Override
             public void doInTransaction(Transaction t) throws GeminiException {
                 EntityRecord newrec = new EntityRecord(dataTypeEntity);
@@ -82,7 +82,7 @@ public class PerformanceEntityManagerTest extends GeminiPostgresqlTestBase {
         newrec.put("textarray", new String[]{"abc", "def"});
         for (int i = 0; i < howMany; i++) {
             newrec.put("text", "otherTextString" + i);
-            transactionManager.executeInSingleTrasaction(new VoidTransactionCallback() {
+            transactionManager.executeEntityManagedTransaction(new VoidTransactionCallback() {
                 @Override
                 public void doInTransaction(Transaction t) throws GeminiException {
                     persistenceEntityManager.createNewEntityRecord(newrec, t);

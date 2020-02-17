@@ -9,6 +9,7 @@ import it.at7.gemini.schema.Entity;
 import it.at7.gemini.schema.EntityField;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 public interface EntityManager {
@@ -36,6 +37,13 @@ public interface EntityManager {
      */
     @Nullable
     Entity getEntity(String entity);
+
+    /**
+     * Get the time of the last update for the entity
+     *
+     * @return a map with last update by entity
+     */
+    Map<Entity, LocalDateTime> getEntitiesLastUpdate() throws GeminiException;
 
     /**
      * Create a new empty Entity Record
@@ -70,7 +78,7 @@ public interface EntityManager {
      * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
      */
     default EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext operationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return putIfAbsent(record, operationContext, transaction);
         });
     }
@@ -122,7 +130,7 @@ public interface EntityManager {
      * @throws GeminiException {@link it.at7.gemini.exceptions.EntityRecordException}
      */
     default Collection<EntityRecord> putIfAbsent(Collection<EntityRecord> records, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return putIfAbsent(records, entityOperationContext, transaction);
         });
     }
@@ -154,7 +162,7 @@ public interface EntityManager {
      * @throws GeminiException if something goes wrong withRecord persistence operations
      */
     default EntityRecord putOrUpdate(EntityRecord record) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return putOrUpdate(record, transaction);
         });
     }
@@ -222,7 +230,7 @@ public interface EntityManager {
      * @throws GeminiException if the record is not found or something goes wrong withRecord persistence operations
      */
     default EntityRecord update(EntityRecord record, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return update(record, entityOperationContext, transaction);
         });
     }
@@ -262,7 +270,7 @@ public interface EntityManager {
      * @throws GeminiException if the record is not found or something goes wrong withRecord persistence operations
      */
     default EntityRecord update(Collection<? extends FieldValue> logicalKey, EntityRecord record, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return update(logicalKey, record, entityOperationContext, transaction);
         });
     }
@@ -277,7 +285,7 @@ public interface EntityManager {
      * @throws GeminiException if the record is not found or something goes wrong withRecord persistence operations
      */
     default EntityRecord update(UUID uuid, EntityRecord record, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return update(uuid, record, entityOperationContext, transaction);
         });
     }
@@ -339,7 +347,7 @@ public interface EntityManager {
      * @throws GeminiException if the record is not found or something goes wrong withRecord persistence operations
      */
     default EntityRecord delete(EntityRecord record, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return delete(record, entityOperationContext, transaction);
         });
     }
@@ -354,7 +362,7 @@ public interface EntityManager {
      * @throws GeminiException if the record is not found or something goes wrong withRecord persistence operations
      */
     default EntityRecord delete(Entity entity, UUID uuid, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return delete(entity, uuid, entityOperationContext, transaction);
         });
     }
@@ -381,7 +389,7 @@ public interface EntityManager {
      * @throws GeminiException if the record is not found or something goes wrong withRecord persistence operations
      */
     default EntityRecord delete(Entity entity, Collection<? extends FieldValue> logicalKey, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return delete(entity, logicalKey, entityOperationContext, transaction);
         });
     }
@@ -443,7 +451,7 @@ public interface EntityManager {
      * @throws GeminiException if persistence error occurs or called on non oneRecord entities
      */
     default EntityRecord getOneRecordEntity(Entity entity, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return getOneRecordEntity(entity, entityOperationContext, transaction);
         });
     }
@@ -519,7 +527,7 @@ public interface EntityManager {
      * @throws GeminiException
      */
     default void getALLRecords(Entity entity, EntityOperationContext entityOperationContext, EntityRecordCallback callback) throws GeminiException {
-        getTransactionManager().executeInSingleTrasaction(transaction -> {
+        getTransactionManager().executeEntityManagedTransaction(transaction -> {
             getALLRecords(entity, entityOperationContext, transaction, callback);
         });
     }
@@ -568,7 +576,7 @@ public interface EntityManager {
     }
 
     default EntityRecord get(Entity entity, Collection<? extends FieldValue> logicalKey) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return get(entity, logicalKey, transaction);
         });
     }
@@ -583,7 +591,7 @@ public interface EntityManager {
      * @throws GeminiException     if some error generic errors occurs
      */
     default EntityRecord get(String entityName, Object logicalKey) throws LkNotFoundException, GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return get(entityName, logicalKey, transaction);
         });
     }
@@ -635,7 +643,7 @@ public interface EntityManager {
     }
 
     default List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return getRecordsMatching(entity, filterContext, entityOperationContext, transaction);
         });
     }
@@ -643,7 +651,7 @@ public interface EntityManager {
     List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
     default long countRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext) throws GeminiException {
-        return getTransactionManager().executeInSingleTrasaction(transaction -> {
+        return getTransactionManager().executeEntityManagedTransaction(transaction -> {
             return countRecordsMatching(entity, filterContext, entityOperationContext, transaction);
         });
     }

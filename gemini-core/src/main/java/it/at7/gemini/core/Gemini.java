@@ -44,7 +44,7 @@ public class Gemini {
             loadCoreServices();
             loadGeminiModules();
             start();
-            transactionManager.executeInSingleTrasaction(this::initializeSchemaAndEvents);
+            transactionManager.executeEntityManagedTransaction(this::initializeSchemaAndEvents);
             initialize();
         } catch (Exception e) {
             logger.error("Error During start of Gemini", e);

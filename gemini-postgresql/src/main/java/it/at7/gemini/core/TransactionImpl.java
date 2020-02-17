@@ -29,7 +29,7 @@ import java.util.Optional;
 
 @Component
 @Scope("prototype")
-public class TransactionImpl implements Transaction {
+public class TransactionImpl extends Transaction {
     private final Logger logger = LoggerFactory.getLogger(TransactionImpl.class);
     private final DataSource dataSource;
 

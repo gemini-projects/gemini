@@ -47,7 +47,7 @@ public class SchemaManagerAbstTest {
         assertNotNull(fieldResolutionEntity);
 
         // then check some default records that must be in db
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             Map<String, Object> entityLogicalKey = Map.of(EntityRef.FIELDS.NAME, "ENTITY");
             EntityRecord entityRecordWithLogicalKey = RecordConverters.entityRecordFromMap(entityEntity, entityLogicalKey);
             Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(entityEntity, entityRecordWithLogicalKey, t);

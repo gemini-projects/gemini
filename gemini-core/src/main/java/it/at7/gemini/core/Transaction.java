@@ -1,21 +1,33 @@
 package it.at7.gemini.core;
 
 import it.at7.gemini.exceptions.GeminiException;
+import it.at7.gemini.schema.Entity;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.*;
 
-public interface Transaction extends AutoCloseable {
+public abstract class Transaction implements AutoCloseable {
 
-    void open() throws GeminiException;
+    private Set<Entity> updatedEntities = new HashSet<>();
 
-    void close() throws GeminiException;
+    public abstract void open() throws GeminiException;
 
-    void commit() throws GeminiException;
+    public abstract void close() throws GeminiException;
 
-    void rollback() throws GeminiException;
+    public abstract void commit() throws GeminiException;
 
-    Optional<TransactionCache> getTransactionCache();
+    public abstract void rollback() throws GeminiException;
 
-    LocalDateTime getOpenTime();
+    public abstract Optional<TransactionCache> getTransactionCache();
+
+    public abstract LocalDateTime getOpenTime();
+
+    public void entityUpdate(Entity entity) {
+        this.updatedEntities.add(entity);
+    }
+
+    public Collection<Entity> getUpdatedEntities() {
+        return Collections.unmodifiableCollection(updatedEntities);
+    }
+
 }

@@ -1,6 +1,7 @@
 package it.at7.gemini.auth.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -28,6 +29,9 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
 
     @Autowired
     private GeminiUserDetailsService userDetailsService;
+
+    @Value("${gemini.auth.tokenSecret:gemini}")
+    private String tokenSecret;
 
 
     // Configure the token store and authentication manager
@@ -75,7 +79,7 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
     @Bean
     public JwtAccessTokenConverter accessTokenConverter() {
         JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-        converter.setSigningKey("secret"); // symmetric key
+        converter.setSigningKey(tokenSecret);
         return converter;
     }
 

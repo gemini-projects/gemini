@@ -9,8 +9,8 @@ public class TransactionManagerAbstTest {
     @Test
     public void testMultipleTransaction() throws GeminiException {
         TransactionManager transactionManager = Services.getTransactionManager();
-        Transaction t1 = transactionManager.openTransaction();
-        Transaction t2 = transactionManager.openTransaction();
+        Transaction t1 = transactionManager.openRawTransaction();
+        Transaction t2 = transactionManager.openRawTransaction();
         Assert.assertNotEquals(t1, t2);
     }
 

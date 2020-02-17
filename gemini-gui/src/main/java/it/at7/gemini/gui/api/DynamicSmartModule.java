@@ -54,7 +54,7 @@ public class DynamicSmartModule {
             ModuleBase moduleBase = module.get();
             SmartModule smartModule = (SmartModule) moduleBase;
             RawSchema rawSchema = smartSchema.getRawSchema(smartModule);
-            transactionManager.executeInSingleTrasaction(t ->
+            transactionManager.executeEntityManagedTransaction(t ->
             {
                 EntityOperationContext entityOperationContext = restAPIControllerInterface.createEntityOperationContext(request);
                 entityOperationContext.putFlag(DYNAMIC_SCHEMA_CONTEXT_FLAG);

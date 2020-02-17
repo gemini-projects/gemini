@@ -60,3 +60,8 @@ ENTITY FieldResolution {
     TEXT    code *
     TEXT    value
 }
+
+ENTITY EntityEra {
+    Entity      entity      *
+    DATETIME    timestamp
+}

@@ -38,7 +38,7 @@ public class PersistenceEntityManagerAbstTest {
         newrec.put("bool", false);
         // save the new entity
         EntityRecord savedEntity =
-                transactionManager.executeInSingleTrasaction(t -> {
+                transactionManager.executeEntityManagedTransaction(t -> {
                     // new record
                     EntityRecord entity = persistenceEntityManager.createNewEntityRecord(newrec, t);
                     assertEquals("textString", entity.get("text"));
@@ -50,7 +50,7 @@ public class PersistenceEntityManagerAbstTest {
 
 
         // error if we try to save it a second time (index on logical key)
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             // check duplicated
             try {
                 persistenceEntityManager.createNewEntityRecord(newrec, t);
@@ -62,7 +62,7 @@ public class PersistenceEntityManagerAbstTest {
 
 
         // update the record
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             savedEntity.put("text", "textUpdatedKey");
             savedEntity.put("numberLong", 88);
             savedEntity.put("numberDouble", 88.88);
@@ -78,14 +78,14 @@ public class PersistenceEntityManagerAbstTest {
 
 
         // first record (lk) no longer exists - we have updated also the key
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             Optional<EntityRecord> recordByLogicalKey = persistenceEntityManager.getEntityRecordByLogicalKey(newrec, t);
             assertFalse(recordByLogicalKey.isPresent());
         });
 
 
         // delete the record
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             persistenceEntityManager.deleteEntityRecordByID(savedEntity, t);
             Optional<EntityRecord> deletedRecord = persistenceEntityManager.getEntityRecordByLogicalKey(newrec, t);
             assertFalse(deletedRecord.isPresent());
@@ -95,7 +95,7 @@ public class PersistenceEntityManagerAbstTest {
         EntityRecord recWithID = new EntityRecord(dataTypeEntity);
         recWithID.put("_id", 777);
         recWithID.put("text", "textStringWithID");
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             // new record
             EntityRecord r = persistenceEntityManager.createNewEntityRecord(recWithID, t);
             assertEquals("textStringWithID", r.get("text"));
@@ -103,7 +103,7 @@ public class PersistenceEntityManagerAbstTest {
         });
         EntityRecord recWithIDIncremented = new EntityRecord(dataTypeEntity);
         recWithIDIncremented.put("text", "textStringWithID_Inc");
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             // new record
             EntityRecord r = persistenceEntityManager.createNewEntityRecord(recWithIDIncremented, t);
             assertEquals("textStringWithID_Inc", r.get("text"));
@@ -117,7 +117,7 @@ public class PersistenceEntityManagerAbstTest {
     @Test(expected = IdFieldException.class)
     public void n2_TestIdRequiredForModifyActions() throws GeminiException {
         EntityRecord newrec = new EntityRecord(dataTypeEntity);
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             newrec.put("numberLong", 88);
             persistenceEntityManager.updateEntityRecordByID(newrec, t);
         });
@@ -126,7 +126,7 @@ public class PersistenceEntityManagerAbstTest {
     @Test
     public void n3_TestSimpleReferenceType() throws GeminiException {
         EntityRecord savedEntity =
-                transactionManager.executeInSingleTrasaction(t -> {
+                transactionManager.executeEntityManagedTransaction(t -> {
                     EntityRecord domain = new EntityRecord(domainEntity);
                     domain.put("code", "D1");
                     persistenceEntityManager.createNewEntityRecord(domain, t);
@@ -144,7 +144,7 @@ public class PersistenceEntityManagerAbstTest {
                 });
 
         // update the entity withGeminiSearchString another FK
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             EntityRecord domain = new EntityRecord(domainEntity);
             domain.put("code", "D2");
             EntityRecord savedDomain = persistenceEntityManager.createNewEntityRecord(domain, t);
@@ -163,7 +163,7 @@ public class PersistenceEntityManagerAbstTest {
     public void n4_getALLEntityRecord() throws GeminiException {
         Map<String, Long> counter = new HashMap<>();
         counter.put("counter", 0L);
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             dataTypeEntity = Services.getSchemaManager().getEntity("TESTDATATYPE");
             persistenceEntityManager.getALLEntityRecords(dataTypeEntity, t, new EntityRecordCallback() {
                 @Override
@@ -179,7 +179,7 @@ public class PersistenceEntityManagerAbstTest {
     //@Test(expected = AssertionError.class)
     public void n4_TestExpectAssertionError() throws SQLException, GeminiException {
         // deleting the Domain D2... excpeting assertion errore when try to get a record withGeminiSearchString reference to the deleted domain
-        transactionManager.executeInSingleTrasaction(t -> {
+        transactionManager.executeEntityManagedTransaction(t -> {
             EntityRecord domain2 = new EntityRecord(domainEntity);
             domain2.put("code", "D2");
             Optional<EntityRecord> domain2OnDb = persistenceEntityManager.getEntityRecordByLogicalKey(domain2, t);

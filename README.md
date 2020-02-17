@@ -2,7 +2,7 @@
     <a href="https://gemini.at7.it" target="_blank"><img src="./gemini_logo.png" height="130" alt="Gemini Logo"></a>
     <br />
     <br />
-    <b>A Model Driven Framework to automatically expose CRUD REST APIs and that manages everything else</b>
+    <b>A Model Driven Framework built for ease of application development.</b>
     <br />
     <br />
 </p>
@@ -15,13 +15,12 @@
 ![Version](https://img.shields.io/github/release/h4t0n/gemini)
 ___
 
-Gemini is a backend REST framework to automatically create CRUD REST APIs from scratch starting from a simple Schema
- definition called Gemini DSL. Briefly Gemini automatically handles for you:
-* **Data Storage**: creating all persistence stuff (tables, relations and so on)
-* **API controllers**: creating common REST CRUD controllers for each DSL Entity
+Gemini lets you focus on your Models and Domains. Just define your schema by using the Gemini DSL and let it do the
+rest. Briefly Gemini automatically handles for you:
+* **Entity Management**: creating all persistence stuff (tables, relations and so on) like an ORM
+* **CRUD REST APIs**: creating common controllers for each DSL Entity
 * **Swagger API documentation**: creating the openapi language-agnostic interface to RESTful APIs 
 * **Authentication**: by using Spring OAuth2 and JWT tokens
-* **API callbacks**: to add business logic with ease
 
 <p align="center">
    <img src="./gemini_hiw.gif" height="400">

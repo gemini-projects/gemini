@@ -26,7 +26,8 @@ import org.springframework.context.ConfigurableApplicationContext;
         FilterEntityManagerAbstTest.class,
         GenericEntityRefEntityManagerAbstTest.class,
         OneRecordEntityManagerAbstTest.class,
-        PasswordEntityManagerAbstTest.class
+        PasswordEntityManagerAbstTest.class,
+        EntityCacheManagerAbstTest.class
 })
 public class SuiteTestCore {
 

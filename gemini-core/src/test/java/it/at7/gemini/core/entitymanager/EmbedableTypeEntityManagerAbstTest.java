@@ -125,7 +125,7 @@ public class EmbedableTypeEntityManagerAbstTest {
         EntityRecord deletedEmbeded = deleted.get("embeded");
         assertEquals(20, (long) deletedEmbeded.get("numberLong")); // updated on test n5
 
-        Services.getTransactionManager().executeInSingleTrasaction(t -> {
+        Services.getTransactionManager().executeEntityManagedTransaction(t -> {
             Optional<EntityRecord> deletedRecord = Services.getPersistenceEntityManager().getEntityRecordById(deleted.getEntity(), (long) deleted.getID(), t);
             assertFalse(deletedRecord.isPresent());
             Optional<EntityRecord> delEmb = Services.getPersistenceEntityManager().getEntityRecordById(deletedEmbeded.getEntity(), (long) deletedEmbeded.getID(), t);

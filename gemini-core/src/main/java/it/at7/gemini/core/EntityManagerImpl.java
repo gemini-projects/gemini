@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static it.at7.gemini.conf.State.PROVIDED_CLASSPATH_RECORDS_HANDLED;
@@ -59,6 +60,18 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         return schemaManager.getEntity(entity.toUpperCase());
     }
 
+    @Override
+    public Map<Entity, LocalDateTime> getEntitiesLastUpdate() throws GeminiException {
+        Transaction transaction = this.getTransactionManager().openRawTransaction();
+        Map<Entity, LocalDateTime> res = new HashMap<>();
+        this.persistenceEntityManager.getALLEntityRecords(getEntity(EntityRef.ERA.NAME), transaction, erupd -> {
+            EntityReferenceRecord erf = erupd.get(EntityRef.ERA.FIELDS.ENTITY);
+            LocalDateTime localDateTime = erupd.get(EntityRef.ERA.FIELDS.TIMESTAMP);
+            res.put(getEntity((String) erf.getLogicalKeyRecord().get(EntityRef.FIELDS.NAME)), localDateTime);
+        });
+        transaction.close();
+        return res;
+    }
 
     @Override
     public EntityRecord putIfAbsent(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
@@ -204,6 +217,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         eventManager.beforeDeleteRecord(persistedRecord, entityOperationContext, transaction);
         handleDeleteResolution(persistedRecord, transaction); // TODO ? use entityOperationContext ??
         persistenceEntityManager.deleteEntityRecordByID(persistedRecord, transaction);
+        transaction.entityUpdate(persistedRecord.getEntity());
         return persistedRecord;
     }
 
@@ -217,14 +231,14 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     @Override
     public EntityRecord get(Entity entity, UUID uuid) throws GeminiException {
         checkEnabledState();
-        return transactionManager.executeInSingleTrasaction(transaction -> {
+        return transactionManager.executeEntityManagedTransaction(transaction -> {
             return get(entity, uuid, transaction);
         });
     }
 
     @Override
     public List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType) throws GeminiException {
-        return transactionManager.executeInSingleTrasaction(transaction -> {
+        return transactionManager.executeEntityManagedTransaction(transaction -> {
             return getRecordsMatching(entity, filterFielValueType, transaction);
         });
     }
@@ -237,7 +251,7 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
 
     @Override
     public List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext, EntityOperationContext entityOperationContext) throws GeminiException {
-        return transactionManager.executeInSingleTrasaction(transaction -> {
+        return transactionManager.executeEntityManagedTransaction(transaction -> {
             return getRecordsMatching(entity, filterContext, entityOperationContext, transaction);
         });
     }
@@ -266,12 +280,17 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         return createNewEntityRecord(new EntityRecord(entity), entityOperationContext, transaction);
     }
 
+
+    // --------- --------- --------- --------- --------- --------- --------- --------- --------- ---------/
+
+
     private EntityRecord createNewEntityRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         this.checkFrameworkEntitiesCreation(record, entityOperationContext);
         this.eventManager.beforeCreateRecord(record, entityOperationContext, transaction);
         this.eventManager.beforeInsertFields(record, entityOperationContext, transaction);
         EntityRecord newEntityRecord = persistenceEntityManager.createNewEntityRecord(record, transaction);
         this.eventManager.onInsertedRecord(newEntityRecord, entityOperationContext, transaction);
+        transaction.entityUpdate(record.getEntity());
         return newEntityRecord;
     }
 
@@ -282,7 +301,9 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
         if (record.someRealUpdatedNeeded(persistedRecord)) {
             // if (someRealUpdatedNeeded(record, persistedRecord)) {
             persistedRecord.update(record);
-            return persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
+            EntityRecord entityRecord = persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
+            transaction.entityUpdate(record.getEntity());
+            return entityRecord;
         }
         return persistedRecord;
     }

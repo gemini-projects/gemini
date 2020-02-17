@@ -13,7 +13,7 @@ public class SchemaManagerInitAbstTest {
         TransactionManager transactionManager = Services.getTransactionManager();
         SchemaManagerInit schemaManager = (SchemaManagerInit) Services.getSchemaManager();
 
-        try (Transaction transaction = transactionManager.openTransaction()) {
+        try (Transaction transaction = transactionManager.openRawTransaction()) {
             schemaManager.loadGeminiModulesSchemas(List.of(new CoreModule(), new MetaNotUnique()));
             schemaManager.initializeSchemaStorage(transaction);
         }

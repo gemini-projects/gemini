@@ -11,33 +11,37 @@ import org.springframework.stereotype.Service;
 public class TransactionManagerImpl implements TransactionManager {
     private final static Logger logger = LoggerFactory.getLogger(TransactionManagerImpl.class);
     private final ApplicationContext applicationContext;
+    private final EntityCacheManager entityCacheManager;
 
 
     @Autowired
-    public TransactionManagerImpl(ApplicationContext applicationContext) {
+    public TransactionManagerImpl(ApplicationContext applicationContext, EntityCacheManager entityCacheManager) {
         this.applicationContext = applicationContext;
+        this.entityCacheManager = entityCacheManager;
     }
 
     @Override
-    public Transaction openTransaction() throws GeminiException {
+    public Transaction openRawTransaction() throws GeminiException {
         Transaction transaction = applicationContext.getBean(Transaction.class);
         transaction.open();
         return transaction;
     }
 
-
     @Override
-    public <T> T executeInSingleTrasaction(TransactionCallback callback) throws GeminiException {
-        try (Transaction transaction = openTransaction()) {
+    public <T> T executeEntityManagedTransaction(TransactionCallback callback) throws GeminiException {
+        try (Transaction transaction = openRawTransaction()) {
             Object o = callback.doInTransaction(transaction);
+            this.entityCacheManager.notifyUpdate(transaction.getUpdatedEntities(), transaction);
             transaction.commit();
             return (T) o;
         }
     }
+
     @Override
-    public void executeInSingleTrasaction(VoidTransactionCallback callback) throws GeminiException {
-        try (Transaction transaction = openTransaction()) {
+    public void executeEntityManagedTransaction(VoidTransactionCallback callback) throws GeminiException {
+        try (Transaction transaction = openRawTransaction()) {
             callback.doInTransaction(transaction);
+            this.entityCacheManager.notifyUpdate(transaction.getUpdatedEntities(), transaction);
             transaction.commit();
         }
     }
