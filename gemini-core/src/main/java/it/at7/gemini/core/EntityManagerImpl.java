@@ -298,14 +298,16 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     private EntityRecord updateRecordIfNeededHandlingEvents(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction, EntityRecord persistedRecord) throws GeminiException {
         eventManager.beforeUpdateRecord(record, persistedRecord, entityOperationContext, transaction);
         eventManager.onUpdateFields(record, persistedRecord, entityOperationContext, transaction);
+        EntityRecord targetRecord = persistedRecord;
         if (record.someRealUpdatedNeeded(persistedRecord)) {
             // if (someRealUpdatedNeeded(record, persistedRecord)) {
             persistedRecord.update(record);
             EntityRecord entityRecord = persistenceEntityManager.updateEntityRecordByID(persistedRecord, transaction);
             transaction.entityUpdate(record.getEntity());
-            return entityRecord;
+            targetRecord = entityRecord;
         }
-        return persistedRecord;
+        eventManager.afterUpdateRecord(targetRecord, entityOperationContext, transaction);
+        return targetRecord;
     }
 
 

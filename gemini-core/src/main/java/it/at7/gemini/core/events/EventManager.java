@@ -21,4 +21,6 @@ public interface EventManager {
     void beforeDeleteRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 
     void onInsertedRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
+
+    void afterUpdateRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException;
 }

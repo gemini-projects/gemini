@@ -33,6 +33,7 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
     private final Map<String, List<BeanWithMethod>> onRecordInserted = new HashMap<>();
     private final Map<String, List<BeanWithMethod>> beforeCreateRecord = new HashMap<>();
     private final Map<String, List<BeanWithMethod>> beforeUpdateRecord = new HashMap<>();
+    private final Map<String, List<BeanWithMethod>> afterUpdateRecord = new HashMap<>();
     private final Map<String, List<BeanWithMethod>> beforeDeleteRecord = new HashMap<>();
 
 
@@ -115,6 +116,10 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
             resolveAnnotationEntity(entityName, beforeUpdateRecord, bean, targetMethod);
         }
 
+        if (annotation instanceof AfterUpdateRecord) {
+            resolveAnnotationEntity(entityName, afterUpdateRecord, bean, targetMethod);
+        }
+
         if (annotation instanceof BeforeDeleteRecord) {
             resolveAnnotationEntity(entityName, beforeDeleteRecord, bean, targetMethod);
         }
@@ -184,26 +189,31 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
     }
 
     @Override
-    public void beforeUpdateRecord(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
+    public void beforeUpdateRecord(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         handleEventForEntity(record, persistedRecord, transaction, entityOperationContext, this.beforeUpdateRecord);
     }
 
     @Override
-    public void beforeCreateRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
+    public void beforeCreateRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         handleEventForEntity(record, null, transaction, entityOperationContext, this.beforeCreateRecord);
     }
 
     @Override
-    public void beforeDeleteRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
+    public void beforeDeleteRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         handleEventForEntity(record, null, transaction, entityOperationContext, this.beforeDeleteRecord);
     }
 
     @Override
-    public void onInsertedRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiGenericException {
+    public void onInsertedRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
         handleEventForEntity(record, null, transaction, entityOperationContext, this.onRecordInserted);
     }
 
-    private void handleEventForEntity(EntityRecord record, EntityRecord persistedRecord, Transaction transaction, EntityOperationContext entityOperationContext, Map<String, List<BeanWithMethod>> methods) throws GeminiGenericException {
+    @Override
+    public void afterUpdateRecord(EntityRecord record, EntityOperationContext entityOperationContext, Transaction transaction) throws GeminiException {
+        handleEventForEntity(record, null, transaction, entityOperationContext, this.afterUpdateRecord);
+    }
+
+    private void handleEventForEntity(EntityRecord record, EntityRecord persistedRecord, Transaction transaction, EntityOperationContext entityOperationContext, Map<String, List<BeanWithMethod>> methods) throws GeminiException {
         Entity entity = record.getEntity();
         String entityName = entity.getName();
 
@@ -217,7 +227,7 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
         ivokeMethodForEntity(record, persistedRecord, entityOperationContext, entityMethods, transaction);
     }
 
-    private void ivokeMethodForEntity(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, List<BeanWithMethod> beanWithMethods, Transaction transaction) throws GeminiGenericException {
+    private void ivokeMethodForEntity(EntityRecord record, EntityRecord persistedRecord, EntityOperationContext entityOperationContext, List<BeanWithMethod> beanWithMethods, Transaction transaction) throws GeminiException {
         if (beanWithMethods != null && !beanWithMethods.isEmpty()) {
             // TODO events sorting and priority
             for (BeanWithMethod bm : beanWithMethods) {
@@ -225,7 +235,10 @@ public class EventManagerInitImpl implements EventManagerInit, EventManager {
                     EventContext eventContext = getEventContext(transaction, entityOperationContext, record, persistedRecord);
                     bm.method.invoke(bm.bean, eventContext);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw GeminiGenericException.wrap(e);
+                    Throwable cause = e.getCause();
+                    if (GeminiException.class.isAssignableFrom(cause.getClass()))
+                        throw (GeminiException) cause;
+                    throw GeminiGenericException.wrap(cause);
                 }
             }
         }
