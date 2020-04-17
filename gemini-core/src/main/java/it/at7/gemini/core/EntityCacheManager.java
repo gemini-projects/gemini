@@ -16,7 +16,7 @@ public interface EntityCacheManager {
     void notifyUpdate(Entity entity, Transaction transaction) throws GeminiException;
 
     /**
-     * Notify that the target entity+ies data were updated
+     * Notify that the target entities data were updated
      *
      * @param entities    target entities
      * @param transaction transaction responsible of the update

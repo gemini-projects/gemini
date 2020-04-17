@@ -249,12 +249,18 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
     }
 
     @Override
-    public List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFielValue, Transaction transaction) throws GeminiException {
+    public List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFielValue, @Nullable BasicFilterContext filterContext, Transaction transaction) throws GeminiException {
         TransactionImpl transactionImpl = (TransactionImpl) transaction;
         Set<EntityFieldValue> filter = convertToEntityFieldValues(entity, filterFielValue);
         try {
-            QueryWithParams queryWithParams = makeSelectQueryFilteringFiledValue(entity, filter, transaction);
-            return transactionImpl.executeQuery(queryWithParams.getSql(), queryWithParams.getParams(), resultSet -> {
+            QueryWithParams query = makeSelectQueryFilteringFiledValue(entity, filter, transaction);
+            // TODO here
+            if (filterContext != null) {
+                addOrderBy(query, filterContext, entity);
+                addLimit(query, filterContext);
+                addOffset(query, filterContext);
+            }
+            return transactionImpl.executeQuery(query.getSql(), query.getParams(), resultSet -> {
                 return fromResultSetToEntityRecord(resultSet, entity, transaction);
             });
         } catch (SQLException e) {
@@ -376,7 +382,7 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
     }
 
-    private void addOrderBy(QueryWithParams query, FilterContext filterContext, Entity entity) {
+    private void addOrderBy(QueryWithParams query, BasicFilterContext filterContext, Entity entity) {
         String[] orderBy = filterContext.getOrderBy();
         if (orderBy != null && orderBy.length > 0) {
             StringJoiner oby = new StringJoiner(", ");
@@ -403,13 +409,13 @@ public class PersistenceEntityManagerImpl implements PersistenceEntityManager {
         }
     }
 
-    private void addLimit(QueryWithParams query, FilterContext filterContext) {
+    private void addLimit(QueryWithParams query, BasicFilterContext filterContext) {
         if (filterContext.getLimit() > 0) {
             query.addToSql(String.format(" LIMIT %d", filterContext.getLimit()));
         }
     }
 
-    private void addOffset(QueryWithParams query, FilterContext filterContext) {
+    private void addOffset(QueryWithParams query, BasicFilterContext filterContext) {
         if (filterContext.getStart() > 0) {
             query.addToSql(String.format(" OFFSET %d", filterContext.getStart()));
         }

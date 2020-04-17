@@ -244,9 +244,15 @@ public class EntityManagerImpl implements EntityManager, EntityManagerInit {
     }
 
     @Override
+    public List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType, BasicFilterContext basicFilterContext) throws GeminiException {
+        return transactionManager.executeEntityManagedTransaction(transaction -> {
+            return persistenceEntityManager.getEntityRecordsMatching(entity, filterFielValueType, basicFilterContext, transaction);
+        });
+    }
+
+    @Override
     public List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType, Transaction transaction) throws GeminiException {
         return persistenceEntityManager.getEntityRecordsMatching(entity, filterFielValueType, transaction);
-
     }
 
     @Override

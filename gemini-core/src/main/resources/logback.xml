@@ -16,6 +16,6 @@
     <logger name="it.at7" level="DEBUG">
     </logger>
 
-    <include file="logging.xml"/>
+    <include optional="true" file="logging.xml"/>
 
 </configuration>

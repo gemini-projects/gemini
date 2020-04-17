@@ -13,7 +13,11 @@ public interface PersistenceEntityManager {
 
     void getALLEntityRecords(Entity entity, Transaction transaction, EntityRecordCallback callback) throws GeminiException;
 
-    List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException;
+    default List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFieldValueType, Transaction transaction) throws GeminiException {
+        return getEntityRecordsMatching(entity, filterFieldValueType, null, transaction);
+    }
+
+    List<EntityRecord> getEntityRecordsMatching(Entity entity, Collection<? extends FieldValue> filterFieldValueType, BasicFilterContext context, Transaction transaction) throws GeminiException;
 
     List<EntityRecord> getEntityRecordsMatching(Entity entity, FilterContext filterContex, Transaction transaction) throws GeminiException;
 

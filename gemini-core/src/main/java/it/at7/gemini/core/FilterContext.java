@@ -2,21 +2,16 @@ package it.at7.gemini.core;
 
 import java.util.Map;
 
-public class FilterContext {
+public class FilterContext extends BasicFilterContext {
     private String searchString;
     private FilterType filterType;
-    private int limit;
-    private final int start;
-    private final String[] orderBy;
     private final boolean count;
     private final Map<String, Object> params;
 
     public FilterContext(FilterType filterType, String searchString, int limit, int start, String[] orderBy, boolean count, Map<String, Object> params) {
+        super(limit, start, orderBy);
         this.filterType = filterType;
         this.searchString = searchString;
-        this.limit = limit;
-        this.start = start;
-        this.orderBy = orderBy;
         this.count = count;
         this.params = params;
     }
@@ -27,18 +22,6 @@ public class FilterContext {
 
     public FilterType getFilterType() {
         return filterType;
-    }
-
-    public int getLimit() {
-        return limit;
-    }
-
-    public int getStart() {
-        return start;
-    }
-
-    public String[] getOrderBy() {
-        return orderBy;
     }
 
     public boolean isCount() {

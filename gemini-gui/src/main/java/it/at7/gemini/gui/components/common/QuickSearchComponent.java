@@ -77,7 +77,6 @@ public class QuickSearchComponent implements GeminiGuiComponentHook {
         }
 
         static SearchElement of(SearchType elementType, String elementRoute, String displayName) {
-            // TODO ADD entity displayName
             return new SearchElement(elementType, elementRoute, displayName);
         }
     }

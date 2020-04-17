@@ -28,16 +28,33 @@ public class EntityCacheManagerAbstTest {
         EntityRecord entityRecord = TestData.getTestDataTypeEntityRecord("logKey-ecachetest");
         entityManager.putIfAbsent(entityRecord);
 
-        Entity caceEntity = entityManager.getEntity(EntityRef.ERA.NAME);
+        Entity cacheEntity = entityManager.getEntity(EntityRef.ERA.NAME);
         Entity dtEntity = entityManager.getEntity("TestDataType");
         PersistenceEntityManager persistenceEntityManager = Services.getPersistenceEntityManager();
-        Services.getTransactionManager().executeEntityManagedTransaction(t ->
+        LocalDateTime ldt1 = Services.getTransactionManager().executeEntityManagedTransaction(t ->
                 {
                     Optional<EntityRecord> cacheRec =
-                            persistenceEntityManager.getEntityRecordById(caceEntity, (long) dtEntity.getIDValue(), t);
+                            persistenceEntityManager.getEntityRecordById(cacheEntity, (long) dtEntity.getIDValue(), t);
                     Assert.assertTrue(cacheRec.isPresent());
+                    EntityRecord record = cacheRec.get();
+                    return record.get(EntityRef.ERA.FIELDS.TIMESTAMP);
+
                 }
         );
+
+        entityRecord.put("text", "updated");
+        entityManager.update(entityRecord);
+        LocalDateTime ldt2 = Services.getTransactionManager().executeEntityManagedTransaction(t ->
+                {
+                    Optional<EntityRecord> cacheRec =
+                            persistenceEntityManager.getEntityRecordById(cacheEntity, (long) dtEntity.getIDValue(), t);
+                    Assert.assertTrue(cacheRec.isPresent());
+                    EntityRecord record = cacheRec.get();
+                    return record.get(EntityRef.ERA.FIELDS.TIMESTAMP);
+
+                }
+        );
+        Assert.assertTrue(ldt2.isAfter(ldt1));
     }
 
     @Test

@@ -636,6 +636,8 @@ public interface EntityManager {
 
     List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType) throws GeminiException;
 
+    List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType, BasicFilterContext filterContext) throws GeminiException;
+
     List<EntityRecord> getRecordsMatching(Entity entity, Set<FieldValue> filterFielValueType, Transaction transaction) throws GeminiException;
 
     default List<EntityRecord> getRecordsMatching(Entity entity, FilterContext filterContext) throws GeminiException {

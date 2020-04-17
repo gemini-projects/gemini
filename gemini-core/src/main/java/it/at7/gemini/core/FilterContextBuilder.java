@@ -57,17 +57,21 @@ public class FilterContextBuilder {
         return this;
     }
 
-    private FilterContextBuilder withStart(int start) {
+    public FilterContextBuilder withStart(int start) {
         this.start = start;
         return this;
     }
 
-    private FilterContextBuilder withOrderBy(String[] orderByFromParameters) {
+    public FilterContextBuilder withOrderBy(String orderByFromParameter) {
+        return withOrderBy(new String[]{orderByFromParameter});
+    }
+
+    public FilterContextBuilder withOrderBy(String[] orderByFromParameters) {
         this.orderBy = orderByFromParameters;
         return this;
     }
 
-    private FilterContextBuilder withCount(boolean count) {
+    public FilterContextBuilder withCount(boolean count) {
         this.count = count;
         return this;
     }
