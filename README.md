@@ -7,8 +7,8 @@
     <br />
     <br />
 </p>
-___
 
+___
 
 Gemini is a Cloud Native & Low Code platform that uses Domain Driven Design over your data to automatically generate a Backend (REST APIs) and its related Frontend (micro-frontend components and a full Admin Web Backoffice GUI).
 
