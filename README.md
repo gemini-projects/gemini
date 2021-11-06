@@ -3,7 +3,7 @@
     <img src="./gemini_logo.png" height="130" alt="Gemini Logo">
     <br />
     <br />
-    <b>Low Code Platform to create REST APIs and full Web Admin Applications in minutes.</b>
+    <b>Cloud Native and Low Code Platform to create REST APIs and full Web Admin Applications in minutes.</b>
     <br />
     <br />
 </p>
