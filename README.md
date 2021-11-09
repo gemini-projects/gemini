@@ -46,7 +46,7 @@ ___
 <p align="">
     <!--<a href="https://gemini.at7.it" target="_blank"><img src="./gemini_logo.png" height="130" alt="Gemini Logo"></a>-->
     <br />
-    <img src="./img/logo/ai-technologies-logo.png" height="80" alt="Gemini Logo">
+    <img src="./img/logo/ai-technologies-logo.png" height="70" alt="Gemini Logo">
     <br />
 </p>
 
