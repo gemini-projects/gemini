@@ -43,8 +43,7 @@ ___
 
 ## ✨ Who is using
 
-<p align="">
-    <!--<a href="https://gemini.at7.it" target="_blank"><img src="./gemini_logo.png" height="130" alt="Gemini Logo"></a>-->
+<p>
     <br />
     <img src="./img/logo/ai-technologies-logo.png" height="70" alt="Gemini Logo">
     <br />
