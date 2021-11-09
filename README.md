@@ -1,6 +1,6 @@
 <p align="center">
     <!--<a href="https://gemini.at7.it" target="_blank"><img src="./gemini_logo.png" height="130" alt="Gemini Logo"></a>-->
-    <img src="./gemini_logo.png" height="130" alt="Gemini Logo">
+    <img src="./img/logo/gemini_logo.png" height="130" alt="Gemini Logo">
     <br />
     <br />
     <b>Cloud Native and Low Code Platform to create FullStack web Admin applications in minutes</b>
@@ -33,6 +33,7 @@ ___
 
 ## 🏆 Top Use Cases
 - Expose your data with solid REST APIs & OAuth2 without writing code
+- Expose microservices data & boundaries
 - Enterprise level BackOffice Web Application
     - For Internal usage (Admin Panels, Services Configuration, etc.)
     - For your clients, with ready to use full stack components
@@ -42,7 +43,18 @@ ___
 
 ## ✨ Who is using
 
+<p align="">
+    <!--<a href="https://gemini.at7.it" target="_blank"><img src="./gemini_logo.png" height="130" alt="Gemini Logo"></a>-->
+    <br />
+    <img src="./img/logo/ai-technologies-logo.png" height="60" alt="Gemini Logo">
+    <br />
+</p>
 
+[AI Technologies](https://aitechnologies.it/) uses Gemini as an internal BackOffice:
+- as a full Admin Panel to its Enterprise Virtual Assistant Platform services
+- to perform atomic configuration releases between dev, staging and production environments
+- to track Machine Learning experiments
+- expose ML & Platform data with REST APIs
 
 ## ❓ How to get Gemini
 
