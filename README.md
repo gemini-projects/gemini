@@ -42,18 +42,20 @@ ___
 
 
 ## ✨ Who is using
-
 <p>
     <br />
-    <img src="./img/logo/ai-technologies-logo.png" height="70" alt="Gemini Logo">
+    <a href="https://www.aitechnologies.it"><img src="./img/logo/ai-technologies-logo.png" height="85" alt="AI Technologies"></a>
     <br />
 </p>
 
-[AI Technologies](https://aitechnologies.it/) uses Gemini as an internal BackOffice:
+https://user-images.githubusercontent.com/13604122/141614137-ec3e379c-105a-4408-8402-a6f3dc3e531c.mp4
+
+
+<!--- [AI Technologies](https://aitechnologies.it/) uses Gemini as an internal BackOffice:
 - as a full Admin Panel to its Enterprise Virtual Assistant Platform services
 - to perform atomic configuration releases between dev, staging and production environments
 - to track Machine Learning experiments
-- expose ML & Platform data with REST APIs
+- expose ML & Platform data with REST APIs */ -->
 
 ## ❓ How to get Gemini
 
