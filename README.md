@@ -61,7 +61,11 @@ https://user-images.githubusercontent.com/13604122/141614137-ec3e379c-105a-4408-
 
 Gemini is an under development platform. I'm going to gradually release its services and libraries with open source licenses.
 
-At the moment is reserved for selected companies with which I collaborate.
+You can find the ***REST API Geneator*** module in the official [Gemini Micronat Repository](https://github.com/gemini-projects/gemini-micronaut/tree/main)
+with starters and other details.
+
+At the moment the GUI modules of the framework (*Full React Admin Single Page Application* and *Low code Full Stack React Components*) is reserved for selected companies with which I collaborate.
+
 
 If you want to try it out or use it in your company you can reach me out on [Linkedin](https://www.linkedin.com/in/andreatarquini/) or open an issue here.
 
