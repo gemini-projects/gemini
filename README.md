@@ -1,6 +1,6 @@
 <p align="center">
     <!--<a href="https://gemini.at7.it" target="_blank"><img src="./gemini_logo.png" height="130" alt="Gemini Logo"></a>-->
-    <img src="./img/logo/gemini_logo.png" height="130" alt="Gemini Logo">
+    <img src="./img/logo/gemini_logo_blue_small.jpg" height="140" alt="Gemini Logo">
     <br />
     <br />
     <b>Cloud Native and Low Code Platform to create FullStack web Admin applications in minutes</b>
