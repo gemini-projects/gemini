@@ -40,6 +40,15 @@ ___
 - Integrate full stack enterprise data components (tables, forms, etc..) in existing web applications
 - Migration from Monolith to Cloud Native services and GUI
 
+## 📄 Documentation
+
+You can find the Gemini documentation on the [official website](https://gemini.at7.it).
+
+Check out the [Getting Started](https://gemini.at7.it/getting-started) page for a quick overview.
+
+**Attention!** Gemini is an under development platform. At the moment a full support service is guaranteed for companies who express interest
+in the project. If you want to try it out or use it in your company you we could get in touch on [Linkedin](https://www.linkedin.com/in/andreatarquini/).
+
 
 ## ✨ Who is using
 <p>
@@ -57,19 +66,7 @@ https://user-images.githubusercontent.com/13604122/141614137-ec3e379c-105a-4408-
 - to track Machine Learning experiments
 - expose ML & Platform data with REST APIs */ -->
 
-## ❓ How to get Gemini
 
-Gemini is an under development platform. I'm going to gradually release its services and libraries with open source licenses.
-
-You can find the ***REST API Geneator*** module in the official [Gemini Micronat Repository](https://github.com/gemini-projects/gemini-micronaut/tree/main)
-with starters and other details.
-
-At the moment the GUI modules of the framework (*Full React Admin Single Page Application* and *Low code Full Stack React Components*) is reserved for selected companies with which I collaborate.
-
-
-If you want to try it out or use it in your company you can reach me out on [Linkedin](https://www.linkedin.com/in/andreatarquini/) or open an issue here.
-
-
-### ⚠️ Old Framework
+## ⚠️ Old Framework
 In the last 2 year Gemini changed its architecture, from a Spring/Angular monolith approach to a Cloud Native and flexible one exploiting Micronaut and React. You can find the old framework on the [old-0.5.0 branch](https://github.com/gemini-projects/gemini/tree/old-0.5.0)
 
