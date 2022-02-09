@@ -1,0 +1,3 @@
+[submodule "gemini-micronaut"]
+	path = gemini-micronaut
+	url = https://github.com/gemini-projects/gemini-micronaut
